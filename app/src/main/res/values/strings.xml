@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GSApp</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="VPlan">Vertretungsplan</string>
+    <string name="aktualisiere">Aktualisieren</string>
+    <string name="Termin">Termine</string>
+    <string name="Aktuell">Aktuelles</string>
+    <string name="About">Über…</string>
+    <string name="Settings">Einstellungen</string>
+    <string name="Kontakt">Kontakt</string>
+    <string name="Sgspp">GSApp</string>
+    <string name="Shpurl">http://xorg.ga/</string>
+    <string name="version">Gino 5.0 RC2</string>
+    <string name="build">G5RC2</string>
+    <string name="codedby">Written by Xorg (Fabian S.)</string>>
+    <string name="title_activity_first_run">Erster Start</string>
+
+    <string name="klasse_desc">Wenn du nur deine Klasse im Vertretungsplan sehen möchtest, wähle sie hier aus:</string>
+    <string name="title_activity_speiseplan">Speiseplan</string>
+    <string name="ConfigVer">2</string>
+
+</resources>

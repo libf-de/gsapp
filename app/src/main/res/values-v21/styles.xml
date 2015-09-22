@@ -1,0 +1,23 @@
+<resources>
+    <style name="AppBaseTheme" parent="Theme.AppCompat.Light">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+    </style>
+
+    <style name="AppTheme" parent="AppBaseTheme">
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:actionBarStyle">@style/MyActionBar</item>
+        <item name="pageMargin">80dp</item>
+        <item name="pageMarginBottom">48dp</item>
+        <item name="pageMarginBottomSV">56dp</item>
+        <item name="android:windowBackground">@color/gsgelb</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+    <style name="MyActionBar" parent="android:style/Widget.Material.Light.ActionBar">
+        <item name="android:background">#fed21b</item>
+    </style>
+
+</resources>

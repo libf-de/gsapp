@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/refresh" android:title="@string/aktualisiere" android:orderInCategory="100"></item>
+    <item android:id="@+id/gotoo" android:title="Gehe zu" android:orderInCategory="100"></item>
+    <item android:id="@+id/startseite" android:title="⇒ Startseite" android:orderInCategory="100"></item>
+    <item android:id="@+id/bestellen" android:title="⇒ Bestellung" android:orderInCategory="100"></item>
+    <item android:id="@+id/plan" android:title="⇒ Speiseplan" android:orderInCategory="100"></item>
+    <item android:id="@+id/account" android:title="⇒ Mein Account" android:orderInCategory="100"></item>
+    <item android:id="@+id/abmelden" android:title="⇒ Abmelden" android:orderInCategory="100"></item>
+</menu>

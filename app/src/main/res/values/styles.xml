@@ -1,0 +1,78 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+    -->
+    <!-- <style name="AppBaseTheme" parent="android:Theme.Light">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+    </style> -->
+    
+    <style name="AppBaseTheme" parent="Theme.AppCompat.Light">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+    </style>
+
+    <style name="ClassicTheme" parent="android:Theme.Light">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+    </style>
+
+    <style name="HoloTheme" parent="android:Theme.Holo.Light" tools:targetApi="11">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="android:windowBackground">@color/gsgelb</item>
+    </style>
+
+    <style name="HoloDarkTheme" parent="android:Theme.Holo" tools:targetApi="11">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="android:windowBackground">@color/gsgelb</item>
+    </style>
+
+    <style name="MaterialTheme" parent="android:Theme.Material.Light" tools:targetApi="21">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="android:windowBackground">@color/gsgelb</item>
+    </style>
+
+    <style name="MaterialDarkTheme" parent="android:Theme.Material" tools:targetApi="21">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="android:windowBackground">@color/gsgelb</item>
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="android:windowBackground">@color/gsgelb</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+    </style>
+
+    <style name="AppThemeSBlack" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppThemeBlack" parent="AppBaseThemeBlack">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+    </style>
+    
+    <style name="AppBaseThemeBlack" parent="Theme.AppCompat.Light">
+        <!-- API 11 theme customizations can go here. -->
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+    </style>
+
+</resources>

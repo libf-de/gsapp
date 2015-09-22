@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/home/xorg/AndroidStudioProjects/GSApp4/app/build/intermediates/exploded-aar/GSApp4/CardsUILib/unspecified/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.1"
+        sha1="1fcd52efbecec67db166ce46ffc7c0b70373bb4c">
+        <dex dex="/home/xorg/AndroidStudioProjects/GSApp4/app/build/intermediates/pre-dexed/debug/classes-4db5c8589fbee66f71bd9e2af123bb414466915e.jar" />
+    </item>
+
+</items>

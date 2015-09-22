@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/withersSCR" >
+        
+    <LinearLayout
+        android:id="@+id/withers"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/KlasseLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="?pageMargin"
+            android:text="Klasse"
+            android:gravity="center"
+            style="@style/CardTitle" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <Spinner
+                android:id="@+id/klasseEinst"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/KlasseLabel"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="10dp"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/CallsLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/klasseEinst"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="15dp"
+            android:text="Anrufe"
+            android:gravity="center"
+            style="@style/CardTitle" />
+
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="5dp">
+
+        <RadioButton
+            android:id="@+id/phoneCall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Direkt"/>
+
+        <RadioButton
+            android:id="@+id/phoneDial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nummer eingeben" />
+
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/NtfLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/ZoomBar"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:text="Benachrichtigung"
+            style="@style/CardTitle"
+            android:gravity="center"/>
+
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center">
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Immer benachrichtigen"
+                android:id="@+id/ntf_always"/>
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nur meine Klasse"
+                android:id="@+id/ntf_user"/>
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nie benachrichtigen"
+                android:id="@+id/ntf_never"/>
+
+            </RadioGroup>
+
+
+        <TextView
+            android:id="@+id/ExpLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/NtfLabel"
+            android:layout_marginTop="15dp"
+            android:text="Weitere Einstellungen"
+            style="@style/CardTitle"
+            android:gravity="center"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="10dp"
+            android:gravity="center">
+
+
+            <CheckBox
+                android:id="@+id/vpAsync"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Asynchron laden (lang tippen für Hilfe)" />
+
+            <Button
+                android:id="@+id/AutologinConfig"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Autom. Anmeldung (Essensbest.)"
+                android:onClick="Autologin"/>
+
+            <Button
+                android:id="@+id/StoreButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="App im PlayStore anzeigen"
+                android:onClick="showInPlay"/>
+
+
+            </LinearLayout>
+
+    </LinearLayout>
+    
+ </ScrollView>

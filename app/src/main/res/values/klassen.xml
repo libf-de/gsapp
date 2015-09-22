@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="klassen_array">
+        <item>keine</item>
+        <item>5.1</item>
+        <item>5.2</item>
+        <item>5.3</item>
+        <item>5.4</item>
+        <item>5.5</item>
+        <item>6.1</item>
+        <item>6.2</item>
+        <item>6.3</item>
+        <item>6.4</item>
+        <item>6.5</item>
+        <item>7.1</item>
+        <item>7.2</item>
+        <item>7.3</item>
+        <item>7.4</item>
+        <item>7.5</item>
+        <item>8.1</item>
+        <item>8.2</item>
+        <item>8.3</item>
+        <item>8.4</item>
+        <item>8.5</item>
+        <item>9.1</item>
+        <item>9.2</item>
+        <item>9.3</item>
+        <item>9.4</item>
+        <item>9.5</item>
+        <item>10.1</item>
+        <item>10.2</item>
+        <item>10.3</item>
+        <item>10.4</item>
+        <item>10.5</item>
+        <item>ABI15</item>
+        <item>ABI16</item>
+    </string-array>
+</resources>

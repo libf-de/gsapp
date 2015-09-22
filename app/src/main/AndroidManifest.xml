@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="de.xorg.gsapp"
+    android:versionCode="492"
+    android:versionName="Gino 5.0 RC2" >
+
+    <uses-sdk android:minSdkVersion="11" />
+    <!-- android:targetSdkVersion="19" -->
+
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".BootChecker"
+            android:enabled="true"
+            android:exported="true"
+            android:label="GSAppAutomaticCheckBootService" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".VPlanViewer"
+            android:label="@string/VPlan"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".InternetViewer"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".About"
+            android:label="Über GSApp"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".Settings"
+            android:icon="@drawable/settings"
+            android:label="@string/Settings"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".KontaktAnzeige"
+            android:label="@string/Kontakt"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".Essensbestellung"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".DeveloperSettings"
+            android:label="GDevSetting"
+            android:noHistory="true"
+            android:screenOrientation="portrait" >
+        </activity>
+
+        <receiver android:name=".CheckService" >
+        </receiver>
+
+        <activity
+            android:name=".CrashActivity"
+            android:label="Fehlermelder"
+            android:noHistory="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light" >
+        </activity>
+        <activity
+            android:name=".FirstRunActivity"
+            android:label="@string/title_activity_first_run"
+            android:noHistory="true"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".SpeiseplanActivity"
+            android:label="@string/title_activity_speiseplan" >
+        </activity>
+    </application>
+
+</manifest>

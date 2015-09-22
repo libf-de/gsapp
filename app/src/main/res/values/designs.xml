@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="design_array">
+        <item>Holo Gelb</item>
+        <item>Holo Dunkel</item>
+        <item>Holo Hell</item>
+    </string-array>
+</resources>
