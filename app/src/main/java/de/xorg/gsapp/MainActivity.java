@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 					sp.remove("MealKW");
 					sp.remove("id");
 					sp.putInt("configVer", 2);
+					sp.commit();
 					Toast.makeText(MainActivity.this, "Die Konfigurationsdateien wurden erfolgreich bereinigt!", Toast.LENGTH_SHORT).show();
 					dialog.dismiss();
 				}
