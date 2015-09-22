@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -15,7 +16,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 
-public class FirstRunActivity extends ActionBarActivity {
+public class FirstRunActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +94,7 @@ public class FirstRunActivity extends ActionBarActivity {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putString("klasse", sp.getTag().toString());
         editor.putInt("check", checkVal);
+        editor.putInt("configVer", 2);
         editor.putBoolean("isfirstrun", false);
         editor.commit();
 
