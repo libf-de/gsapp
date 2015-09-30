@@ -184,7 +184,7 @@ public class VPlanViewer extends ActionBarActivity {
 
             try {
                 if (result != "E") {
-                    String gPart = result.split("<td colspan=\"7\" class=\"vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
+                    String gPart = result.split("<td colspan=\"7\" class=\"rundeEckenOben vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
                     dateD = gPart;
                     String bemerkung = result.split("<tr id=\"Shinweis\">")[1].split("</tr>")[0].replace("Hinweis: <br />","").replace("<br />", "· ").replaceAll("\\<.*?>", "").replace("&uuml;", "ü").replace("&Uuml;", "Ü").replace("&auml;", "ä").replace("&Auml;", "Ä").replace("&ouml;", "ö").replace("&Ouml;", "Ö").replace("&szlig;", "ß").replaceAll("[\\\r\\\n]+", "").trim();
                     hinweisD = bemerkung;
@@ -391,7 +391,7 @@ public class VPlanViewer extends ActionBarActivity {
 
                 try {
                     if(result != "E") {
-                        String gPart = result.split("<td colspan=\"7\" class=\"vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
+                        String gPart = result.split("<td colspan=\"7\" class=\"rundeEckenOben vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
                         dateD = gPart;
                         String bemerkung = result.split("<tr id=\"Shinweis\">")[1].split("</tr>")[0].replace("Hinweis: <br />","").replace("<br />", "· ").replaceAll("\\<.*?>", "").replace("&uuml;", "ü").replace("&Uuml;", "Ü").replace("&auml;", "ä").replace("&Auml;", "Ä").replace("&ouml;", "ö").replace("&Ouml;", "Ö").replace("&szlig;", "ß").replaceAll("[\\\r\\\n]+", "").trim();
                         hinweisD = bemerkung;
@@ -496,7 +496,7 @@ public class VPlanViewer extends ActionBarActivity {
 
         try {
             if(result != "E") {
-                String gPart = result.split("<td colspan=\"7\" class=\"vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
+                String gPart = result.split("<td colspan=\"7\" class=\"rundeEckenOben vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
                 dateD = gPart;
                 String bemerkung = result.split("<tr id=\"Shinweis\">")[1].split("</tr>")[0].replace("Hinweis: <br />","").replace("<br />", "· ").replaceAll("\\<.*?>", "").replace("&uuml;", "ü").replace("&Uuml;", "Ü").replace("&auml;", "ä").replace("&Auml;", "Ä").replace("&ouml;", "ö").replace("&Ouml;", "Ö").replace("&szlig;", "ß").replaceAll("[\\\r\\\n]+", "").trim();
                 hinweisD = "[!] " + bemerkung;
