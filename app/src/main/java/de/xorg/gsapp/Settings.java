@@ -1,5 +1,6 @@
 package de.xorg.gsapp;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
@@ -7,9 +8,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
@@ -222,6 +225,7 @@ public class Settings extends ActionBarActivity implements OnItemSelectedListene
 			}
 		}
 
+
         int checkVal = 0;
         if( ((RadioButton) findViewById(R.id.ntf_never)).isChecked() ) {
             checkVal = 0;
@@ -246,10 +250,18 @@ public class Settings extends ActionBarActivity implements OnItemSelectedListene
 		
 		Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
 		editor.putString("klasse", EinstellungKlasse);
-        editor.putString("ruf", ttyp);
         editor.putBoolean("loadAsync", VALoad.isChecked());
         editor.putInt("check", checkVal);
-        editor.commit();
+		if (ttyp.equals("call") && ContextCompat.checkSelfPermission(Settings.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+			editor.commit();
+			Intent intent = new Intent(Settings.this, PermissionManager.class);
+			intent.putExtra("reason", "call");
+			finish();
+			startActivity(intent);
+		} else {
+			editor.putString("ruf", ttyp);
+		}
+		editor.commit();
 	}
 	
 	public void toaster(String msg) {

@@ -39,7 +39,8 @@ import java.util.Date;
 
 public class InternetViewer extends ActionBarActivity {
 	public final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
-	
+	public int lastID = 209;
+	public String UrlToLoad;
 	@SuppressWarnings("unused")
 	private Context c;
 	private boolean isConnected = true;
@@ -49,9 +50,7 @@ public class InternetViewer extends ActionBarActivity {
 	private boolean isNtf = false;
 	private boolean isRST = false;
 	private int PostID = 207;
-	public int lastID = 209;
-	
-	public String UrlToLoad; 
+
 	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -262,11 +261,11 @@ public class InternetViewer extends ActionBarActivity {
     }
 	
 	private class GetLastPost extends AsyncTask<String, Void, String> {
-		GetLastPost(){
-		    
-		}
-		
 		private ProgressDialog progressDialog;
+		
+		GetLastPost(){
+
+		}
 		
 		@Override  
         protected void onPreExecute()  
@@ -276,12 +275,12 @@ public class InternetViewer extends ActionBarActivity {
             //Set the progress dialog to display a horizontal progress bar  
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);  
             //Set the dialog title to 'Loading...'  
-            progressDialog.setTitle("GSApp 4.x »Gino«");
-            //Set the dialog message to 'Loading application View, please wait...'  
-            progressDialog.setMessage("Lade Daten...");  
-            //This dialog can't be canceled by pressing the back key  
-            progressDialog.setCancelable(false);  
-            //This dialog isn't indeterminate  
+			progressDialog.setTitle("GSApp 5.x »Merlin Rewrite«");
+			//Set the dialog message to 'Loading application View, please wait...'
+			progressDialog.setMessage("Lade Daten...");
+			//This dialog can't be canceled by pressing the back key
+			progressDialog.setCancelable(false);
+			//This dialog isn't indeterminate
             progressDialog.setIndeterminate(true);  
             //Display the progress dialog  
             progressDialog.show();  
@@ -324,7 +323,7 @@ public class InternetViewer extends ActionBarActivity {
 			progressDialog.dismiss(); 
 			if(result != "E") {
 				String gStr = result.split("<div id=\"InhaltAkt\">")[1];
-				Log.d("GSApp-Gino", "+" + gStr + "+");
+				Log.d("GSApp", "+" + gStr + "+");
 				String[] rawC = gStr.split("\n");
 				String GLINE = rawC[0].replace("  <iframe src=\"", "").replace("\" id=\"inhframeAkt\" name=\"frmakt\" frameborder=\"0\" scrolling=\"no\"></iframe>", "").replace("Aktuell/ausgeben.php5?id=", "").split("</div>")[0];
 				lastID = Integer.parseInt(GLINE);

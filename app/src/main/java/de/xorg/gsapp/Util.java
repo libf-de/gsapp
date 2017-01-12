@@ -7,6 +7,12 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -19,6 +25,9 @@ import android.widget.Toast;
 import java.util.Calendar;
 
 public class Util {
+
+    public static final int PERMISSION_DEBUG = 22021996;
+    public static final int PERMISSION_CALL = 17082000;
 
     public static boolean isNumeric(String str)
     {
@@ -142,65 +151,101 @@ public class Util {
     }
 
     public static void setOrientation(Activity a) {
-        Calendar c = Calendar.getInstance();
-        if(c.get(Calendar.DAY_OF_MONTH) == 1 && c.get(Calendar.MONTH) == Calendar.APRIL) {
-            a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
-            Toast.makeText(a, "APRIL APRIL :D", Toast.LENGTH_SHORT).show();
-        } else {
-            switch (PreferenceManager.getDefaultSharedPreferences(a).getInt("rotateMode", 1)) {
-                case 3:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_BEHIND);
-                    break;
-                case 10:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
-                    break;
-                case 13:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
-                    break;
-                case 0:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                    break;
-                case 14:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
-                    break;
-                case 5:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
-                    break;
-                case 1:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                    break;
-                case 8:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
-                    break;
-                case 9:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
-                    break;
-                case 4:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-                    break;
-                case 6:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-                    break;
-                case 7:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
-                    break;
-                case -1:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-                    break;
-                case 2:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
-                    break;
-                case 11:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
-                    break;
-                case 12:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
-                    break;
-                default:
-                    a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                    Toast.makeText(a, "WARNUNG: UNGÜLTIGE ENTWICKEREINSTELLUNG UIROTATEMODEGLOBAL!", Toast.LENGTH_SHORT).show();
-                    break;
-            }
+        switch (PreferenceManager.getDefaultSharedPreferences(a).getInt("rotateMode", 1)) {
+            case 3:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_BEHIND);
+                break;
+            case 10:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+                break;
+            case 13:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
+                break;
+            case 0:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                break;
+            case 14:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+                break;
+            case 5:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+                break;
+            case 1:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                break;
+            case 8:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+                break;
+            case 9:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+                break;
+            case 4:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                break;
+            case 6:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                break;
+            case 7:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+                break;
+            case -1:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                break;
+            case 2:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
+                break;
+            case 11:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
+                break;
+            case 12:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
+                break;
+            default:
+                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                Toast.makeText(a, "WARNUNG: UNGÜLTIGE ENTWICKEREINSTELLUNG UIROTATEMODEGLOBAL!", Toast.LENGTH_SHORT).show();
+                break;
         }
+    }
+
+
+}
+
+class TextDrawable extends Drawable {
+
+    private final String text;
+    private final Paint paint;
+
+    public TextDrawable(String text) {
+
+        this.text = text;
+
+        this.paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setTextSize(22f);
+        paint.setAntiAlias(true);
+        paint.setFakeBoldText(true);
+        paint.setShadowLayer(6f, 0, 0, Color.BLACK);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setTextAlign(Paint.Align.LEFT);
+    }
+
+    @Override
+    public void draw(Canvas canvas) {
+        canvas.drawText(text, 0, 0, paint);
+    }
+
+    @Override
+    public void setAlpha(int alpha) {
+        paint.setAlpha(alpha);
+    }
+
+    @Override
+    public void setColorFilter(ColorFilter cf) {
+        paint.setColorFilter(cf);
+    }
+
+    @Override
+    public int getOpacity() {
+        return PixelFormat.TRANSLUCENT;
     }
 }

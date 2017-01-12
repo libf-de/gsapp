@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- From: file:/home/xorg/AndroidStudioProjects/GSApp4/CardsUILib/res/values/colors.xml -->
-    <eat-comment/>
     <color name="card_border">#ffdedede</color>
     <color name="card_grid_text">#ff707070</color>
     <color name="card_light_text">#ffb5b5b5</color>
@@ -10,8 +8,6 @@
     <color name="card_title_text">#ff707070</color>
     <color name="stroke">#dddddd</color>
     <color name="text_light">#66000000</color>
-    <!-- From: file:/home/xorg/AndroidStudioProjects/GSApp4/CardsUILib/res/values/dimens.xml -->
-    <eat-comment/>
     <dimen name="action_bar_switch_padding">16.0dip</dimen>
     <dimen name="action_confirm_button_margin">16.0dip</dimen>
     <dimen name="app_icon_area_height">120.0dip</dimen>
@@ -184,8 +180,6 @@
     <dimen name="webview_margin_left">60.0dip</dimen>
     <dimen name="widget_margin_left_right">8.0dip</dimen>
     <dimen name="widget_margin_top_bottom">8.0dip</dimen>
-    <!-- From: file:/home/xorg/AndroidStudioProjects/GSApp4/CardsUILib/res/values/styles.xml -->
-    <eat-comment/>
     <style name="CardLightText" parent="@style/CardText">
         <item name="android:textColor">@color/card_light_text</item>
     </style>

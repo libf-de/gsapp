@@ -21,14 +21,108 @@ import android.widget.Toast;
 
 public class About extends AppCompatActivity {
 	
-	// Zähler für Easter-Egg
-	public static int EggPressed = 0;
-	
 	// Intent-Extras' -Bezeichner für Name und URL
 	public final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
 	public final static String EXTRA_NAME = "de.xorg.gsapp.MESSAGENAME";
+	// Zähler für Easter-Egg
+	public static int EggPressed = 0;
+	private GALog l;
 
-    private GALog l;
+	public static String dataLoader(Activity ct) {
+		final StringBuilder RITT = new StringBuilder();
+
+		RITT.append("--> DEBUG <--\n");
+		RITT.append("\n");
+		RITT.append("--> Build\n");
+		RITT.append("BUILD.DEBUG=" + String.valueOf(BuildConfig.DEBUG) + "\n");
+		RITT.append("BUILD.VERSIONCODE=" + Util.getVersionID(ct) + "\n");
+		RITT.append("BUILD.VERSIONNAME=" + Util.getVersionCode(ct) + "\n");
+		RITT.append("BUILD.VERSION=" + Util.getVersion(ct).replace(" ", "_") + "\n");
+		RITT.append("BUILD.BUILD=" + ct.getString(R.string.build) + "\n");
+		RITT.append("BUILD.DEBUG=" + String.valueOf(BuildConfig.DEBUG) + "\n");
+		RITT.append("\n");
+		RITT.append("--> Device\n");
+
+		// Bildschirmgroesse
+		DisplayMetrics dm = new DisplayMetrics();
+		ct.getWindowManager().getDefaultDisplay().getMetrics(dm);
+		int width = dm.widthPixels;
+		int height = dm.heightPixels;
+		int dens = dm.densityDpi;
+		double wi = (double) width / (double) dens;
+		double hi = (double) height / (double) dens;
+		double x = Math.pow(wi, 2);
+		double y = Math.pow(hi, 2);
+		double si = Math.sqrt(x + y);
+		si = Math.round(si * 100);
+		si = si / 100;
+		String BILDSCHIRMGROESSE = String.valueOf(si);
+
+		// DPI
+		DisplayMetrics metrics = ct.getResources().getDisplayMetrics();
+		int densityDpi = (int) (metrics.density * 160f);
+		String DPI = String.valueOf(densityDpi);
+
+		// Bildschirmaufloesung
+		DisplayMetrics displaymetrics = new DisplayMetrics();
+		ct.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+		int heightA = displaymetrics.heightPixels;
+		int widthA = displaymetrics.widthPixels;
+		String BILDSCHIRMAUFLOESUNG = String.valueOf(widthA) + "x" + String.valueOf(heightA);
+
+		// Android-Version
+		String ANDROIDVERSION = Build.VERSION.RELEASE;
+		String ANDROIDSDK = String.valueOf(Build.VERSION.SDK_INT);
+
+		// Handydaten
+		String HERSTELLER = Build.MANUFACTURER;
+		String HANDYTYP = getDeviceName();
+
+		// Einmalige ID-Nummer
+		String PI = PreferenceManager.getDefaultSharedPreferences(ct).getString("id", "X0X0X0X0X");
+
+		Boolean asyncb = PreferenceManager.getDefaultSharedPreferences(ct).getBoolean("loadAsync", false);
+		String ASYNC = "";
+		if (asyncb) {
+			ASYNC = "TRUE";
+		} else {
+			ASYNC = "FALSE";
+		}
+
+		RITT.append("DEVICE.SCREEN.SIZE=" + BILDSCHIRMGROESSE + "\n");
+		RITT.append("DEVICE.SCREEN.DPI=" + DPI + "\n");
+		RITT.append("DEVICE.SCREEN.RESOLUTION=" + BILDSCHIRMAUFLOESUNG + "\n");
+		RITT.append("DEVICE.ANDROID.VERSION=" + ANDROIDVERSION + "\n");
+		RITT.append("DEVICE.ANDROID.SDK=" + ANDROIDSDK + "\n");
+		RITT.append("DEVICE.MANUFACTURER=" + HERSTELLER + "\n");
+		RITT.append("DEVICE.DESCRIPTOR=" + HANDYTYP + "\n");
+		RITT.append("DEVICE.IDENTIFIER=" + PI + "\n");
+		RITT.append("DEVICE.LOADSASYNC=" + ASYNC + "\n");
+
+		return RITT.toString();
+	}
+
+	public static String getDeviceName() {
+		String manufacturer = Build.MANUFACTURER;
+		String model = Build.MODEL;
+		if (model.startsWith(manufacturer)) {
+			return capitalize(model);
+		} else {
+			return capitalize(manufacturer) + " " + model;
+		}
+	}
+
+	private static String capitalize(String s) {
+		if (s == null || s.length() == 0) {
+			return "";
+		}
+		char first = s.charAt(0);
+		if (Character.isUpperCase(first)) {
+			return s;
+		} else {
+			return Character.toUpperCase(first) + s.substring(1);
+		}
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,23 +141,23 @@ public class About extends AppCompatActivity {
 
 		ver.setText(Util.getVersion(this));
 		ver.setOnClickListener(new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 
-				Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://gsapp.xorg.ga/gino/"));
+				Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://gsapp.xorg.ga/"));
 				startActivity(browserIntent);
 			}
 		});
-		
+
 		ver.setOnLongClickListener(new OnLongClickListener() {
 
 			@Override
 			public boolean onLongClick(View v) {
-				
+
 				try {
 				    StringBuilder NOTE = new StringBuilder();
-				    
+
 				    NOTE.append("--> Note\n");
 				    NOTE.append("Diese Informationen werden nicht an irgendjemanden\n");
 				    NOTE.append("weiterverkauft oder an einen Server gesendet! Sie\n");
@@ -71,13 +165,13 @@ public class About extends AppCompatActivity {
 				    NOTE.append("vom Entwickler angefordert, von ihnen weitergeleitet\n");
 				    NOTE.append("werden. Wenn sie die Informationen weiterleiten möchten,\n");
 				    NOTE.append("tippen sie hier auf SENDEN. Danke");
-				    
-					
+
+
 					AlertDialog.Builder alert = new AlertDialog.Builder(About.this);
 
 					alert.setTitle("Debug-Informationen");
-					alert.setMessage("==[ GSApp 4.x »Gino« ]==\n" + About.dataLoader(About.this) + "\n" + NOTE.toString());
-					
+					alert.setMessage("==[ GSApp 5.x »Merlin« ]==\n" + About.dataLoader(About.this) + "\n" + NOTE.toString());
+
 					alert.setCancelable(false);
 
 					alert.setPositiveButton("SENDEN", new DialogInterface.OnClickListener() {
@@ -105,10 +199,10 @@ public class About extends AppCompatActivity {
 				return false;
 			}
 		});
-		
+
 		//Easter-Egg-Bytecode :D
 		B2.setOnClickListener(new OnClickListener() {
-			@Override 
+			@Override
 			public void onClick(View v) {
 				if (EggPressed == 5) {
 					zeigeEGG();
@@ -121,9 +215,9 @@ public class About extends AppCompatActivity {
 
 			        @Override
 			        public void run() {
-			            EggPressed = 0;                       
-			        }
-			    }, 2000);
+						EggPressed = 0;
+					}
+				}, 2000);
 			}
 		});
 
@@ -136,7 +230,7 @@ public class About extends AppCompatActivity {
                 return false;
             }
         });
-		
+
 		HPButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -145,112 +239,20 @@ public class About extends AppCompatActivity {
 			}
 		});
 	}
-	
-	public static String dataLoader(Activity ct) {
-		final StringBuilder RITT = new StringBuilder();
-		
-		RITT.append("--> DEBUG <--\n");
-		RITT.append("\n");
-		RITT.append("--> Build\n");
-		RITT.append("BUILD.DEBUG=" + String.valueOf(BuildConfig.DEBUG) + "\n");
-		RITT.append("BUILD.VERSIONCODE=" + Util.getVersionID(ct) + "\n");
-		RITT.append("BUILD.VERSIONNAME=" + Util.getVersionCode(ct) + "\n");
-		RITT.append("BUILD.VERSION=" + Util.getVersion(ct).replace(" ", "_") + "\n");
-		RITT.append("BUILD.BUILD=" + ct.getString(R.string.build) + "\n");
-		RITT.append("BUILD.DEBUG=" + String.valueOf(BuildConfig.DEBUG) + "\n");
-		RITT.append("\n");
-		RITT.append("--> Device\n");
-		
-		// Bildschirmgroesse
-		DisplayMetrics dm = new DisplayMetrics();
-		ct.getWindowManager().getDefaultDisplay().getMetrics(dm);
-		int width=dm.widthPixels;
-		int height=dm.heightPixels;
-		int dens=dm.densityDpi;
-		double wi=(double)width/(double)dens;
-		double hi=(double)height/(double)dens;
-		double x = Math.pow(wi,2);
-		double y = Math.pow(hi,2);
-		double si = Math.sqrt(x+y);
-		si = Math.round(si * 100);
-		si = si/100;
-	    String BILDSCHIRMGROESSE = String.valueOf(si);
-	    
-	    // DPI
-	    DisplayMetrics metrics = ct.getResources().getDisplayMetrics();
-	    int densityDpi = (int)(metrics.density * 160f);
-	    String DPI = String.valueOf(densityDpi);
-	    
-	    // Bildschirmaufloesung
-	    DisplayMetrics displaymetrics = new DisplayMetrics();
-	    ct.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-	    int heightA = displaymetrics.heightPixels;
-	    int widthA = displaymetrics.widthPixels;
-	    String BILDSCHIRMAUFLOESUNG = String.valueOf(widthA) + "x" + String.valueOf(heightA);
-	    
-	    // Android-Version
-	    String ANDROIDVERSION = Build.VERSION.RELEASE;
-	    String ANDROIDSDK = String.valueOf(Build.VERSION.SDK_INT);
-	    
-	    // Handydaten
-	    String HERSTELLER = Build.MANUFACTURER;
-	    String HANDYTYP = getDeviceName();
-	    
-	    // Einmalige ID-Nummer
-	    String PI = PreferenceManager.getDefaultSharedPreferences(ct).getString("id", "X0X0X0X0X");
-	    
-	    Boolean asyncb = PreferenceManager.getDefaultSharedPreferences(ct).getBoolean("loadAsync", false);
-	    String ASYNC = ""; if(asyncb) { ASYNC = "TRUE"; } else { ASYNC = "FALSE"; }
-	    
-	    RITT.append("DEVICE.SCREEN.SIZE=" + BILDSCHIRMGROESSE + "\n");
-	    RITT.append("DEVICE.SCREEN.DPI=" + DPI + "\n");
-	    RITT.append("DEVICE.SCREEN.RESOLUTION=" + BILDSCHIRMAUFLOESUNG + "\n");
-	    RITT.append("DEVICE.ANDROID.VERSION=" + ANDROIDVERSION + "\n");
-	    RITT.append("DEVICE.ANDROID.SDK=" + ANDROIDSDK + "\n");
-	    RITT.append("DEVICE.MANUFACTURER=" + HERSTELLER + "\n");
-	    RITT.append("DEVICE.DESCRIPTOR=" + HANDYTYP + "\n");
-	    RITT.append("DEVICE.IDENTIFIER=" + PI + "\n");
-	    RITT.append("DEVICE.LOADSASYNC=" + ASYNC + "\n");
-	    
-	    return RITT.toString();
-	}
-	
+
 	@Override
 	public void onDestroy() {
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 		super.onDestroy();
 	}
-	
+
 	//EasterEgg zeigen
 	public void zeigeEGG() {
 		if(Util.hasInternet(getApplicationContext())) {
 			Intent intent = new Intent(this, InternetViewer.class);
 			intent.putExtra(EXTRA_URL, "http://gsapp.xorg.ga/uimserv.php");
 			intent.putExtra(EXTRA_NAME, "EasterEgg");
-		    startActivity(intent);		
+			startActivity(intent);
 		}
-	}
-
-	public static String getDeviceName() {
-		  String manufacturer = Build.MANUFACTURER;
-		  String model = Build.MODEL;
-		  if (model.startsWith(manufacturer)) {
-		    return capitalize(model);
-		  } else {
-		    return capitalize(manufacturer) + " " + model;
-		  }
-		}
-
-
-	private static String capitalize(String s) {
-		  if (s == null || s.length() == 0) {
-		    return "";
-		  }
-		  char first = s.charAt(0);
-		  if (Character.isUpperCase(first)) {
-		    return s;
-		  } else {
-		    return Character.toUpperCase(first) + s.substring(1);
-		  }
 	}
 }

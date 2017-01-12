@@ -25,4 +25,4 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@android:color/primary_text_dark" />
 
-</RelativeLayout><!-- From: file:/home/xorg/AndroidStudioProjects/GSApp4/CardsUILib/res/layout/footer_fragment.xml --><!-- From: file:/home/xorg/AndroidStudioProjects/GSApp4/CardsUILib/build/intermediates/bundles/debug/res/layout/footer_fragment.xml -->
+</RelativeLayout>

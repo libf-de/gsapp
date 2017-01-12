@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CardsUILib/CardsUILib.iml" filepath="$PROJECT_DIR$/CardsUILib/CardsUILib.iml" />
-      <module fileurl="file://$PROJECT_DIR$/GSApp4.iml" filepath="$PROJECT_DIR$/GSApp4.iml" />
+      <module fileurl="file://$PROJECT_DIR$/GSApp6.iml" filepath="$PROJECT_DIR$/GSApp6.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

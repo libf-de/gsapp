@@ -31,6 +31,15 @@ import java.util.List;
 
 public class CrashActivity extends ActionBarActivity {
 
+
+    /**
+     * GSApp Merlin-Rewrite: CrashActivity.java
+     * <p>
+     * Neu geschrieben am 12.01.2017
+     * <p>
+     * Behandelt Abstürze der GSApp
+     */
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,21 +50,24 @@ public class CrashActivity extends ActionBarActivity {
         //TextView error = (TextView) findViewById(R.id.errorCode);
         //error.setText(STACKTRACE);
 
-        setTitle("): GSApp ist abgestürzt");
+        setTitle("GSAPP MRLNRW0");
 
         Button sent = (Button) findViewById(R.id.send);
         sent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(CrashActivity.this, "Sende Fehlerbericht...", Toast.LENGTH_SHORT).show();
-                reportError(STACKTRACE, ((EditText) findViewById(R.id.description)).getText().toString());
+                if (!STACKTRACE.contains("This is a known error") || ((EditText) CrashActivity.this.findViewById(R.id.description)).getText().toString().length() >= 20) {
+                    Toast.makeText(CrashActivity.this, "Sende Fehlerbericht...", Toast.LENGTH_SHORT).show();
+                    reportError(STACKTRACE, ((EditText) findViewById(R.id.description)).getText().toString());
 
-                Intent mStartActivity = new Intent(CrashActivity.this, MainActivity.class);
-                int mPendingIntentId = 123456;
-                PendingIntent mPendingIntent = PendingIntent.getActivity(CrashActivity.this, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
-                AlarmManager mgr = (AlarmManager) CrashActivity.this.getSystemService(Context.ALARM_SERVICE);
-                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
-                System.exit(0);
+                    Intent mStartActivity = new Intent(CrashActivity.this, MainActivity.class);
+                    int mPendingIntentId = 123456;
+                    PendingIntent mPendingIntent = PendingIntent.getActivity(CrashActivity.this, mPendingIntentId, mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+                    AlarmManager mgr = (AlarmManager) CrashActivity.this.getSystemService(Context.ALARM_SERVICE);
+                    mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+                    System.exit(0);
+                }
+                Toast.makeText(CrashActivity.this, "Bitte beschreibe den Fehler mit mehr als 20 Zeichen Text", Toast.LENGTH_SHORT).show();
             }
         });
 

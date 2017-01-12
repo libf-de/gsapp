@@ -4,12 +4,17 @@ package de.xorg.gsapp;
  * Created by xorg on 08.01.15.
  */
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -64,8 +69,18 @@ public class DeveloperSettings extends ActionBarActivity {
                 if(rotateMode.getText().toString() != null) { editor.putInt("rotateMode", Integer.parseInt(rotateMode.getText().toString())); }
                 editor.putBoolean("devMode", showDeveloper.isChecked());
                 if(themeMode.getText().toString() != null) { editor.putString("themeMode", themeMode.getText().toString()); }
-                editor.putBoolean("debug", debugMode.isChecked());
                 if(debugsrc.getText().toString() != null) { editor.putInt("debugSrc", Integer.parseInt(debugsrc.getText().toString())); }
+                if (!PreferenceManager.getDefaultSharedPreferences(DeveloperSettings.this).getBoolean("debug", false)) {
+                    if (debugMode.isChecked() && ContextCompat.checkSelfPermission(DeveloperSettings.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        editor.commit();
+                        Intent intent = new Intent(DeveloperSettings.this, PermissionManager.class);
+                        intent.putExtra("reason", "debug");
+                        finish();
+                        startActivity(intent);
+                    } else {
+                        editor.putBoolean("debug", debugMode.isChecked());
+                    }
+                }
                 editor.commit();
                 Toast.makeText(DeveloperSettings.this, "Einstellungen gespeichert", Toast.LENGTH_SHORT).show();
                 DeveloperSettings.this.finish();
@@ -107,7 +122,7 @@ public class DeveloperSettings extends ActionBarActivity {
         msg.append("WARNUNG: Entwickereinstellungen werden NICHT auf Richtigkeit überprüft. Ungültige Werte können zu Abstürzen führen. Sollte die App nicht mehr starten, löschen sie die Daten der App in den Android-Einstellungen.");
 
         builder.setMessage(msg.toString())
-                .setTitle("GSApp 4.X »Gino«");
+                .setTitle("GSApp 5.X »Merlin Rewrite«");
 
         builder.setPositiveButton("Schließen", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {

@@ -51,8 +51,8 @@ public class Essensbestellung extends ActionBarActivity {
 		widerrist.setBackgroundColor(Color.parseColor("#fed21b"));
  		
 		Speisen.setWebViewClient(new MyWebViewClient() );
-		
-		Speisen.getSettings().setJavaScriptEnabled(false);
+
+		Speisen.getSettings().setJavaScriptEnabled(true);
 		Speisen.getSettings().setBuiltInZoomControls(true);
 		
 	    isConnected = Util.hasInternet(getApplicationContext());

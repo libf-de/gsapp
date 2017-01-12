@@ -21,4 +21,4 @@
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
-</FrameLayout><!-- From: file:/home/xorg/AndroidStudioProjects/GSApp4/CardsUILib/res/layout/cards_view.xml --><!-- From: file:/home/xorg/AndroidStudioProjects/GSApp4/CardsUILib/build/intermediates/bundles/debug/res/layout/cards_view.xml -->
+</FrameLayout>

@@ -32,6 +32,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,17 +45,7 @@ import java.util.Collections;
 
 public class VPlanViewer extends ActionBarActivity {
 	public final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
-	
-	@SuppressWarnings("unused")
-	private Context c;
-	private boolean isFiltered = false;
-	private String Filter = null;
-	private boolean singleMode = false;
-	private CardUI mCardView;
     public boolean fallback = false;
-	private String dateD = "unbekannt";
-	private String hinweisD = "kein Hinweis";
-	
 	public String cDeutsch = "#3f51b5";
 	public String cMathe = "#f44336";
 	public String cMusik = "#9e9e9e";
@@ -70,45 +64,68 @@ public class VPlanViewer extends ActionBarActivity {
 	public String cWirtschaftRecht = "#ff5722";
 	public String cGeschichte = "#9c27b0";
     public String cFRL="#558b2f";
-	
-	
-	
 	public Eintrage vplane;
-	
-	private ProgressDialog progressDialog;  
-	
-	public String UrlToLoad; 
-	@SuppressLint("NewApi")
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		Boolean BeanUI = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("bean", false);
+    public String UrlToLoad;
+    @SuppressWarnings("unused")
+    private Context c;
+    private boolean isFiltered = false;
+    private String Filter = null;
+    private boolean singleMode = false;
+    private CardUI mCardView;
+    private String dateD = "unbekannt";
+    private String hinweisD = "kein Hinweis";
+    private ProgressDialog progressDialog;
+
+    private static int[] unset(int[] arrIn, int index) {
+        int i;
+
+        // new array is shorter
+        int[] arrOut = new int[arrIn.length - 1];
+
+        // copy element "before" arrIn[index]
+        for (i = 0; i < index; i++) {
+            arrOut[i] = arrIn[i];
+        }
+
+        // copy element "after" arrIn[index]
+        for (i = index; i < arrOut.length; i++) {
+            arrOut[i] = arrIn[i + 1];
+        }
+
+        return arrOut;
+    }
+
+    @SuppressLint("NewApi")
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Boolean BeanUI = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("bean", false);
         Util.setThemeUI(this);
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 		setContentView(R.layout.cards);
-		
+
 		//Tablet-Oberfläche einstellen
         Util.setOrientation(this);
-		
+
 		final Animation anim = AnimationUtils.loadAnimation(this, R.anim.slide);
 		//isDarkUI = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("bean", false);
-		
+
 		mCardView = (CardUI) findViewById(R.id.cardsview);
 		mCardView.setAnimation(anim);
 		mCardView.setSwipeable(false);
-		
+
 		vplane = new Eintrage();
-		
+
 		//Util.setTranscluent(this, BeanUI);
 
 		magic();
-		
+
 	}
-	
+
 	public void magic() {
 		if(Util.hasInternet(getApplicationContext())) {
 			mCardView.clearCards();
-			
+
 			if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("loadAsync", false)) {
 				new GetVPL().execute();
 			} else {
@@ -154,10 +171,10 @@ public class VPlanViewer extends ActionBarActivity {
 			//loadSynced();
 			super.onBackPressed();
 		}
-		
+
         return;
 	}
-	
+
 	public void loadSynced() {
 		String result = "";
 		try {
@@ -179,135 +196,8 @@ public class VPlanViewer extends ActionBarActivity {
             while ((line = rd.readLine()) != null) {
                 result = result + line + "\n";
             }
-            char gf = (char) 34;
-            String Klasse = PreferenceManager.getDefaultSharedPreferences(VPlanViewer.this).getString("klasse", "");
-
-            try {
-                if (result != "E") {
-                    String gPart = result.split("<td colspan=\"7\" class=\"rundeEckenOben vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
-                    dateD = gPart;
-                    String bemerkung = result.split("<tr id=\"Shinweis\">")[1].split("</tr>")[0].replace("Hinweis: <br />","").replace("<br />", "· ").replaceAll("\\<.*?>", "").replace("&uuml;", "ü").replace("&Uuml;", "Ü").replace("&auml;", "ä").replace("&Auml;", "Ä").replace("&ouml;", "ö").replace("&Ouml;", "Ö").replace("&szlig;", "ß").replaceAll("[\\\r\\\n]+", "").trim();
-                    hinweisD = bemerkung;
-                    //dateD = dateD + "\n" + bemerkung;
-                }
-            } catch (Exception ex) {
-                //Allgemeiner Fehler beim Auswerten
-
-
-                Log.d("GSApp VPC", "Fehler beim Auswerten der Informationen");
-            }
-
-            //GDebug.doLogWrite(result, "a-completehtml");
-
-            if (result != "E") {
-                String gPart = result.split("<tr id=\"Svertretungen\">\n")[1];
-
-                //GDebug.doLogWrite(gPart, "a-gpart");
-
-                String[] rawC = gPart.split("\n");
-
-                String cleaned = clearUp(rawC);
-
-                //GDebug.doLogWrite(cleaned, "a-clean");
-
-                String[] newC = cleaned.split("\n");
-
-                int counter = 1;
-                int va = 0;
-                String klasse = "";
-                String stunde = "";
-                String orgfach = "";
-                String vertret = "";
-                String raum = "";
-                String verfach = "";
-                String bemerkung = "";
-
-                for (String cnt : newC) {
-                    if (counter == 1) {
-                        klasse = cnt;
-                        counter = counter + 1;
-                    } else if (counter == 2) {
-                        stunde = cnt;
-                        counter = counter + 1;
-                    } else if (counter == 3) {
-                        orgfach = cnt;
-                        counter = counter + 1;
-                    } else if (counter == 4) {
-                        vertret = cnt;
-                        counter = counter + 1;
-                    } else if (counter == 5) {
-                        raum = cnt;
-                        counter = counter + 1;
-                    } else if (counter == 6) {
-                        verfach = cnt;
-                        counter = counter + 1;
-                    } else if (counter == 7) {
-                        bemerkung = cnt;
-                        counter = 1;
-                        if (!hinweisD.equals("Hinweis:")) {
-                            MyPlayCard card = new MyPlayCard("Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\\\r\\\n]+", "").trim(), "#00FF00", "#00FF00", true, false);
-                            card.setOnClickListener(new OnClickListener() {
-
-                                @Override
-                                public void onClick(View v) {
-                                    // TODO Auto-generated method stub
-                                    AlertDialog ad = new AlertDialog.Builder(VPlanViewer.this).create();
-                                    ad.setCancelable(true); // This blocks the 'BACK' button
-                                    ad.setTitle("Hinweis");
-                                    ad.setMessage(hinweisD);
-
-                                    ad.setButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
-                                        }
-                                    });
-                                    ad.show();
-                                }
-
-                            });
-                            mCardView.addCard(card);
-                        }
-                        if (Klasse.equals("")) {
-                            isFiltered = false;
-                            displayStuff(klasse, stunde, orgfach, vertret, raum, verfach, bemerkung);
-                            va = va + 1;
-                            klasse = "";
-                            stunde = "";
-                            orgfach = "";
-                            vertret = "";
-                            raum = "";
-                            verfach = "";
-                            bemerkung = "";
-                        } else {
-                            isFiltered = true;
-                            Filter = Klasse;
-                            String skl = String.valueOf(klasse.charAt(0));
-                            String SUCL = klasse.replace("/2", " " + skl + ".2");
-                            SUCL = SUCL.replace("/3", " " + skl + ".3");
-                            SUCL = SUCL.replace("/4", " " + skl + ".4");
-                            SUCL = SUCL.replace("/5", " " + skl + ".5");
-
-                            if(SUCL.length() == 1) {
-                                if(Klasse.startsWith(SUCL)) {
-                                    displayStuff(klasse, stunde, orgfach, vertret, raum, verfach, bemerkung);
-                                    va = va + 1;
-                                }
-                            } else {
-                                if (SUCL.contains(Klasse)) {
-                                    displayStuff(klasse, stunde, orgfach, vertret, raum, verfach, bemerkung);
-                                    va = va + 1;
-                                }
-                            }
-                        }
-                    }
-                }
-                System.out.println("--- PARSE END AT " + System.currentTimeMillis() + " ---");
-                displayAll();
-                System.out.println("--- DISPLAY END AT " + System.currentTimeMillis() + " ---");
-            } else {
-                mkMsg("Space error :(");
-            }
+            //TODO: add parser Method
+            parseResponse(result);
         } catch (ArrayIndexOutOfBoundsException e) {
             fallbackLoad(result);
 		} catch (Exception exe) {
@@ -324,170 +214,70 @@ public class VPlanViewer extends ActionBarActivity {
 			exe.printStackTrace();
         }
 	}
-	
-	private class GetVPL extends AsyncTask<String, Void, String> {
-		GetVPL(){ Log.d("GSApp-Gino", "Lade Vertretungsplan"); }
-		
-		@Override  
-        protected void onPreExecute()  
-        {  
-			 System.setProperty("http.keepAlive", "false");
-            //Create a new progress dialog  
-            progressDialog = new ProgressDialog(VPlanViewer.this);  
-            //Set the progress dialog to display a horizontal progress bar  
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);  
-            //Set the dialog title to 'Loading...'  
-            progressDialog.setTitle("GSApp 4.x »Gino«");
-            //Set the dialog message to 'Loading application View, please wait...'  
-            progressDialog.setMessage("Lade Daten...");  
-            //This dialog can't be canceled by pressing the back key  
-            progressDialog.setCancelable(false);  
-            //This dialog isn't indeterminate  
-            progressDialog.setIndeterminate(true);  
-            //Display the progress dialog  
-            progressDialog.show();  
-            
-            System.out.println("--- GET START AT " + System.currentTimeMillis() + " ---");
-        }  
 
-		 protected String doInBackground(String... message) {
-			 HttpClient httpclient;
-			 HttpGet request;
-			 HttpResponse response = null;
-			 String result = "";
-			 try {
-			 httpclient = new DefaultHttpClient();
-			 //request = new HttpGet("http://www.gymnasium-sonneberg.de/Informationen/vp.html");
-                 request = new HttpGet(getURL());
-                 request.setHeader("User-Agent", Util.getUserAgentString(VPlanViewer.this, false));
-			 response = httpclient.execute(request);
-			 }
-			 catch (Exception e) {
-			 result = "E";
-			 e.printStackTrace();
-			 }
-			 try {
-			 BufferedReader rd = new BufferedReader(new InputStreamReader(
-			 response.getEntity().getContent()));
-			 String line = "";
-			 while ((line = rd.readLine()) != null) {
-			 result = result + line + "\n" ;
-			 }
-			 } catch (Exception e) {
-			 result = "E";
-			 e.printStackTrace();
-			 }
-			 return result;
-		}
+    public void parseResponse(String result) throws ArrayIndexOutOfBoundsException {
+        char gf = (char) 34;
+        String Klasse = PreferenceManager.getDefaultSharedPreferences(VPlanViewer.this).getString("klasse", "");
 
-		protected void onPostExecute(String result) {
-			System.out.println("--- GET END AT " + System.currentTimeMillis() + " ---");
-			//close the progress dialog  
-            progressDialog.dismiss();
+        if (result.equals("E")) {
+            return;
+        }
 
-            try {
-                char gf = (char) 34;
-                String Klasse = PreferenceManager.getDefaultSharedPreferences(VPlanViewer.this).getString("klasse", "");
+        Document doc = Jsoup.parse(result);
+        Element date = doc.select("td[class=vpUeberschr]").first();
+        Element bemerk = doc.select("td[class=vpTextLinks]").first();
 
-                try {
-                    if(result != "E") {
-                        String gPart = result.split("<td colspan=\"7\" class=\"rundeEckenOben vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
-                        dateD = gPart;
-                        String bemerkung = result.split("<tr id=\"Shinweis\">")[1].split("</tr>")[0].replace("Hinweis: <br />","").replace("<br />", "· ").replaceAll("\\<.*?>", "").replace("&uuml;", "ü").replace("&Uuml;", "Ü").replace("&auml;", "ä").replace("&Auml;", "Ä").replace("&ouml;", "ö").replace("&Ouml;", "Ö").replace("&szlig;", "ß").replaceAll("[\\\r\\\n]+", "").trim();
-                        hinweisD = bemerkung;
+        Log.d("GSApp5", "JBMK: *" + bemerk.text() + "*");
 
-                    }
-                } catch(Exception ex) {
-                    //Allgemeiner Fehler beim Auswerten
-                    Log.d("GSApp VPC", "Fehler beim Auswerten der Informationen");
-                }
+        if (date.text().equals("Beschilderung beachten!")) {
+            //TODO: Ferien
+            Toast.makeText(this, "Es sind Ferien!", Toast.LENGTH_SHORT).show();
+            return;
+        } else {
+            dateD = date.text();
+            hinweisD = bemerk.text().replace("Hinweis: ", "");
+        }
 
-                if(result != "E") {
-                    String gPart = result.split("<tr id=\"Svertretungen\">\n")[1];
-                    String[] rawC = gPart.split("\n");
+        Elements vpEnts = doc.select("tr[id=Svertretungen] ~ tr");
 
-                    String[] newC = clearUp(rawC).split("\n");
-
-                    int counter = 1;
-                    int va = 0;
-                    String klasse = "";
-                    String stunde = "";
-                    String orgfach = "";
-                    String vertret = "";
-                    String raum = "";
-                    String verfach = "";
-                    String bemerkung = "";
-
-                    for(String cnt : newC) {
-                        if(counter == 1) {
-                            klasse = cnt;
-                            counter = counter + 1;
-                        } else if(counter == 2) {
-                            stunde = cnt;
-                            counter = counter + 1;
-                        } else if(counter == 3) {
-                            orgfach = cnt;
-                            counter = counter + 1;
-                        } else if(counter == 4) {
-                            vertret = cnt;
-                            counter = counter + 1;
-                        } else if(counter == 5) {
-                            raum = cnt;
-                            counter = counter + 1;
-                        } else if(counter == 6) {
-                            verfach = cnt;
-                            counter = counter + 1;
-                        } else if(counter == 7) {
-                            bemerkung = cnt;
-                            counter = 1;
-
-                            if(Klasse.equals("")) {
-                                isFiltered = false;
-                                displayStuff(klasse, stunde, orgfach, vertret, raum, verfach, bemerkung);
-                                va = va + 1;
-                                klasse = "";
-                                stunde = "";
-                                orgfach = "";
-                                vertret = "";
-                                raum = "";
-                                verfach = "";
-                                bemerkung = "";
-                            } else {
-                                isFiltered = true;
-                                Filter = Klasse;
-                                String skl = String.valueOf(klasse.charAt(0));
-                                String SUCL = klasse.replace("/2", " " + skl + ".2");
-                                SUCL = SUCL.replace("/3", " " + skl + ".3");
-                                SUCL = SUCL.replace("/4", " " + skl + ".4");
-                                SUCL = SUCL.replace("/5", " " + skl + ".5");
-
-                                if(SUCL.length() == 1) {
-                                    if(Klasse.startsWith(SUCL)) {
-                                        displayStuff(klasse, stunde, orgfach, vertret, raum, verfach, bemerkung);
-                                        va = va + 1;
-                                    }
-                                } else {
-                                    if (SUCL.contains(Klasse)) {
-                                        displayStuff(klasse, stunde, orgfach, vertret, raum, verfach, bemerkung);
-                                        va = va + 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    System.out.println("--- PARSE END AT " + System.currentTimeMillis() + " ---");
-                    displayAll();
-                    System.out.println("--- DISPLAY END AT " + System.currentTimeMillis() + " ---");
-                } else {
-                    mkMsg("Space error :(");
-                }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                fallbackLoad(result);
+        for (Element e : vpEnts) {
+            Elements d = e.children();
+            String[] data = new String[7];
+            int dID = 0;
+            for (Element g : d) {
+                data[dID] = g.text();
+                dID++;
             }
 
-		}
+            if (Klasse.equals("")) {
+                isFiltered = false;
+                displayStuff(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
+            } else {
+                isFiltered = true;
+                Filter = Klasse;
+                String skl = String.valueOf(data[0].charAt(0));
+                String SUCL = data[0].replace("/2", " " + skl + ".2");
+                SUCL = SUCL.replace("/3", " " + skl + ".3");
+                SUCL = SUCL.replace("/4", " " + skl + ".4");
+                SUCL = SUCL.replace("/5", " " + skl + ".5");
 
-	}
+                if (SUCL.length() == 1) {
+                    if (Klasse.startsWith(SUCL)) {
+                        displayStuff(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
+                    }
+                } else {
+                    if (SUCL.contains(Klasse)) {
+                        displayStuff(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
+                    }
+                }
+            }
+        }
+
+        displayAll();
+        return;
+
+
+    }
 
     private void fallbackLoad(String result) {
         Log.d("GSApp", "--------- LOADING FALLBACK ----------");
@@ -985,26 +775,6 @@ public class VPlanViewer extends ActionBarActivity {
 		return me;
 	}
 	
-	private static int[] unset(int[] arrIn, int index) 
-	{
-	    int i;
-
-	    // new array is shorter
-	    int[] arrOut = new int[arrIn.length-1];
-
-	    // copy element "before" arrIn[index]
-	    for(i = 0; i < index ; i++) {
-	        arrOut[i] = arrIn[i];
-	    }
-
-	    // copy element "after" arrIn[index]
-	    for(i = index; i < arrOut.length ; i++) {
-	        arrOut[i] = arrIn[i+1];
-	    }
-
-	    return arrOut;
-	}
-	
 	public void mkMsg(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         Log.d("gsapp-space", msg);
@@ -1060,26 +830,97 @@ public class VPlanViewer extends ActionBarActivity {
             e.printStackTrace();
         }
     }
-	
+
+    private class GetVPL extends AsyncTask<String, Void, String> {
+        GetVPL() {
+            Log.d("GSApp", "Lade Vertretungsplan");
+        }
+
+        @Override
+        protected void onPreExecute() {
+            System.setProperty("http.keepAlive", "false");
+            //Create a new progress dialog
+            progressDialog = new ProgressDialog(VPlanViewer.this);
+            //Set the progress dialog to display a horizontal progress bar
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            //Set the dialog title to 'Loading...'
+            progressDialog.setTitle("GSApp 5.x »Merlin Rewrite«");
+            //Set the dialog message to 'Loading application View, please wait...'
+            progressDialog.setMessage("Lade Daten...");
+            //This dialog can't be canceled by pressing the back key
+            progressDialog.setCancelable(false);
+            //This dialog isn't indeterminate
+            progressDialog.setIndeterminate(true);
+            //Display the progress dialog
+            progressDialog.show();
+
+            System.out.println("--- GET START AT " + System.currentTimeMillis() + " ---");
+        }
+
+        protected String doInBackground(String... message) {
+            HttpClient httpclient;
+            HttpGet request;
+            HttpResponse response = null;
+            String result = "";
+            try {
+                httpclient = new DefaultHttpClient();
+                //request = new HttpGet("http://www.gymnasium-sonneberg.de/Informationen/vp.html");
+                request = new HttpGet(getURL());
+                request.setHeader("User-Agent", Util.getUserAgentString(VPlanViewer.this, false));
+                response = httpclient.execute(request);
+            } catch (Exception e) {
+                result = "E";
+                e.printStackTrace();
+            }
+            try {
+                BufferedReader rd = new BufferedReader(new InputStreamReader(
+                        response.getEntity().getContent()));
+                String line = "";
+                while ((line = rd.readLine()) != null) {
+                    result = result + line + "\n";
+                }
+            } catch (Exception e) {
+                result = "E";
+                e.printStackTrace();
+            }
+            return result;
+        }
+
+        protected void onPostExecute(String result) {
+            System.out.println("--- GET END AT " + System.currentTimeMillis() + " ---");
+            //close the progress dialog
+            progressDialog.dismiss();
+
+            try {
+                parseResponse(result);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                fallbackLoad(result);
+            }
+
+        }
+
+    }
+
 }
 
 class Eintrag {
-	String Klasse;
-	String Stunde;
-	String Fachnormal;
-	String Vertretung;
-	String Raum;
-	String Fachvertret;
-	String Bemerkung;
-	Eintrag(String klasse, String stunde, String fachnormal, String vertretung, String raum, String fachvertret, String bemerkung) {
-		Klasse = klasse;
-		Stunde = stunde;
-		Fachnormal = fachnormal;
-		Vertretung = vertretung;
-		Raum = raum;
-		Fachvertret = fachvertret;
-		Bemerkung = bemerkung;
-	}
+    String Klasse;
+    String Stunde;
+    String Fachnormal;
+    String Vertretung;
+    String Raum;
+    String Fachvertret;
+    String Bemerkung;
+
+    Eintrag(String klasse, String stunde, String fachnormal, String vertretung, String raum, String fachvertret, String bemerkung) {
+        Klasse = klasse;
+        Stunde = stunde;
+        Fachnormal = fachnormal;
+        Vertretung = vertretung;
+        Raum = raum;
+        Fachvertret = fachvertret;
+        Bemerkung = bemerkung;
+    }
 
     Eintrag(JSONObject input)  throws Exception {
         Klasse = input.getString("Klasse");
@@ -1090,70 +931,82 @@ class Eintrag {
         Fachvertret = input.getString("Fachvertret");
         Bemerkung = input.getString("Bemerkung");
     }
-	
-	public String getKlasse() {
-		return Klasse;
-	}
-	public String getStunde() {
-		return Stunde;
-	}
-	public String getFachNormal() {
-		return Fachnormal;
-	}
-	public String getVertretung() {
-		if(Vertretung.equals("##") || Vertretung.equals("&nbsp;")) {
-			return "niemandem";
-		} else {
-			return Vertretung;
-		}
-	}
-	public String getRaum() {
-		if(Raum.equals("##")) {
-			return "k.A.";
-		} else {
-			return Raum;
-		}
-	}
-	public String getFachVertretung() {
-		if(Fachvertret.equals("##") || Vertretung.equals("&nbsp;")) {
-			return "nichts";
-		} else {
-			return Fachvertret;
-		}
-	}
-	public String getBemerkung() {
-		if(Bemerkung.equals("&nbsp;")) {
-			return "keine Bemerkung";
-		} else {
-			return Bemerkung;
-		}
-	}
-	
-	public void setKlasse(String value) {
-		Klasse = value;
-	}
-	public void setStunde(String value) {
-		Stunde = value;
-	}
-	public void setFachNormal(String value) {
-		Fachnormal = value;
-	}
-	public void setVertretung(String value) {
-		Vertretung = value;
-	}
-	public void setRaum(String value) {
-		Raum = value;
-	}
-	public void setFachVertretung(String value) {
-		Fachvertret = value;
-	}
-	public void setBemerkung(String value) {
-		Bemerkung = value;
-	}
-	
-	public Boolean isKlasse(String input) {
+
+    public String getKlasse() {
+        return Klasse;
+    }
+
+    public void setKlasse(String value) {
+        Klasse = value;
+    }
+
+    public String getStunde() {
+        return Stunde;
+    }
+
+    public void setStunde(String value) {
+        Stunde = value;
+    }
+
+    public String getFachNormal() {
+        return Fachnormal;
+    }
+
+    public void setFachNormal(String value) {
+        Fachnormal = value;
+    }
+
+    public String getVertretung() {
+        if (Vertretung.equals("##") || Vertretung.equals("&nbsp;")) {
+            return "niemandem";
+        } else {
+            return Vertretung;
+        }
+    }
+
+    public void setVertretung(String value) {
+        Vertretung = value;
+    }
+
+    public String getRaum() {
+        if (Raum.equals("##")) {
+            return "k.A.";
+        } else {
+            return Raum;
+        }
+    }
+
+    public void setRaum(String value) {
+        Raum = value;
+    }
+
+    public String getFachVertretung() {
+        if (Fachvertret.equals("##") || Vertretung.equals("&nbsp;")) {
+            return "nichts";
+        } else {
+            return Fachvertret;
+        }
+    }
+
+    public void setFachVertretung(String value) {
+        Fachvertret = value;
+    }
+
+    public String getBemerkung() {
+        if (Bemerkung.equals("&nbsp;")) {
+            return "keine Bemerkung";
+        } else {
+            return Bemerkung;
+        }
+    }
+
+    public void setBemerkung(String value) {
+        Bemerkung = value;
+    }
+
+    public Boolean isKlasse(String input) {
         return Klasse == input;
-	}
+    }
 
     public String[] toSaveString() {
         String[] dieser = new String[7];
@@ -1174,13 +1027,13 @@ class Eintrage extends ArrayList<Eintrag> {
 	public ArrayList<Eintrag> getKlasseGruppe(String klasse, Boolean reverse) throws KeineEintrageException {
 		ArrayList<Eintrag> outp = new ArrayList<Eintrag>();
 		for(Eintrag single : this) {
-			Log.d("GSApp-Gino", "ET: " + single.getKlasse() + " vs SUCH: " + klasse);
-			if(single.getKlasse().equals(klasse)) {
-				outp.add(single);
-			}
-		}
-		
-		if(outp.size() < 1) {
+            Log.d("GSApp", "ET: " + single.getKlasse() + " vs SUCH: " + klasse);
+            if (single.getKlasse().equals(klasse)) {
+                outp.add(single);
+            }
+        }
+
+        if(outp.size() < 1) {
 			throw new KeineEintrageException();
 		} else {
 			if(reverse) {
@@ -1193,13 +1046,13 @@ class Eintrage extends ArrayList<Eintrag> {
 	public ArrayList<Eintrag> getKlasseGruppeS(String klasse) throws KeineEintrageException {
 		ArrayList<Eintrag> outp = new ArrayList<Eintrag>();
 		for(Eintrag single : this) {
-			Log.d("GSApp-Gino", "ET: " + single.getKlasse() + " vs SUCH: " + klasse);
-			if(single.getKlasse().equals(klasse)) {
-				outp.add(single);
-			}
-		}
-		
-		if(outp.size() < 1) {
+            Log.d("GSApp", "ET: " + single.getKlasse() + " vs SUCH: " + klasse);
+            if (single.getKlasse().equals(klasse)) {
+                outp.add(single);
+            }
+        }
+
+        if(outp.size() < 1) {
 			throw new KeineEintrageException();
 		} else {
 			return outp;

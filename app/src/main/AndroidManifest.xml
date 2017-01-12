@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.xorg.gsapp"
-    android:versionCode="493"
-    android:versionName="Gino 5.0 RC3" >
+    android:versionCode="500"
+    android:versionName="Merlin Rewrite 01">
 
     <uses-sdk android:minSdkVersion="11" />
     <!-- android:targetSdkVersion="19" -->
@@ -17,7 +17,6 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
@@ -102,7 +101,8 @@
         </activity>
         <activity
             android:name=".SpeiseplanActivity"
-            android:label="@string/title_activity_speiseplan" >
+            android:label="@string/title_activity_speiseplan"></activity>
+        <activity android:name=".PermissionManager">
         </activity>
     </application>
 

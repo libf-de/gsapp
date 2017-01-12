@@ -24,10 +24,12 @@ public class GALog {
         File debug = new File("/sdcard/galog.log");
         if(!debug.exists()) {
             try {
-                FileWriter f = new FileWriter("/sdcard/galog.log", true);
-                f.write("### GALOG v. 1.1pub ###\nwritten by Xorg\nwritten for iMute\ndebug is currently " + String.valueOf(DEBUG) + "\n\n - log start -\n");
+                FileWriter f = openDebug();
+                if (f != null) {
+                    f.write("### GALOG v. 1.1pub ###\nwritten by Xorg\nwritten for iMute\ndebug is currently " + String.valueOf(DEBUG) + "\n\n - log start -\n");
                 f.flush();
-                f.close();
+                    f.close();
+                }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -35,11 +37,26 @@ public class GALog {
         }
     }
 
+    public FileWriter openDebug() throws IOException {
+        File debug = new File("/sdcard/galog.log");
+        if (debug.canRead() && debug.canWrite()) {
+            return new FileWriter("/sdcard/galog.log", true);
+        } else {
+            Log.e("GALOG", "GALog cannot write to internal storage! Please check Marshmallow permission dialog!");
+            return null;
+        }
+    }
+
     public void debug(String message) {
         if(DEBUG) {
             try {
 
-                FileWriter f = new FileWriter("/sdcard/galog.log", true);
+                FileWriter f = openDebug();
+
+                if (f == null) {
+                    Log.d("GALog", "FGALog:" + message);
+                    return;
+                }
 
                 Calendar c = Calendar.getInstance();
 
@@ -57,7 +74,12 @@ public class GALog {
         if(DEBUG) {
             try {
 
-                FileWriter f = new FileWriter("/sdcard/galog.log", true);
+                FileWriter f = openDebug();
+
+                if (f == null) {
+                    Log.w("GALog", "FGALog:" + message);
+                    return;
+                }
 
                 Calendar c = Calendar.getInstance();
 
@@ -75,7 +97,12 @@ public class GALog {
         if(DEBUG) {
             try {
 
-                FileWriter f = new FileWriter("/sdcard/galog.log", true);
+                FileWriter f = openDebug();
+
+                if (f == null) {
+                    Log.e("GALog", "FGALog:" + message);
+                    return;
+                }
 
                 Calendar c = Calendar.getInstance();
 
@@ -93,7 +120,12 @@ public class GALog {
         if(DEBUG) {
             try {
 
-                FileWriter f = new FileWriter("/sdcard/galog.log", true);
+                FileWriter f = openDebug();
+
+                if (f == null) {
+                    Log.i("GALog", "FGALog:" + message);
+                    return;
+                }
 
                 Calendar c = Calendar.getInstance();
 

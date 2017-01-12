@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -18,10 +19,9 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
 	public final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
 	public final static String EXTRA_NAME = "de.xorg.gsapp.MESSAGENAME";
-
+	public static MainActivity IBLAH;
 	@SuppressWarnings("unused")
 	private Context c;
-	public static MainActivity IBLAH;
 	@SuppressWarnings("unused")
 	private boolean isConnected = false;
 	private CheckService alarm;
@@ -62,28 +62,19 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
 		}
 
-		if(PreferenceManager.getDefaultSharedPreferences(this).getInt("configVer", 1) < Util.getConfigVersion(this)) {
-			AlertDialog ad = new AlertDialog.Builder(this).create();
-			ad.setCancelable(true);
-			ad.setTitle("GSApp wurde aktualisiert!");
-			ad.setMessage("Diese Version verwendet ein neues Konfigurations-System, nicht mehr benötigte Dateien werden nun bereinigt");
-			ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					SharedPreferences.Editor sp = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
-					sp.remove("Meal1");
-					sp.remove("Meal2");
-					sp.remove("Meal3");
-					sp.remove("MealKW");
-					sp.remove("id");
-					sp.putInt("configVer", 2);
-					sp.commit();
-					Toast.makeText(MainActivity.this, "Die Konfigurationsdateien wurden erfolgreich bereinigt!", Toast.LENGTH_SHORT).show();
-					dialog.dismiss();
-				}
-			});
-			ad.show();
+		if (!PreferenceManager.getDefaultSharedPreferences(this).contains("isSamsung")) {
+			boolean isSamsung = Build.MANUFACTURER.equals("samsung");
+			SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+			editor.putBoolean("isSamsung", isSamsung);
+			if (isSamsung) {
+				editor.putBoolean("loadAsync", false);
+			} else {
+				editor.putBoolean("loadAsync", true);
+			}
+			editor.commit();
+			Toast.makeText(this, "Sollte der Vertretungsplan lange zum Anzeigen benötigen, melde dies bitte dem Entwickler!", Toast.LENGTH_LONG).show();
 		}
+		setTitle("GSApp MRLNRW0");
 
 		new ServerMessageHandler(this).execute("");
 	}

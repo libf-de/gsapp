@@ -6,4 +6,4 @@
     android:layout_marginTop="0dp"
     android:background="@drawable/card_background" >
 
-</FrameLayout><!-- From: file:/home/xorg/AndroidStudioProjects/GSApp4/CardsUILib/res/layout/item_play_card_empty_first.xml -->
+</FrameLayout>
