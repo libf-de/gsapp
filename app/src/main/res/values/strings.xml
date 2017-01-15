@@ -12,8 +12,8 @@
     <string name="Kontakt">Kontakt</string>
     <string name="Sgspp">GSApp</string>
     <string name="Shpurl">http://xorg.ga/</string>
-    <string name="version">Merlin Rewrite 01</string>
-    <string name="build">MRLNRW0</string>
+    <string name="version">5.0 "Merlin"</string>
+    <string name="build">MRLN0</string>
     <string name="codedby">Written by Xorg (Fabian S.)</string>>
     <string name="title_activity_first_run">Erster Start</string>
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.xorg.gsapp"
-    android:versionCode="500"
-    android:versionName="Merlin Rewrite 01">
+    android:versionCode="501"
+    android:versionName="5.0 Merlin">
 
     <uses-sdk android:minSdkVersion="11" />
     <!-- android:targetSdkVersion="19" -->

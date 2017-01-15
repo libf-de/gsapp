@@ -224,7 +224,7 @@ public class VPlanViewer extends ActionBarActivity {
         }
 
         Document doc = Jsoup.parse(result);
-        Element date = doc.select("td[class=vpUeberschr]").first();
+        Element date = doc.select("td[class*=vpUeberschr]").first();
         Element bemerk = doc.select("td[class=vpTextLinks]").first();
 
         Log.d("GSApp5", "JBMK: *" + bemerk.text() + "*");

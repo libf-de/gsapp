@@ -587,8 +587,8 @@ class GetDate extends AsyncTask<String, Void, String> {
                 loc.debug("CheckService: RESULT ERROR");
                 return;
             }
-            Document doc = Jsoup.parse(result);
-            String gDate = doc.select("td[class*=vpUeberschr]").first().text().replace("Montag, den ", BuildConfig.FLAVOR).replace("Dienstag, den ", BuildConfig.FLAVOR).replace("Mittwoch, den ", BuildConfig.FLAVOR).replace("Donnerstag, den ", BuildConfig.FLAVOR).replace("Freitag, den ", BuildConfig.FLAVOR);
+            Document doc = Jsoup.parse(result); //td.rundeEckenOben.vpUeberschr
+            String gDate = doc.select("td[class*=vpUeberschr]").first().text().replace("Montag, den ", "").replace("Dienstag, den ", "").replace("Mittwoch, den ", "").replace("Donnerstag, den ", "").replace("Freitag, den ", "").replaceAll("[^0-9.]", "");
             String serverDate = new SimpleDateFormat("yyyyMMdd").format(new SimpleDateFormat("dd.MM.yyyy").parse(gDate));
             loc.debug("CheckService/GetDate: Datum von Server erhalten: +" + serverDate + "+");
             String riddenDate = CheckService.getRiddenDate();
