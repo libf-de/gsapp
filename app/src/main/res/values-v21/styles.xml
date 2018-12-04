@@ -1,0 +1,86 @@
+<resources>
+
+    <style name="AppTheme" parent="MaterialDrawerTheme.Light">
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="pageMargin">80dp</item>
+        <item name="pageMarginBottom">48dp</item>
+        <item name="pageMarginBottomSV">56dp</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:actionBarStyle">@style/ActionBarLight</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <!--<item name="android:navigationBarColor">@color/transparent</item>-->
+        <item name="colorPrimaryDark">@color/gsgelbdark</item>
+        <item name="material_drawer_selected">@color/md_selected</item>
+        <item name="material_drawer_selected_text">@color/md_selected_text</item>
+    </style>
+
+    <style name="AppThemeLight" parent="AppTheme">
+        <item name="android:windowBackground">@color/background_white</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeLight</item>
+    </style>
+
+    <style name="AppThemeDark" parent="MaterialDrawerTheme">
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeDark</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="pageMargin">80dp</item>
+        <item name="pageMarginBottom">48dp</item>
+        <item name="pageMarginBottomSV">56dp</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:actionBarStyle">@style/ActionBarDark</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <!--<item name="android:navigationBarColor">@color/transparent</item>-->
+        <item name="colorPrimaryDark">@color/background_dark</item>
+        <item name="material_drawer_selected">@color/md_selected</item>
+        <item name="material_drawer_selected_text">@color/md_selected_text</item>
+    </style>
+
+    <style name="ActionBarDark" parent="Base.Widget.AppCompat.ActionBar">
+        <item name="android:background">#000000</item>
+    </style>
+
+    <style name="ActionBarLight" parent="Base.Widget.AppCompat.ActionBar">
+        <item name="android:background">#FED21B</item>
+    </style>
+
+    <style name="AppThemeYellow" parent="AppTheme">
+        <item name="android:windowBackground">@color/background_yellow</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeYellow</item>
+    </style>
+
+    <!--<style name="AppTheme" parent="AppBaseTheme">
+        -<item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:actionBarStyle">@style/MyActionBar</item>
+        <item name="pageMargin">80dp</item>
+        <item name="pageMarginBottom">48dp</item>
+        <item name="pageMarginBottomSV">56dp</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="colorPrimaryDark">@color/gsgelbdark</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
+        <item name="android:navigationBarColor">@color/gsgelbdark</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="MyActionBar" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:background">#fed21b</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@color/gsgelbdark</item>
+    </style>-->
+
+</resources>

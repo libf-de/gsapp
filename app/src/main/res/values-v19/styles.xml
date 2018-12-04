@@ -1,0 +1,82 @@
+<resources>
+
+    <style name="PAppThemeLight" parent="AppThemeLight">
+        <item name="pageMarginBottom">0dp</item>
+        <item name="pageMarginBottomSV">0dp</item>
+    </style>
+
+    <style name="PAppThemeDark" parent="AppThemeDark">
+        <item name="pageMarginBottom">0dp</item>
+        <item name="pageMarginBottomSV">0dp</item>
+    </style>
+
+    <style name="PAppThemeYellow" parent="AppThemeYellow">
+        <item name="pageMarginBottom">0dp</item>
+        <item name="pageMarginBottomSV">0dp</item>
+    </style>
+
+    <style name="AppTheme" parent="MaterialDrawerTheme.Light"> <!-- Theme.MaterialComponents.Light.NoActionBar -->
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="pageMargin">80dp</item>
+        <item name="pageMarginBottom">48dp</item>
+        <item name="pageMarginBottomSV">56dp</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:actionBarStyle">@style/ActionBarLight</item>
+        <item name="colorPrimaryDark">@color/gsgelbdark</item>
+        <item name="material_drawer_selected">@color/md_selected</item>
+        <item name="material_drawer_selected_text">@color/md_selected_text</item>
+    </style>
+
+    <style name="AppThemeLight" parent="AppTheme">
+        <item name="android:windowBackground">@color/background_white</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeLight</item>
+    </style>
+
+    <style name="AppThemeDark" parent="MaterialDrawerTheme"> <!-- Theme.MaterialComponents.NoActionBar -->
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeDark</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="pageMargin">80dp</item>
+        <item name="pageMarginBottom">48dp</item>
+        <item name="pageMarginBottomSV">56dp</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:actionBarStyle">@style/ActionBarDark</item>
+        <item name="colorPrimaryDark">@color/background_dark</item>
+        <item name="material_drawer_selected">@color/md_selected</item>
+        <item name="material_drawer_selected_text">@color/md_selected_text</item>
+    </style>
+
+    <style name="ActionBarDark" parent="Base.Widget.AppCompat.ActionBar">
+        <item name="android:background">#000000</item>
+    </style>
+
+    <style name="ActionBarLight" parent="Base.Widget.AppCompat.ActionBar">
+        <item name="android:background">#FED21B</item>
+    </style>
+
+    <style name="AppThemeYellow" parent="AppTheme">
+        <item name="android:windowBackground">@color/background_yellow</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeYellow</item>
+    </style>
+
+    <style name="CardTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">25.0sp</item>
+        <item name="android:textColor">#ff707070</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">2</item>
+    </style>
+
+    <!-- Application theme. -->
+
+</resources>

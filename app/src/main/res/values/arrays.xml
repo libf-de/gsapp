@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="pushMode">
+        <item>@string/prefs_pushmode_disabled</item>
+        <item>@string/prefs_pushmode_own</item>
+        <item>@string/prefs_pushmode_all</item>
+    </string-array>
+
+    <string-array name="pushModeState">
+        <item>DISABLED</item>
+        <item>PRIVATE</item>
+        <item>PUBLIC</item>
+    </string-array>
+
+    <string-array name="themes">
+        <item>@string/prefs_theme_auto</item>
+        <item>@string/prefs_theme_light</item>
+        <item>@string/prefs_theme_dark</item>
+        <item>@string/prefs_theme_yellow</item>
+    </string-array>
+
+    <string-array name="themesState">
+        <item>AUTO</item>
+        <item>LIGHT</item>
+        <item>DARK</item>
+        <item>YELLOW</item>
+    </string-array>
+</resources>

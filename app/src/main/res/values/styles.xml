@@ -1,0 +1,121 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+    -->
+    <!-- <style name="AppBaseTheme" parent="android:Theme.Light">
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+    </style> -->
+
+    <style name="SheetThemeLight"
+        parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/ModalStyleLight</item>
+    </style>
+
+    <style name="ModalStyleLight" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/round_sheet_light</item>
+    </style>
+
+    <style name="SheetThemeDark" parent="Theme.Design.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/ModalStyleDark</item>
+    </style>
+
+    <style name="ModalStyleDark" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/round_sheet_dark</item>
+    </style>
+
+    <style name="SheetThemeYellow"
+        parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/ModalStyleYellow</item>
+    </style>
+
+    <style name="ModalStyleYellow" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/round_sheet_yellow</item>
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="MaterialDrawerTheme.Light"> <!-- Theme.MaterialComponents.Light.NoActionBar -->
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:actionBarStyle">@style/ActionBarLight</item>
+        <item name="colorPrimaryDark">@color/gsgelbdark</item>
+        <item name="material_drawer_selected">@color/md_selected</item>
+        <item name="material_drawer_selected_text">@color/md_selected_text</item>
+    </style>
+
+    <style name="AppThemeLight" parent="AppTheme">
+        <item name="android:windowBackground">@color/background_white</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeLight</item>
+    </style>
+
+    <style name="AppThemeDark" parent="MaterialDrawerTheme"> <!-- Theme.MaterialComponents.NoActionBar -->
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeDark</item>
+        <item name="pageMargin">0dp</item>
+        <item name="pageMarginBottom">0dp</item>
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="colorPrimaryDark">@color/background_dark</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:actionBarStyle">@style/ActionBarDark</item>
+
+        <item name="material_drawer_selected">@color/md_selected</item>
+        <item name="material_drawer_selected_text">@color/md_selected_text</item>
+    </style>
+
+    <style name="ActionBarDark" parent="Base.Widget.AppCompat.ActionBar">
+        <item name="android:background">#000000</item>
+    </style>
+
+    <style name="ActionBarLight" parent="Base.Widget.AppCompat.ActionBar">
+        <item name="android:background">#FED21B</item>
+    </style>
+
+    <style name="AppThemeYellow" parent="AppTheme">
+        <item name="android:windowBackground">@color/background_yellow</item>
+        <item name="bottomSheetDialogTheme">@style/SheetThemeYellow</item>
+    </style>
+
+    <!-- Application theme. -->
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="FragDialog" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+    </style>
+
+    <style name="DrawerArrowStyle" parent="@style/Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">true</item>
+        <item name="color">@color/black</item>
+    </style>
+
+    <style name="CardTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">25.0sp</item>
+        <item name="android:textColor">#ff707070</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">2</item>
+    </style>
+
+    <style name="CardText">
+        <item name="android:textSize">14.0sp</item>
+        <item name="android:textColor">#ff8d8d8d</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">2</item>
+    </style>
+
+</resources>

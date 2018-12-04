@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/eb_refresh"
+        android:orderInCategory="100"
+        android:title="@string/aktualisiere"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/eb_gotoo"
+        android:orderInCategory="100"
+        android:title="Gehe zu"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/eb_startseite"
+        android:orderInCategory="100"
+        android:title="⇒ Startseite"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/eb_bestellen"
+        android:orderInCategory="100"
+        android:title="⇒ Bestellung"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/eb_plan"
+        android:orderInCategory="100"
+        android:title="⇒ Speiseplan"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/eb_account"
+        android:orderInCategory="100"
+        android:title="⇒ Mein Account"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/eb_abmelden"
+        android:orderInCategory="100"
+        android:title="⇒ Abmelden"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/web_refresh"
+        android:title="@string/aktualisiere"
+        android:icon="@drawable/ic_refresh"
+        app:showAsAction="always"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/main_settings"
+        android:orderInCategory="100"
+        android:title="Einstellungen"
+        android:visible="false"></item>
+    <item
+        android:id="@+id/main_about"
+        android:orderInCategory="100"
+        android:title="Über..."
+        android:visible="false"></item>
+
+    <item
+        android:id="@+id/br_back"
+        app:showAsAction="always"
+        android:title="Zurück"
+        android:icon="@drawable/arrow_back"
+        android:visible="false"></item>
+
+    <item
+        android:id="@+id/br_fwd"
+        app:showAsAction="always"
+        android:title="Weiter"
+        android:icon="@drawable/arrow_next"
+        android:visible="false"></item>
+
+    <item
+        android:id="@+id/show_all"
+        app:showAsAction="always"
+        android:title="Alle/Eigene Klasse anzeigen"
+        android:icon="@drawable/ic_filter"
+        android:visible="false"></item>
+
+    <item
+        android:id="@+id/show_src"
+        app:showAsAction="always"
+        android:title="Quellcode"
+        android:icon="@drawable/home"
+        android:visible="false"></item>
+
+    <item android:id="@+id/action_klausur_toggle" app:showAsAction="always" android:title="Kl.12" android:visible="false" />
+
+</menu>
