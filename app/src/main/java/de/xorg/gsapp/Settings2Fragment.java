@@ -2,10 +2,13 @@ package de.xorg.gsapp;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,12 +18,17 @@ import java.util.List;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceGroup;
 
 public class Settings2Fragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
     @Override
     public void onCreatePreferences(Bundle bundle, String s) {
         // Load the Preferences from the XML file
         addPreferencesFromResource(R.xml.tk_prefs);
+
+        if (getArguments() != null && getArguments().containsKey("theme") && (getArguments().getString("theme").equals(Util.AppTheme.DARK))) {
+            tintIcons(getPreferenceScreen());
+        }
 
         final ListPreference listPreference = (ListPreference) findPreference("pref_klasse");
 
@@ -70,11 +78,27 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
         lp.setEntryValues(entryValues);
     }
 
+    private static void tintIcons(Preference p) {
+        if (p instanceof PreferenceGroup) {
+            PreferenceGroup g = (PreferenceGroup) p;
+            for (int i = 0; i < g.getPreferenceCount(); i++) {
+                tintIcons(g.getPreference(i));
+            }
+        } else {
+            Drawable i = p.getIcon();
+            if (i != null)
+                i.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+        }
+    }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals("pref_push")) {
+        if (key.equals(Util.Preferences.PUSH_MODE)) {
             String val = sharedPreferences.getString(key, Util.PushMode.DISABLED);
-            FirebaseService.changePush(this.getContext(), (val == Util.PushMode.PRIVATE || val == Util.PushMode.PUBLIC));
+            Toast.makeText(this.getContext(), val, Toast.LENGTH_SHORT).show();
+            FirebaseService.changePush(this.getContext(), (val.equals(Util.PushMode.PRIVATE) || val.equals(Util.PushMode.PUBLIC)));
+        } else if (key.equals(Util.Preferences.THEME)) {
+            ((MainActivity2) getActivity()).changeTheme();
         }
     }
 }

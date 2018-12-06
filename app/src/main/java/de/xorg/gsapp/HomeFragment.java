@@ -45,8 +45,6 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
-
-        getActivity().setTitle("GSApp - HOME");
     }
 
     @Override

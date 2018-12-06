@@ -9,8 +9,6 @@
     <string name="klasse_desc">Wenn du nur deine Klasse im Vertretungsplan sehen möchtest, wähle sie hier aus:</string>
     <string name="ConfigVer">2</string>
 
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="push_enable_success">Successfully enabled push notifications!</string>
     <string name="push_enable_failed">Could not enable push notifications - please try again later!</string>
     <string name="push_disable_success">Successfully disabled push notifications!</string>
@@ -27,5 +25,7 @@
     <string name="prefs_theme_light">Light</string>
     <string name="prefs_theme_dark">Dark</string>
     <string name="prefs_theme_yellow">Yellow</string>
+    <string name="prefs_marquee">Scroll card title</string>
+    <string name="prefs_marquee_sum">Scrolls Vertretungsplan-titles if too long</string>
 
 </resources>

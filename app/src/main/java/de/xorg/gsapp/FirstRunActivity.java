@@ -81,14 +81,14 @@ public class FirstRunActivity extends AppCompatActivity {
             checkVal = 2;
         }
 
-        FirebaseService.changePush(this, (checkVal == 1 || checkVal == 2));
+        //FirebaseService.changePush(this, (checkVal == 1 || checkVal == 2));
 
         Spinner sp = (Spinner) findViewById(R.id.spinner);
 
 
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putString("klasse", sp.getTag().toString());
-        editor.putInt(Util.Preferences.PUSH_MODE, checkVal);
+        //editor.putInt(Util.Preferences.PUSH_MODE, checkVal);
         editor.putInt("configVer", 2);
         editor.putBoolean(Util.Preferences.FIRST_RUN2, false);
         editor.commit();

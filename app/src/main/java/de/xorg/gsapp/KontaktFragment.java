@@ -123,7 +123,7 @@ public class KontaktFragment extends Fragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        Util.prepareMenu(menu, R.id.nav_kontakt);
+        Util.prepareMenu(menu, Util.NavFragments.KONTAKT);
         super.onPrepareOptionsMenu(menu);
     }
 

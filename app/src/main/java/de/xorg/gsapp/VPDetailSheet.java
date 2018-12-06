@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +32,7 @@ public class VPDetailSheet extends BottomSheetDialogFragment {
     View rootView;
 
     boolean istDark = false;
+    boolean cardMarquee;
 
     public VPDetailSheet() {
         // Required empty public constructor
@@ -47,18 +49,20 @@ public class VPDetailSheet extends BottomSheetDialogFragment {
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.vpdetail_sheet, container, false);
         display = rootView.findViewById(R.id.cv_dialog);
+        cardMarquee = PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(Util.Preferences.MARQUEE, false);
         dateD = getArguments().getString("date");
         hinweisD = getArguments().getString("hinweis");
-        istDark = getArguments().getString("theme") == Util.AppTheme.DARK;
+        istDark = getArguments().getString("theme").equals(Util.AppTheme.DARK);
         input = (ArrayList) getArguments().getSerializable("input");
         klasse = getArguments().getString("klasse");
 
         CardStack dateHead = new CardStack(istDark);
+        dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
         dateHead.setTitle("Für " + dateD);
         display.addStack(dateHead);
 
         if(hinweisD.length() > 6) {
-            MyPlayCard card = new MyPlayCard(istDark,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\\\r\\\n]+","").trim(), "#00FF00", "#00FF00", true, false, false);
+            MyPlayCard card = new MyPlayCard(istDark,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\\\r\\\n]+","").trim(), "#00FF00", "#00FF00", true, false, false, cardMarquee);
             card.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -83,6 +87,7 @@ public class VPDetailSheet extends BottomSheetDialogFragment {
 
         CardStack stackPlay = new CardStack(istDark);
         stackPlay.setTitle("Vertretungen für Klasse " + klasse);
+        stackPlay.setTypeface(Util.getTKFont(getContext(), false));
         display.addStack(stackPlay);
 
         for(final Eintrag single : input) {
@@ -98,13 +103,13 @@ public class VPDetailSheet extends BottomSheetDialogFragment {
             }
 
             if(single.getBemerkung().equals("Ausfall")) {
-                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde - Ausfall!" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Ausfall (Raum " + single.getRaum() + ")", getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde - Ausfall!" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Ausfall (Raum " + single.getRaum() + ")", getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
             } else if(single.getBemerkung().equals("Stillbesch.")) {
-                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde - Stillbesch.!" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Stillbeschäftigung im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde - Stillbesch.!" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Stillbeschäftigung im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
             } else if(single.getBemerkung().equals("AA")) {
-                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Arbeitsauftrag im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Arbeitsauftrag im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
             } else {
-                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + ".\n\n" + single.getBemerkung(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + ".\n\n" + single.getBemerkung(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
             }
             card.setOnClickListener(new View.OnClickListener() {
 

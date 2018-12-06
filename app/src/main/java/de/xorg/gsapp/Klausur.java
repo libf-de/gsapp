@@ -43,7 +43,7 @@ public class Klausur {
     public String getRemainingTime() {
         Calendar klausurTag = Calendar.getInstance();
         klausurTag.setTime(this.datum);
-        long msDiff = Calendar.getInstance().getTimeInMillis() - klausurTag.getTimeInMillis();
+        long msDiff = klausurTag.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
         long daysDiff = TimeUnit.MILLISECONDS.toDays(msDiff);
         long weeksDiff = daysDiff / 7;
         if (daysDiff == 0)

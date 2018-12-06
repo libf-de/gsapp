@@ -1,4 +1,5 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
@@ -7,20 +8,30 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize">
+        android:layout_height="?attr/actionBarSize"
+        app:title=""
+        android:elevation="4dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="?attr/actionBarSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="GSApp"
-            android:gravity="center_vertical"
-            style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"/>
+            android:gravity="center"
+            style="@style/TkToolbar"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:paddingRight="?android:attr/actionBarSize"
+            android:id="@+id/toolbar_title"/><!--  -->
 
-        <ImageView
+        <!--<ImageView
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:src="@drawable/christmas_header"
-            android:scaleType="fitEnd" />
+            android:scaleType="fitEnd" />-->
 
     </androidx.appcompat.widget.Toolbar>
 

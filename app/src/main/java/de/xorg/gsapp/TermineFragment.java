@@ -18,6 +18,7 @@ public class TermineFragment extends Fragment {
 
     String URI;
     private boolean isConnected = true;
+    boolean isYellow = false;
 
 
     public TermineFragment() {
@@ -41,15 +42,17 @@ public class TermineFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        if (getArguments() != null && getArguments().containsKey("theme")) {
+            isYellow = (getArguments().getString("theme").equals(Util.AppTheme.YELLOW));
+        }
         Util.setOrientation(this.getActivity());
 
         //Variablen
         WebView Termine = (WebView) getView().findViewById(R.id.WebView);
         RelativeLayout FragFrm = (RelativeLayout) getView().findViewById(R.id.withers);
 
-        FragFrm.setBackgroundColor(Color.parseColor("#fed21b"));
-        Termine.setBackgroundColor(Color.parseColor("#fed21b"));
+        if(isYellow) FragFrm.setBackgroundColor(Color.parseColor("#fed21b"));
+        if(isYellow) Termine.setBackgroundColor(Color.parseColor("#fed21b"));
 
         Termine.setWebViewClient(new MyWebViewClient() );
 
@@ -59,8 +62,6 @@ public class TermineFragment extends Fragment {
         isConnected = Util.hasInternet(this.getContext());
 
         Termine.loadUrl("http://www.gymnasium-sonneberg.de/Informationen/Term/ausgebenK.php5");
-
-        getActivity().setTitle("GSApp - Termine");
     }
 
     @Override
@@ -98,7 +99,7 @@ public class TermineFragment extends Fragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        Util.prepareMenu(menu, R.id.nav_termine);
+        Util.prepareMenu(menu, Util.NavFragments.TERMINE);
         super.onPrepareOptionsMenu(menu);
 
     }

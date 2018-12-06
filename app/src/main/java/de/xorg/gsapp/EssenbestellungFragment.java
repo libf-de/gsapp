@@ -22,6 +22,8 @@ public class EssenbestellungFragment extends Fragment {
 
     String URI;
     private boolean isConnected = true;
+    boolean isDark = false;
+    String themeId;
 
 
     public EssenbestellungFragment() {
@@ -45,15 +47,30 @@ public class EssenbestellungFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (getArguments() != null && getArguments().containsKey("theme")) {
+            themeId = getArguments().getString("theme");
+            isDark = (themeId.equals(Util.AppTheme.DARK));
+        }
 
-        Util.setOrientation(this.getActivity());
 
         //Variablen
         WebView Speisen = (WebView) getView().findViewById(R.id.WebView);
         RelativeLayout FragFrm = (RelativeLayout) getView().findViewById(R.id.withers);
 
-        FragFrm.setBackgroundColor(Color.parseColor("#fed21b"));
-        Speisen.setBackgroundColor(Color.parseColor("#fed21b"));
+        switch(themeId) {
+            case Util.AppTheme.DARK:
+                FragFrm.setBackgroundResource(R.color.background_dark);
+                Speisen.setBackgroundResource(R.color.background_dark);
+                break;
+            case Util.AppTheme.LIGHT:
+                FragFrm.setBackgroundResource(R.color.background_white);
+                Speisen.setBackgroundResource(R.color.background_white);
+                break;
+            case Util.AppTheme.YELLOW:
+                FragFrm.setBackgroundResource(R.color.background_yellow);
+                Speisen.setBackgroundResource(R.color.background_yellow);
+                break;
+        }
 
         Speisen.setWebViewClient(new MyWebViewClient() );
 
@@ -83,7 +100,6 @@ public class EssenbestellungFragment extends Fragment {
                 }
             }
         }
-        getActivity().setTitle("GSApp - Essenbestellung");
     }
 
     @Override
@@ -95,23 +111,23 @@ public class EssenbestellungFragment extends Fragment {
             case R.id.eb_gotoo:
                 return true;
             case R.id.eb_startseite:
-                URI = "http://www.schulkueche-bestellung.de/index.php?m=2;0";
+                URI = "https://www.schulkueche-bestellung.de/index.php?m=2;0";
                 openUrl(URI);
                 return true;
             case R.id.eb_bestellen:
-                URI = "http://www.schulkueche-bestellung.de/index.php?m=2;2";
+                URI = "https://www.schulkueche-bestellung.de/index.php?m=2;2";
                 openUrl(URI);
                 return true;
             case R.id.eb_plan:
-                URI = "http://www.schulkueche-bestellung.de/index.php?m=2;1";
+                URI = "https://www.schulkueche-bestellung.de/index.php?m=2;1";
                 openUrl(URI);
                 return true;
             case R.id.eb_account:
-                URI = "http://www.schulkueche-bestellung.de/index.php?m=2;5";
+                URI = "https://www.schulkueche-bestellung.de/index.php?m=2;5";
                 openUrl(URI);
                 return true;
             case R.id.eb_abmelden:
-                URI = "http://www.schulkueche-bestellung.de/?a=login/logout";
+                URI = "https://www.schulkueche-bestellung.de/?a=login/logout";
                 openUrl(URI);
                 return true;
             default:
@@ -121,7 +137,7 @@ public class EssenbestellungFragment extends Fragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        Util.prepareMenu(menu, R.id.nav_essenbest);
+        Util.prepareMenu(menu, Util.NavFragments.BESTELLUNG);
         super.onPrepareOptionsMenu(menu);
 
     }

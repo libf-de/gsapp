@@ -26,7 +26,6 @@
 
 
     <color name="ripple">#1f000000</color>
-    <color name="black">#ff000000</color>
     <color name="white">#ffffffff</color>
     <color name="gsgelb">#fffed21b</color>
     <color name="gsgelbdark">#ffcba815</color>

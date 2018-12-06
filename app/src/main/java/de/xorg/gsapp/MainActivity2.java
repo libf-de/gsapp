@@ -1,7 +1,12 @@
 package de.xorg.gsapp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,6 +14,8 @@ import android.preference.PreferenceManager;
 //import android.support.v4.app.Fragment;
 //import android.support.v4.app.FragmentTransaction;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.core.app.TaskStackBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 //import android.support.design.widget.NavigationView;
@@ -17,10 +24,19 @@ import androidx.core.view.GravityCompat;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.transition.Fade;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 //import android.view.ViewGroup;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.animation.AlphaAnimation;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mikepenz.crossfader.Crossfader;
@@ -48,6 +64,10 @@ public class MainActivity2 extends AppCompatActivity {
     Drawer result;
     String applicationTheme;
     boolean doubleBackToExitPressedOnce = false;
+    long first;
+    Typeface tkFont;
+
+    TextView toolbarTextView;
 
     @Override
     protected void onNewIntent(Intent i) {
@@ -101,11 +121,23 @@ public class MainActivity2 extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        first = System.currentTimeMillis();
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         applicationTheme = applyTheme(false);
         setContentView(R.layout.activity_main2);
+
+        tkFont = Util.getTKFont(this);
+
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        if (applicationTheme.equals(Util.AppTheme.DARK)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) toolbar.setElevation(0.0f);
+            toolbar.setBackgroundColor(Color.BLACK);
+        } else
+            toolbar.setBackgroundResource(R.color.gsgelb);
+
+        toolbarTextView = (TextView) findViewById(R.id.toolbar_title);
 
         if(Timber.treeCount() < 1) {
             //if(BuildConfig.DEBUG) {
@@ -140,19 +172,11 @@ public class MainActivity2 extends AppCompatActivity {
             Toast.makeText(this, "Sollte der Vertretungsplan lange zum Anzeigen benötigen, melde dies bitte dem Entwickler!", Toast.LENGTH_LONG).show();
         }
 
-        setupDrawer();
-
         /*DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();*/
-
-        defaultFragment = Util.NavFragments.VERTRETUNGSPLAN;
-
-
-
-
         /*final ImageView logo = ((ImageView) ((NavigationView) findViewById(R.id.nav_view)).getHeaderView(0).findViewById(R.id.imageViewBar));
         logo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -175,35 +199,65 @@ public class MainActivity2 extends AppCompatActivity {
 
 
         // recovering the instance state
-        if (savedInstanceState != null) {
-            //Toast.makeText(this, "InstanceState recovered", Toast.LENGTH_SHORT).show();
+        if (savedInstanceState != null)
             shownFragment = savedInstanceState.getInt("GSAPP_MRLN_FRAGMENT");
-        }
+        else
+            if(i.hasExtra("FRAG_SHOW"))
+                shownFragment = i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN);
+            else
+                shownFragment = Util.NavFragments.VERTRETUNGSPLAN;
 
-        if(shownFragment == -1) {
-            if(i.hasExtra("FRAG_SHOW")) {
-                showFragment(i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN));
-            } else {
-                showFragment(defaultFragment);
-            }
-        } else {
-            showFragment(shownFragment);
-        }
+        setupDrawer(shownFragment);
+        showFragment(shownFragment);
+
+        Timber.d("onCreate finished after " + (System.currentTimeMillis() - first) + "ms");
+
+        //if(shownFragment == -1) {
+        //    if(i.hasExtra("FRAG_SHOW")) {
+        //        showFragment();
+        //    } else {
+        //        showFragment(defaultFragment);
+        //    }
+        //} else {
+        //    showFragment(shownFragment);
+        //}
 
 
     }
 
-    public void setupDrawer() {
+    public void changeTheme() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setExitTransition(new Fade());
+        }
+        //overridePendingTransition(R.anim.fadein, R.anim.fadeout);
+        this.recreate();
+    }
+
+    public void setBarTitle(String str) {
+        if(this.toolbarTextView == null)
+            return;
+        this.toolbarTextView.setText(str);
+    }
+
+    public void setupDrawer(long selectedItem) {
         //FirebaseService.checkAppSignature(this);
         //FirebaseService.sendToken(this);
+        ViewGroup fot = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.ferien_footer, null);
+
+        /*new Feriencounter.FeriencounterCallback(){
+            @Override
+            public void run() {
+                Toast.makeText(MainActivity2.this, daysUntil, Toast.LENGTH_SHORT).show();
+            }
+        };*/
+
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header_background)
                 .withSelectionListEnabled(false)
                 .withProfileImagesClickable(false)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("GSApp").withEmail("Ladybug Alpha").withIcon(getResources().getDrawable(R.mipmap.ic_launcher)),
-                        new ProfileDrawerItem().withIcon(getResources().getDrawable(R.drawable.tree_icon))
+                        new ProfileDrawerItem().withName("GSApp").withEmail("Woody Beta 1").withIcon(getResources().getDrawable(R.drawable.icon_tree))
                 )
                 .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
                     @Override
@@ -213,17 +267,15 @@ public class MainActivity2 extends AppCompatActivity {
                 })
                 .build();
 
-        PrimaryDrawerItem vp = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.VERTRETUNGSPLAN).withName("Vertretungsplan").withIcon(R.drawable.school);
-        PrimaryDrawerItem sp = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.SPEISEPLAN).withName("Speiseplan").withIcon(R.drawable.food_fork_drink);
-        PrimaryDrawerItem eb = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.BESTELLUNG).withName("Essenbestellung").withIcon(R.drawable.shopping);
-        PrimaryDrawerItem ak = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.AKTUELLES).withName("Aktuelles").withIcon(R.drawable.newspaper);
-        PrimaryDrawerItem tm = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.TERMINE).withName("Termine").withIcon(R.drawable.calendar_clock);
-        PrimaryDrawerItem kt = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.KONTAKT).withName("Kontakt").withIcon(R.drawable.phone_in_talk);
-        PrimaryDrawerItem ks = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.KLAUSUREN).withName("Klausuren");
-        SecondaryDrawerItem st = new SecondaryDrawerItem().withIdentifier(Util.NavFragments.SETTINGS).withName("Einstellungen").withIcon(R.drawable.settings);
-        SecondaryDrawerItem ab = new SecondaryDrawerItem().withIdentifier(Util.NavFragments.ABOUT).withName("Über...").withIcon(R.drawable.information);
-
-
+        PrimaryDrawerItem vp = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.VERTRETUNGSPLAN).withName("Vertretungsplan").withIcon(Util.getThemedDrawable(this, R.drawable.school, applicationTheme)).withTypeface(tkFont);
+        PrimaryDrawerItem sp = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.SPEISEPLAN).withName("Speiseplan").withIcon(Util.getThemedDrawable(this,R.drawable.food_fork_drink, applicationTheme)).withTypeface(tkFont);
+        PrimaryDrawerItem eb = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.BESTELLUNG).withName("Essenbestellung").withIcon(Util.getThemedDrawable(this,R.drawable.shopping, applicationTheme)).withTypeface(tkFont);
+        PrimaryDrawerItem ak = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.AKTUELLES).withName("Aktuelles").withIcon(Util.getThemedDrawable(this,R.drawable.newspaper, applicationTheme)).withTypeface(tkFont);
+        PrimaryDrawerItem tm = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.TERMINE).withName("Termine").withIcon(Util.getThemedDrawable(this,R.drawable.calendar_clock, applicationTheme)).withTypeface(tkFont);
+        //PrimaryDrawerItem kt = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.KONTAKT).withName("Kontakt").withIcon(Util.getThemedDrawable(this,R.drawable.phone_in_talk, applicationTheme));
+        PrimaryDrawerItem ks = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.KLAUSUREN).withName("Klausuren").withIcon(Util.getThemedDrawable(this, R.drawable.ic_klausur, applicationTheme)).withTypeface(tkFont);
+        SecondaryDrawerItem st = new SecondaryDrawerItem().withIdentifier(Util.NavFragments.SETTINGS).withName("Einstellungen").withIcon(Util.getThemedDrawable(this,R.drawable.settings, applicationTheme)).withTypeface(tkFont);
+        SecondaryDrawerItem ab = new SecondaryDrawerItem().withIdentifier(Util.NavFragments.ABOUT).withName("Über...").withIcon(Util.getThemedDrawable(this,R.drawable.information, applicationTheme)).withTypeface(tkFont);
 
         result = new DrawerBuilder()
                 .withActivity(this)
@@ -234,12 +286,13 @@ public class MainActivity2 extends AppCompatActivity {
                         eb,
                         ak,
                         tm,
-                        kt,
+                        //kt,
                         ks,
                         new DividerDrawerItem(),
                         st,
                         ab
                 )
+                .withStickyFooter(fot)
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
@@ -250,7 +303,21 @@ public class MainActivity2 extends AppCompatActivity {
                     }
                 })
                 .withAccountHeader(headerResult)
+                .withSelectedItem(selectedItem)
                 .build();
+
+        new Feriencounter(this, new Feriencounter.FeriencounterCallback() {
+            @Override
+            public void run() {
+                fot.setVisibility(View.VISIBLE);
+                TextView hd = fot.findViewById(R.id.footer_head);
+                TextView bd = fot.findViewById(R.id.footer_body);
+                hd.setTypeface(tkFont);
+                bd.setTypeface(tkFont);
+                hd.setText(nameFerien);
+                bd.setText(daysUntil);
+            }
+        }).requestFerien();
     }
 
 
@@ -375,40 +442,46 @@ public class MainActivity2 extends AppCompatActivity {
         switch (fragId) {
             case Util.NavFragments.VERTRETUNGSPLAN:
                 fragm = new VPlanFragment();
+                setBarTitle("Vertretungsplan");
                 break;
             case 631:
                 fragm = new VPlanFragment();
-                fragId = R.id.nav_vplan;
+                setBarTitle("Vertretungsplan");
                 break;
             case Util.NavFragments.SPEISEPLAN:
                 fragm = new SpeiseplanFragment();
+                setBarTitle("Speiseplan");
                 break;
             case Util.NavFragments.BESTELLUNG:
                 fragm = new EssenbestellungFragment();
+                setBarTitle("Essenbestellung");
                 break;
             case Util.NavFragments.TERMINE:
                 fragm = new TermineFragment();
-                break;
-            case Util.NavFragments.KONTAKT:
-                fragm = new KontaktFragment();
+                setBarTitle("Termine");
                 break;
             case Util.NavFragments.AKTUELLES:
                 fragm = new AktuellesFragment();
+                setBarTitle("Aktuelles");
                 break;
             case Util.NavFragments.SETTINGS:
                 fragm = new Settings2Fragment();
+                setBarTitle("Einstellungen");
                 break;
             case Util.NavFragments.KLAUSUREN:
                 fragm = new KlausurenFragment();
+                setBarTitle("Klausurenplan");
                 break;
             case Util.NavFragments.ABOUT:
                 fragm = new AboutFragment();
+                setBarTitle("Über GSApp...");
                 break;
         }
 
         if (fragm != null) {
             fragm.setArguments(bundle);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.setCustomAnimations(R.anim.fadein, R.anim.fadeout);
             ft.replace(R.id.content_frame, fragm);
             ft.commit();
         }

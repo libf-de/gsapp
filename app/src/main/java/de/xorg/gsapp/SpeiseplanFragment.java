@@ -3,6 +3,7 @@ package de.xorg.gsapp;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -25,10 +26,6 @@ import de.xorg.cardsuilib.views.CardUI;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -37,15 +34,23 @@ import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import timber.log.Timber;
 
 public class SpeiseplanFragment extends Fragment {
 
 
     int displayed = 0;
+    int today = 1;
     boolean istWeekend = false;
     boolean showWeekend = true;
     boolean didLoad = false;
@@ -63,59 +68,73 @@ public class SpeiseplanFragment extends Fragment {
 
     }
 
-    private class GetSpeiseplan extends AsyncTask<String, Void, String> {
+    public void fetchSpeiseplan() {
+        OkHttpClient.Builder b = new OkHttpClient.Builder();
+        b.readTimeout(20, TimeUnit.SECONDS);
+        b.connectTimeout(20, TimeUnit.SECONDS);
 
-        GetSpeiseplan() {
+        OkHttpClient client = b.build();
 
-        }
+        System.setProperty("http.keepAlive", "false");
+        SpeiseplanFragment.this.progressDialog = new ProgressDialog(SpeiseplanFragment.this.getContext());
+        SpeiseplanFragment.this.progressDialog.setProgressStyle(0);
+        SpeiseplanFragment.this.progressDialog.setTitle("GSApp");
+        SpeiseplanFragment.this.progressDialog.setMessage("Lade Daten...");
+        SpeiseplanFragment.this.progressDialog.setCancelable(false);
+        SpeiseplanFragment.this.progressDialog.setIndeterminate(true);
+        SpeiseplanFragment.this.progressDialog.show();
 
-        protected void onPreExecute() {
-            System.setProperty("http.keepAlive", "false");
-            SpeiseplanFragment.this.progressDialog = new ProgressDialog(SpeiseplanFragment.this.getContext());
-            SpeiseplanFragment.this.progressDialog.setProgressStyle(0);
-            SpeiseplanFragment.this.progressDialog.setTitle("GSApp");
-            SpeiseplanFragment.this.progressDialog.setMessage("Lade Daten...");
-            SpeiseplanFragment.this.progressDialog.setCancelable(false);
-            SpeiseplanFragment.this.progressDialog.setIndeterminate(true);
-            SpeiseplanFragment.this.progressDialog.show();
-        }
+        Request request = new Request.Builder()
+                .url("https://www.schulkueche-bestellung.de/index.php?m=2;1")
+                .build();
 
-        protected String doInBackground(String... hasCache) {
-            HttpResponse response = null;
-            String result = "";
-            try {
-                HttpClient httpclient = new DefaultHttpClient();
-                HttpGet request = new HttpGet("https://www.schulkueche-bestellung.de/index.php?m=2;1");
-                request.setHeader("User-Agent", Util.getUserAgentString(SpeiseplanFragment.this.getContext(), false));
-                response = httpclient.execute(request);
-            } catch (Exception e) {
-                result = "E";
-                e.printStackTrace();
-            }
-            try {
-                BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-                String str = "";
-                while (true) {
-                    str = rd.readLine();
-                    if (str == null) {
-                        return result;
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Timber.e(e);
+                if(SpeiseplanFragment.this.getActivity() == null)
+                    return;
+
+                SpeiseplanFragment.this.getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(e.getMessage().contains("timeout")) {
+                            Toast.makeText(SpeiseplanFragment.this.getContext(), "Der Speiseplan konnte nicht neu geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
+                        } else {
+                            Toast.makeText(SpeiseplanFragment.this.getContext(), "Der Speiseplan konnte nicht neu geladen werden!", Toast.LENGTH_SHORT).show();
+                        }
+
+                        //TODO: Besser catchen
+
+                        if (SpeiseplanFragment.this.progressDialog != null) {
+                            SpeiseplanFragment.this.progressDialog.dismiss();
+                        }
                     }
-                    result = result + str + "\n";
-                }
-            } catch (Exception e2) {
-                result = "E";
-                e2.printStackTrace();
-                return result;
+                });
             }
-        }
 
-        protected void onPostExecute(String result) {
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(!response.isSuccessful())
+                    Timber.e("onResponse FAILED (" + response.code() + ")");
+                final String result = response.body().string();
 
+                if(SpeiseplanFragment.this.getActivity() == null)
+                    return;
 
-            if (SpeiseplanFragment.this.progressDialog != null) {
-                SpeiseplanFragment.this.progressDialog.dismiss();
+                SpeiseplanFragment.this.getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        parseTable(result);
+                        loadCallback();
+
+                        if (SpeiseplanFragment.this.progressDialog != null) {
+                            SpeiseplanFragment.this.progressDialog.dismiss();
+                        }
+                    }
+                });
             }
-        }
+        });
     }
 
     @Nullable
@@ -148,7 +167,7 @@ public class SpeiseplanFragment extends Fragment {
         Calendar calendar = Calendar.getInstance();
         int cKW = calendar.get(Calendar.WEEK_OF_YEAR);
         String currentKW = String.valueOf(cKW);
-        int today = calendar.get(Calendar.DAY_OF_WEEK);
+        today = calendar.get(Calendar.DAY_OF_WEEK);
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this.getContext());
         String savedKW = sp.getString("cacheKW", "0");
 
@@ -187,13 +206,13 @@ public class SpeiseplanFragment extends Fragment {
                     m2.fromSaveJSON(M2, CKW);
                     m3.fromSaveJSON(M3, CKW);
                     didLoad = true;
-
+                    Timber.d("Cache loaded");
 
                 }
             } catch (Exception e) {
                 Timber.e("Konnte nicht aus dem Cache laden: " + e.getMessage());
                 e.printStackTrace();
-                loadSynced();
+                fetchSpeiseplan();
             }
         } else if (Util.isNumeric(savedKW) && cKW < Integer.parseInt(savedKW)) {
             Toast.makeText(this.getContext(), "Cache load! (KW New)", Toast.LENGTH_SHORT).show();
@@ -217,7 +236,7 @@ public class SpeiseplanFragment extends Fragment {
             } catch (Exception e) {
                 Timber.e("Konnte nicht aus dem Cache laden: " + e.getMessage());
                 e.printStackTrace();
-                loadSynced();
+                fetchSpeiseplan();
             }
         } else {
             if (!Util.hasInternet(this.getContext())) {
@@ -244,17 +263,19 @@ public class SpeiseplanFragment extends Fragment {
                 } catch (Exception e) {
                     Timber.e("Konnte nicht aus dem Cache laden: " + e.getMessage());
                     e.printStackTrace();
-                    loadSynced();
+                    fetchSpeiseplan();
                 }
             }
             Timber.d("Cache existiert nicht oder ist veraltet!");
-            loadSynced();
+            fetchSpeiseplan();
         }
 
         prevDay = (Button) getView().findViewById(R.id.prevDay);
         nextDay = (Button) getView().findViewById(R.id.nextDay);
+        loadCallback();
+    }
 
-
+    public void loadCallback() {
         if (didLoad) {
             if (today == Calendar.SATURDAY || today == Calendar.SUNDAY) {
                 displayed = Calendar.MONDAY;
@@ -272,7 +293,7 @@ public class SpeiseplanFragment extends Fragment {
                 @Override
                 public void onClick(View view) {
                     if (Util.hasInternet(SpeiseplanFragment.this.getContext())) {
-                        loadSynced();
+                        fetchSpeiseplan();
                     } else {
                         Toast.makeText(SpeiseplanFragment.this.getContext(), "Es besteht keine Internetverbindung!", Toast.LENGTH_SHORT).show();
                     }
@@ -280,7 +301,6 @@ public class SpeiseplanFragment extends Fragment {
             });
             mCardView.addCard(cardW);
         }
-        getActivity().setTitle("GSApp - Speiseplan");
     }
 
     public void nextDay(View v) {
@@ -289,41 +309,6 @@ public class SpeiseplanFragment extends Fragment {
 
     public void prevDay(View v) {
 
-    }
-
-    public void loadSynced() {
-        String result = "";
-        try {
-            HttpClient client = new DefaultHttpClient();
-            HttpGet request = new HttpGet("https://www.schulkueche-bestellung.de/index.php?m=2;1");
-            if (android.os.Build.VERSION.SDK_INT > 9) {
-                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-                StrictMode.setThreadPolicy(policy);
-            }
-            request.setHeader("Accept-Charset", "utf-8");
-            request.setHeader("User-Agent", Util.getUserAgentString(this.getContext(), true));
-            HttpResponse response = client.execute(request);
-            BufferedReader rd = new BufferedReader(
-                    new InputStreamReader(response.getEntity().getContent()));
-            String line = "";
-            while ((line = rd.readLine()) != null) {
-                result = result + line + "\n";
-            }
-
-            try {
-                if (result != "E") {
-                    Timber.d( "result");
-                    parseTable(result);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Timber.e("Konnte Serverantwort nicht verarbeiten: " + ex.getMessage());
-            }
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void parseTable(String data) {
@@ -335,12 +320,15 @@ public class SpeiseplanFragment extends Fragment {
             String KW = date.text().split(" ")[1];
             Timber.d( "Got KW " + KW);
             String Datum = date.text().split("\\|\\|")[1];
+            Timber.d("Datum is +" + Datum + "+");
 
             m1.setKW(KW);
             m2.setKW(KW);
             m3.setKW(KW);
 
             m1.setDatum(Datum);
+            m2.setDatum(Datum);
+            m3.setDatum(Datum);
 
             Elements tableElements = doc.select("table[class=splanauflistung]");
 
@@ -422,7 +410,7 @@ public class SpeiseplanFragment extends Fragment {
             editor.putString("cacheKW", KW);
             editor.commit();
 
-            didLoad = true;
+            SpeiseplanFragment.this.didLoad = true;
 
             File outputDir = this.getContext().getCacheDir(); // context being the Activity pointer
             File outputFile = new File(outputDir, "speiseplan.gxcache");
@@ -454,6 +442,7 @@ public class SpeiseplanFragment extends Fragment {
     public void drawCardsForDay(final int day, final boolean isWeekend) {
         mCardView.clearCards();
         CardStack dateHead = new CardStack(istDark);
+        dateHead.setTypeface(Util.getTKFont(getContext(), false));
         //dateHead.setTitle("Kalenderwoche " + m1.getKW());
         String Datem = m1.getDatum();
         String FromDate = "??";
@@ -559,7 +548,7 @@ public class SpeiseplanFragment extends Fragment {
         });
         mCardView.addCard(card3);
 
-        MyPlayCard salad = new MyPlayCard(istDark,"Salat", getSalatForDay(day), "#3f51b5", "#3f51b5", true, true, false);
+        MyPlayCard salad = new MyPlayCard(istDark,"Salat", getSalatForDay(day), "#2196F3", "#2196F3", true, true, false);
         salad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

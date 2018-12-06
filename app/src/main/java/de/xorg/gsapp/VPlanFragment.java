@@ -71,7 +71,7 @@ public class VPlanFragment extends Fragment {
     public Activity actv = null;
     public String cBiologie = "#4caf50";
     public String cChemie = "#e91e63";
-    public String cDeutsch = "#3f51b5";
+    public String cDeutsch = "#2196F3";
     public String cEnglisch = "#ff9800";
     public String cEthik = "#ff8f00";
     public String cFRL = "#558b2f";
@@ -101,100 +101,12 @@ public class VPlanFragment extends Fragment {
     public boolean showingAll = false;
     public boolean istDunkel = false;
     String themeId = Util.AppTheme.LIGHT;
+    boolean cardMarquee;
 
 
 
 
     //TODO: Keine Internetverbindung behandeln!
-
-    /*private class GetVPL extends AsyncTask<String, Void, String> {
-        boolean isRefresh = false;
-
-        OkHttpClient client = new OkHttpClient();
-
-        long startTime;
-
-        GetVPL(boolean isRefreshing) {
-            this.isRefresh = isRefreshing;
-        }
-
-        protected void onPreExecute() {
-            System.setProperty("http.keepAlive", "false");
-            if (!this.isRefresh) {
-                VPlanFragment.this.progressDialog = new ProgressDialog(VPlanFragment.this.getContext());
-                VPlanFragment.this.progressDialog.setProgressStyle(0);
-                VPlanFragment.this.progressDialog.setTitle("GSApp");
-                VPlanFragment.this.progressDialog.setMessage("Lade Daten...");
-                VPlanFragment.this.progressDialog.setCancelable(false);
-                VPlanFragment.this.progressDialog.setIndeterminate(true);
-                VPlanFragment.this.progressDialog.show();
-            }
-            this.startTime = System.currentTimeMillis();
-        }
-
-        protected String doInBackground(String... hasCache) {
-            client.setConnectTimeout(1, TimeUnit.SECONDS); // connect timeout
-            client.setReadTimeout(1, TimeUnit.SECONDS);
-            Request.Builder builder = new Request.Builder();
-            builder.url(VPlanFragment.this.getURL());
-            Request request = builder.build();
-
-            try {
-                Response response = client.newCall(request).execute();
-                return response.body().string();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        protected void onPostExecute(String result) {
-            VPlanFragment.this.vplane.clear();
-            saveToHtmlCache(result);
-
-            try {
-                VPlanFragment.this.parseResponse(result);
-            } catch (ArrayIndexOutOfBoundsException e) {
-                try {
-                    VPlanFragment.this.fallbackLoad(result);
-                } catch(Exception exo) {
-                    Timber.d( "Failed on fallbackLoad: " + exo.getMessage());
-                    Timber.e(exo);
-                    exo.printStackTrace();
-                }
-
-            } catch(Exception e) {
-                Timber.d( "Failed on ParseResponse: " + e.getMessage());
-                Timber.e(e);
-                e.printStackTrace();
-            }
-            long secs = (long) (((int) (System.currentTimeMillis() - (this.startTime / 1000))) % 60);
-
-            try {
-                if(isAdded()) {
-                    if (PreferenceManager.getDefaultSharedPreferences(VPlanFragment.this.getContext()).getBoolean("devMode", false)) {
-                        Toast.makeText(VPlanFragment.this.getContext(), "Ladedauer: " + secs + "s", Toast.LENGTH_SHORT).show();
-                        Timber.d( "Needed " + secs + " to load!");
-                    }
-                } else {
-                    Timber.d( "postExec: Not added!");
-                }
-            } catch (Exception e) {
-                Timber.d( "postExec: EXCEPTION!");
-                e.printStackTrace();
-
-            }
-
-            if (!this.isRefresh && VPlanFragment.this.progressDialog != null) {
-                VPlanFragment.this.progressDialog.dismiss();
-            }
-        }
-    }*/
-
-    public void applyTheme(boolean shallReload) {
-
-    }
-
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
@@ -222,8 +134,7 @@ public class VPlanFragment extends Fragment {
         });
         swipeContainer.setColorSchemeResources(new int[]{R.color.md_cyan_A200, R.color.md_light_green_A400, R.color.md_amber_300, R.color.md_red_A400});
         Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString("klasse", "");
-        getActivity().setTitle("GSApp - Vertretungsplan");
-        //view.setBackgroundColor((istDunkel ? Color.BLACK : Color.WHITE));
+        cardMarquee = PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(Util.Preferences.MARQUEE, false);
 
 
         //Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.slide);
@@ -306,7 +217,7 @@ public class VPlanFragment extends Fragment {
 
                         if(mCardView.getChildCount() < 2) {
                             mCardView.clearCards();
-                            mCardView.addCard(new MyPlayCard(istDunkel,"Interner Fehler", "Es ist ein Fehler beim Herunterladen des Vertretungsplans aufgetreten!", "#FF0000", "#FF0000", true, false, false));
+                            mCardView.addCard(new MyPlayCard(istDunkel,"Interner Fehler", "Es ist ein Fehler beim Herunterladen des Vertretungsplans aufgetreten!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
                             Toast.makeText(getContext(), "Vertretungsplan konnte nicht angezeigt werden, zeige im Browser..", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(getContext(), WebViewActivity.class);
                             intent.putExtra(EXTRA_URL, "https://www.gymnasium-sonneberg.de/Informationen/vp.php5");
@@ -385,7 +296,7 @@ public class VPlanFragment extends Fragment {
         Timber.d("Loading start after " + (System.currentTimeMillis() - appStart) + "ms");
         if (Util.hasInternet(getContext())) {
             //this.mCardView.clearCards();
-            Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString("klasse", "");
+            Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "");
             //if (PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("loadAsync", false)) {
                 if (!isRefresh) {
                     boolean cacheState = loadFromHtmlCache();
@@ -400,7 +311,7 @@ public class VPlanFragment extends Fragment {
         } else {
             if(!loadFromHtmlCache()) {
                 this.mCardView.clearCards();
-                this.mCardView.addCard(new MyPlayCard(istDunkel, "Fehler", "Es besteht keine Internetverbindung und es wurde noch kein Vertretungsplan zwischengespeichert!", "#FF0000", "#FF0000", true, false, false));
+                this.mCardView.addCard(new MyPlayCard(istDunkel, "Fehler", "Es besteht keine Internetverbindung und es wurde noch kein Vertretungsplan zwischengespeichert!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
                 this.mCardView.refresh();
             } else {
                 Toast.makeText(getContext(), "Vertretungsplan aus dem Zwischenspeicher geladen!", Toast.LENGTH_SHORT).show();
@@ -446,7 +357,7 @@ public class VPlanFragment extends Fragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        Util.prepareMenu(menu, R.id.nav_vplan);
+        Util.prepareMenu(menu, Util.NavFragments.VERTRETUNGSPLAN);
         //if(PreferenceManager.getDefaultSharedPreferences(getContext()).getString("klasse", "").isEmpty())
         //menu.findItem(R.id.show_all).setVisible(false);
         super.onPrepareOptionsMenu(menu);
@@ -548,7 +459,7 @@ public class VPlanFragment extends Fragment {
     }
 
     private void fallbackLoad(String result) {
-        String Klasse = PreferenceManager.getDefaultSharedPreferences(getContext()).getString("klasse", "");
+        String Klasse = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "");
         if(this.showingAll)
             Klasse = "";
         try {
@@ -661,13 +572,14 @@ public class VPlanFragment extends Fragment {
     private void displayAll() {
         mCardView.clearCards();
         CardStack dateHead = new CardStack(istDunkel);
+        dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
         dateHead.setTitle("Für " + dateD);
         mCardView.addStack(dateHead);
 
         //if(!hinweisD.equals("Hinweis:")) {
         Timber.d("Hinweis= +" + hinweisD + "+");
         if(!hinweisD.isEmpty()) {
-            MyPlayCard card = new MyPlayCard(istDunkel,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\\\r\\\n]+","").trim(), "#00FF00", "#00FF00", true, false, false);
+            MyPlayCard card = new MyPlayCard(istDunkel,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\\\r\\\n]+","").trim(), "#00FF00", "#00FF00", true, false, false, cardMarquee);
             card.setOnClickListener(new OnClickListener() {
 
                 @Override
@@ -693,12 +605,14 @@ public class VPlanFragment extends Fragment {
         try {
             if(isFiltered) {
                 CardStack stacky = new CardStack(istDunkel);
+                stacky.setTypeface(Util.getTKFont(this.getContext(), false));
                 stacky.setTitle("Vertretungen für Klasse " + Filter);
                 mCardView.addStack(stacky);
             }
             for(String klassee : vplane.getKlassen()) {
                 if(!isFiltered) {
                     CardStack stacky = new CardStack(istDunkel);
+                    stacky.setTypeface(Util.getTKFont(this.getContext(), false));
                     stacky.setTitle("Klasse " + klassee);
                     mCardView.addStack(stacky);
                 }
@@ -720,15 +634,15 @@ public class VPlanFragment extends Fragment {
                     }
 
                     if(single.getBemerkung().equals("Ausfall")) {
-                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde - Ausfall!" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Ausfall (Raum " + single.getRaum() + ")", getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde - Ausfall!" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Ausfall (Raum " + single.getRaum() + ")", getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
                     } else if(single.getBemerkung().equals("Stillbesch.") || single.getBemerkung().equals("Stillbeschäftigung")) {
-                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde - Stillbesch.!" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Stillbeschäftigung im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde - Stillbesch.!" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Stillbeschäftigung im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
                     } else if(single.getBemerkung().equals("AA") || single.getBemerkung().equals("Arbeitsauftrag")) {
-                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Arbeitsauftrag im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Arbeitsauftrag im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
                     } else if(single.getFachNormal().equals(single.getFachVertretung())) {
-                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Du hast " + LongName(single.getFachNormal()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Du hast " + LongName(single.getFachNormal()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
                     } else {
-                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu());
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
                     }
                     if(isFiltered) {
                         card.setOnClickListener(new OnClickListener() {
@@ -759,14 +673,15 @@ public class VPlanFragment extends Fragment {
                 }
             }
         } catch (KeineKlassenException e) {
-            mCardView.addCard(new MyPlayCard(istDunkel,"Keine Vertretungen", "", cMNT, cMNT, false, false, false));
+            mCardView.addCard(new MyPlayCard(istDunkel,"Keine Vertretungen", "", cMNT, cMNT, false, false, false, cardMarquee));
             e.printStackTrace();
         } catch (KeineEintrageException e) {
-            mCardView.addCard(new MyPlayCard(istDunkel,"ERROR", "KeineEinträgeException", "#FF0000", "#FF0000", false, false, false));
+            mCardView.addCard(new MyPlayCard(istDunkel,"ERROR", "KeineEinträgeException", "#FF0000", "#FF0000", false, false, false, cardMarquee));
             e.printStackTrace();
         }
 
         CardStack adStack = new CardStack(istDunkel);
+        adStack.setTypeface(Util.getTKFont(this.getContext(), false));
         adStack.setTitle("Werbung zur Serverfinanzierung");
         mCardView.addStack(adStack);
         mCardView.addCardToLastStack(new AdCard(this.getContext(), false, false));

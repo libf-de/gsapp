@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -38,6 +39,11 @@ public class CardStack extends AbstractCard {
     private int mPosition;
     private Context mContext;
     private CardStack mStack;
+
+    private RelativeLayout mContainer;
+    private TextView mHeaderView;
+
+    private Typeface mHeaderViewTypeface;
 
     private boolean isDarkMode = true;
 
@@ -98,6 +104,8 @@ public class CardStack extends AbstractCard {
         final RelativeLayout container = (RelativeLayout) view
                 .findViewById(R.id.stackContainer);
 
+        this.mContainer = container;
+
 
         final TextView title = (TextView) view.findViewById(R.id.stackTitle);
         stackTitleColor = isDarkMode ? mContext.getResources().getColor(android.R.color.primary_text_dark) : mContext.getResources().getColor(android.R.color.primary_text_light);
@@ -106,6 +114,8 @@ public class CardStack extends AbstractCard {
             if (stackTitleColor == null)
                 stackTitleColor = context.getResources().getColor(R.color.card_title_text);
 
+            mHeaderView = title;
+            if(mHeaderViewTypeface != null) title.setTypeface(mHeaderViewTypeface);
             title.setTextColor(stackTitleColor);
             title.setText(this.title);
             title.setVisibility(View.VISIBLE);
@@ -182,6 +192,17 @@ public class CardStack extends AbstractCard {
         return view;
     }
 
+    public void setIsDarkMode(boolean dmod) {
+        if (mContainer == null) return;
+        if (mContext == null) return;
+        this.isDarkMode = dmod;
+        for (int i = 0; i < mContainer.getChildCount(); i++) {
+            mContainer.getChildAt(i).setBackgroundResource(dmod ? R.drawable.card_shadow_bottom_dark : R.drawable.card_shadow_bottom);
+        }
+
+        if (mHeaderView != null) mHeaderView.setTextColor(isDarkMode ? mContext.getResources().getColor(android.R.color.primary_text_dark) : mContext.getResources().getColor(android.R.color.primary_text_light));
+    }
+
     /**
      * Attempt to modify the convertView instead of inflating a new View for this CardStack.
      * If convertView isn't compatible, it isn't modified.
@@ -238,6 +259,8 @@ public class CardStack extends AbstractCard {
         this.title = title;
     }
 
+    public void setTypeface(Typeface t) { this.mHeaderViewTypeface = t; }
+
     public int setColor(String color) {
         return this.stackTitleColor = Color.parseColor(color);
     }
@@ -282,7 +305,7 @@ public class CardStack extends AbstractCard {
                 frameLayout.setMinimumHeight(frameLayout.getHeight());
 
                 // resize container to new height
-                Animation resiz = new ResizeAnimation(frameLayout, frameLayout.getWidth(), frameLayout.getHeight(), frameLayout.getWidth(), frameLayout.getHeight() + (views[0].getHeight() - views[views.length - 1].getHeight()) + (int) convertDpToPixel(2.5f));
+                Animation resiz = new ResizeAnimation(frameLayout, frameLayout.getWidth(), frameLayout.getHeight(), frameLayout.getWidth(), frameLayout.getHeight() + (views[0].getHeight() - views[views.length - 1].getHeight()));
                 resiz.setInterpolator(new AccelerateInterpolator());
                 resiz.setDuration(300);
                 frameLayout.setAnimation(resiz);
@@ -297,9 +320,9 @@ public class CardStack extends AbstractCard {
                         float downFactor = 0;
                         if (views.length > 2) {
                             downFactor = convertDpToPixel((_45F)
-                                    * (views.length - 1) - 1) - convertDpToPixel(3.5f);
+                                    * (views.length - 1) - 1) - convertDpToPixel(4.0f);
                         } else {
-                            downFactor = convertDpToPixel(_45F)  - convertDpToPixel(3.5f);
+                            downFactor = convertDpToPixel(_45F)  - convertDpToPixel(4.0f);
                         }
 
                         anim = ObjectAnimator.ofFloat(views[i],
@@ -308,11 +331,13 @@ public class CardStack extends AbstractCard {
                                 frameLayout, index, views[index]));
 
                     } else if (i == 1) {
+                        //views[i].setBackgroundResource(R.drawable.card_shadow_bottom);
+                        //Utils.setDrawableBackground(mContext, views[i].getBackground(), (isDarkMode ? R.color.cardview_dark_background : R.color.cardview_light_background));
                         // the second goes up just a bit
                         float upFactor = convertDpToPixel(-17f);
                         anim = ObjectAnimator.ofFloat(views[i],
                                 NINE_OLD_TRANSLATION_Y, 0, upFactor);
-
+                        //anim.addListener(getColorListener(views[i]));
                     } else {
                         // the rest go up by one card
                         float upFactor = convertDpToPixel(-1 * _45F);
@@ -329,7 +354,7 @@ public class CardStack extends AbstractCard {
             public void onClickOtherCard(final CardStack cardStack,
                                          final RelativeLayout frameLayout, final int index,
                                          View[] views, int last) {
-                Animation resiz = new ResizeAnimation(frameLayout, frameLayout.getWidth(), frameLayout.getHeight(), frameLayout.getWidth(), frameLayout.getHeight() + (views[index].getHeight() - views[views.length - 1].getHeight()) + (int) convertDpToPixel(2.5f));
+                Animation resiz = new ResizeAnimation(frameLayout, frameLayout.getWidth(), frameLayout.getHeight(), frameLayout.getWidth(), frameLayout.getHeight() + (views[index].getHeight() - views[views.length - 1].getHeight()));
                 resiz.setInterpolator(new AccelerateInterpolator());
                 resiz.setDuration(300);
                 frameLayout.setAnimation(resiz);
@@ -343,7 +368,7 @@ public class CardStack extends AbstractCard {
 
                     if (i == index) {
                         // the selected card goes all the way down
-                        float downFactor = convertDpToPixel(_45F * (last - i) + _12F) - convertDpToPixel(3.5f);
+                        float downFactor = convertDpToPixel(_45F * (last - i) + _12F) - convertDpToPixel(4.0f);
                         anim = ObjectAnimator.ofFloat(views[i],
                                 NINE_OLD_TRANSLATION_Y, 0, downFactor);
                         anim.addListener(getAnimationListener(cardStack,
@@ -398,7 +423,7 @@ public class CardStack extends AbstractCard {
                 frameLayout.setMinimumHeight(frameLayout.getHeight());
 
                 // resize container to new height
-                Animation resiz = new ResizeAnimation(frameLayout, frameLayout.getWidth(), frameLayout.getHeight(), frameLayout.getWidth(), frameLayout.getHeight() + (views[0].getHeight() - views[views.length - 1].getHeight()) + (int) convertDpToPixel(2.5f));
+                Animation resiz = new ResizeAnimation(frameLayout, frameLayout.getWidth(), frameLayout.getHeight(), frameLayout.getWidth(), frameLayout.getHeight() + (views[0].getHeight() - views[views.length - 1].getHeight()));
                 resiz.setInterpolator(new AccelerateInterpolator());
                 resiz.setDuration(300);
                 frameLayout.setAnimation(resiz);
@@ -413,9 +438,9 @@ public class CardStack extends AbstractCard {
     					float downFactor = 0;
     					if (views.length > 2) {
     						downFactor = convertDpToPixel((_45F)
-    								* (views.length - 1) - 1) - convertDpToPixel(3.5f);
+    								* (views.length - 1) - 1) - convertDpToPixel(4.0f);
     					} else {
-    						downFactor = convertDpToPixel(_45F) - convertDpToPixel(3.5f);
+    						downFactor = convertDpToPixel(_45F) - convertDpToPixel(4.0f);
     					}
     					
     					anim = ObjectAnimator.ofFloat(views[i],
@@ -447,7 +472,7 @@ public class CardStack extends AbstractCard {
     				final RelativeLayout frameLayout, final int index,
     				View[] views, int last) {
                 // resize container to new height
-                Animation resiz = new ResizeAnimation(frameLayout, frameLayout.getWidth(), frameLayout.getHeight(), frameLayout.getWidth(), frameLayout.getHeight() + (views[0].getHeight() - views[views.length - 1].getHeight()) + (int) convertDpToPixel(2.5f));
+                Animation resiz = new ResizeAnimation(frameLayout, frameLayout.getWidth(), frameLayout.getHeight(), frameLayout.getWidth(), frameLayout.getHeight() + (views[0].getHeight() - views[views.length - 1].getHeight()));
                 resiz.setInterpolator(new AccelerateInterpolator());
                 resiz.setDuration(300);
                 frameLayout.setAnimation(resiz);
@@ -462,7 +487,7 @@ public class CardStack extends AbstractCard {
     				if (i == index) {
     					// the selected card goes all the way down
     					float downFactor = convertDpToPixel(_45F * (last - i)
-    							+ _12F) - convertDpToPixel(3.5f);
+    							+ _12F) - convertDpToPixel(4.0f);
     					anim = ObjectAnimator.ofFloat(views[i],
     							NINE_OLD_TRANSLATION_Y, 0, downFactor);
     					anim.addListener(getAnimationListener(cardStack,
@@ -497,20 +522,15 @@ public class CardStack extends AbstractCard {
                     View newFirstCard = frameLayout.getChildAt(1);
                     handleFirstCard(newFirstCard);
                 } else {
-                    if (isDarkMode)
-                        clickedCard.setBackgroundResource(R.drawable.card_shadow_bottom_dark);
-                    else
-                        clickedCard.setBackgroundResource(R.drawable.card_shadow_bottom);
-                    Utils.setDrawableBackground(mContext, clickedCard.getBackground(), (isDarkMode ? R.color.cardview_dark_background : R.color.cardview_light_background));
+                    //clickedCard.setBackgroundResource(isDarkMode ? R.drawable.card_shadow_bottom_dark : R.drawable.card_shadow_bottom); //TODO: Remove?
                 }
                 frameLayout.removeView(clickedCard);
                 frameLayout.addView(clickedCard);
             }
 
             private void handleFirstCard(View newFirstCard) {
-                newFirstCard
-                        .setBackgroundResource(R.drawable.card_shadow_bottom);
-                Utils.setDrawableBackground(mContext, clickedCard.getBackground(), (isDarkMode ? R.color.cardview_dark_background : R.color.cardview_light_background));
+                //newFirstCard.setBackgroundResource(R.drawable.card_shadow_bottom);
+                //Utils.setDrawableBackground(mContext, clickedCard.getBackground(), (isDarkMode ? R.color.cardview_dark_background : R.color.cardview_light_background));
                 RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
                         RelativeLayout.LayoutParams.MATCH_PARENT,
                         RelativeLayout.LayoutParams.WRAP_CONTENT);
@@ -526,7 +546,7 @@ public class CardStack extends AbstractCard {
                 lp.setMargins(0, top, 0, bottom);
                 newFirstCard.setLayoutParams(lp);
                 newFirstCard.setPadding(newFirstCard.getPaddingLeft(),
-                        Utils.convertDpToPixelInt(mContext, 7), newFirstCard.getPaddingRight(), 0);
+                        Utils.convertDpToPixelInt(mContext, 4f), newFirstCard.getPaddingRight(), 0);
 
             }
 

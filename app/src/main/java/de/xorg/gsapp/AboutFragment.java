@@ -138,8 +138,6 @@ public class AboutFragment extends Fragment {
                 return false;
             }
         });
-
-        getActivity().setTitle("Über GSApp...");
     }
 
     @Override

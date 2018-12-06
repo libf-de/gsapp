@@ -28,6 +28,12 @@
             android:summary="%s"
             android:icon="@drawable/themes_icon"/>
 
+        <SwitchPreferenceCompat
+            android:key="pref_marquee"
+            android:title="@string/prefs_marquee"
+            android:summary="@string/prefs_marquee_sum"
+            android:icon="@drawable/marquee_icon" />
+
         <!--<Preference
             android:key="preference"
             android:title="@string/title_basic_preference"

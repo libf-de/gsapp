@@ -172,7 +172,7 @@ public class FirebaseService extends FirebaseMessagingService {
      * @return Gespeicherte Klasse
      */
     public String getKlasse() {
-        return PreferenceManager.getDefaultSharedPreferences(this).getString("klasse", "");
+        return PreferenceManager.getDefaultSharedPreferences(this).getString(Util.Preferences.KLASSE, "");
     }
 
     /**

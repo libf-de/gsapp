@@ -39,6 +39,8 @@ public class AktuellesFragment extends Fragment {
     int lastID = 260;
     int PostID = 260;
     private ProgressDialog progressDialog;
+    boolean isDark = false;
+    String themeId;
 
 
     public AktuellesFragment() {
@@ -62,15 +64,29 @@ public class AktuellesFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        Util.setOrientation(this.getActivity());
+        if (getArguments() != null && getArguments().containsKey("theme")) {
+            themeId = getArguments().getString("theme");
+            isDark = (themeId.equals(Util.AppTheme.DARK));
+        }
 
         //Variablen
         WebView Termine = (WebView) getView().findViewById(R.id.WebView);
         RelativeLayout FragFrm = (RelativeLayout) getView().findViewById(R.id.withers);
 
-        FragFrm.setBackgroundColor(Color.parseColor("#fed21b"));
-        Termine.setBackgroundColor(Color.parseColor("#fed21b"));
+        switch(themeId) {
+            case Util.AppTheme.DARK:
+                FragFrm.setBackgroundResource(R.color.background_dark);
+                Termine.setBackgroundResource(R.color.background_dark);
+                break;
+            case Util.AppTheme.LIGHT:
+                FragFrm.setBackgroundResource(R.color.background_white);
+                Termine.setBackgroundResource(R.color.background_white);
+                break;
+            case Util.AppTheme.YELLOW:
+                FragFrm.setBackgroundResource(R.color.background_yellow);
+                Termine.setBackgroundResource(R.color.background_yellow);
+                break;
+        }
 
         Termine.setWebViewClient(new MyWebViewClient() );
 
@@ -83,8 +99,6 @@ public class AktuellesFragment extends Fragment {
             fetchLastPost();
 
         Termine.loadUrl("http://www.gymnasium-sonneberg.de/Informationen/Term/ausgebenK.php5");
-
-        getActivity().setTitle("GSApp - Aktuelles");
     }
 
     public void fetchLastPost() {
@@ -197,7 +211,9 @@ public class AktuellesFragment extends Fragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        Util.prepareMenu(menu, R.id.nav_aktuelles);
+        Util.prepareMenu(menu, Util.NavFragments.AKTUELLES);
+        menu.findItem(R.id.br_back).setIcon(Util.getThemedDrawable(this.getContext(), R.drawable.arrow_back, isDark));
+        menu.findItem(R.id.br_fwd).setIcon(Util.getThemedDrawable(this.getContext(), R.drawable.arrow_next, isDark));
         super.onPrepareOptionsMenu(menu);
     }
 

@@ -17,6 +17,8 @@ import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -32,10 +34,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -62,6 +61,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.core.content.res.ResourcesCompat;
 import timber.log.Timber;
 
 public class Util {
@@ -76,7 +76,7 @@ public class Util {
     public final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
     public final static String EXTRA_NAME = "de.xorg.gsapp.MESSAGENAME";
 
-    public static String cDeutsch = "#3f51b5";
+    public static String cDeutsch = "#2196F3";
     public static String cMathe = "#f44336";
     public static String cMusik = "#9e9e9e";
     public static String cKunst = "#673ab7";
@@ -204,13 +204,30 @@ public class Util {
         public static final String HAS_REGISTERED = "fcm-has-registered";
         public static final String PUSH_MODE = "pref_push";
         public static final String FIRST_RUN2 = "first-run-v2";
-        public static final String KLASSE = "klasse";
+        public static final String KLASSE = "pref_klasse";
+        public static final String THEME = "pref_theme";
+        public static final String FERIEN_FETCHED = "ferien_fetched";
+        public static final String MARQUEE = "pref_marquee";
     }
 
     public static interface PushMode {
         public static final String DISABLED = "DISABLED";
         public static final String PRIVATE = "PRIVATE";
         public static final String PUBLIC = "PUBLIC";
+    }
+
+    public static Typeface getTKFont(Context c) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+            return ResourcesCompat.getFont(c, R.font.google_sans);
+        else
+            return Typeface.createFromAsset(c.getAssets(), "google_sans_regular.ttf");
+    }
+
+    public static Typeface getTKFont(Context c, boolean bold) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+            return (bold ? ResourcesCompat.getFont(c, R.font.google_sans_bold) : ResourcesCompat.getFont(c, R.font.google_sans_regular));
+        else
+            return (bold ? Typeface.createFromAsset(c.getAssets(), "google_sans_bold.ttf") : Typeface.createFromAsset(c.getAssets(), "google_sans_regular.ttf"));
     }
 
     public static int getAppVersion(Context c) {
@@ -223,6 +240,20 @@ public class Util {
         }
 
         return vers;
+    }
+
+    public static Drawable getThemedDrawable(Context c, int resId, boolean isDark) {
+        Drawable ic = c.getResources().getDrawable(resId);
+        if(isDark)
+            ic.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+        return ic;
+    }
+
+    public static Drawable getThemedDrawable(Context c, int resId, String applicationTheme) {
+        Drawable ic = c.getResources().getDrawable(resId);
+        if(applicationTheme.equals(Util.AppTheme.DARK))
+            ic.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+        return ic;
     }
 
     public static String dataLoader(Activity ct) {
@@ -748,7 +779,7 @@ public class Util {
 
     public static void prepareMenu(Menu menu, int fragId) {
         switch (fragId) {
-            case R.id.nav_essenbest:
+            case NavFragments.BESTELLUNG:
                 menu.findItem(R.id.eb_abmelden).setVisible(true);
                 menu.findItem(R.id.eb_account).setVisible(true);
                 menu.findItem(R.id.eb_bestellen).setVisible(true);
@@ -764,7 +795,7 @@ public class Util {
                 menu.findItem(R.id.show_all).setVisible(false);
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 break;
-            case R.id.nav_termine:
+            case NavFragments.TERMINE:
                 menu.findItem(R.id.eb_abmelden).setVisible(false);
                 menu.findItem(R.id.eb_account).setVisible(false);
                 menu.findItem(R.id.eb_bestellen).setVisible(false);
@@ -781,7 +812,7 @@ public class Util {
                 menu.findItem(R.id.show_all).setVisible(false);
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 break;
-            case R.id.nav_aktuelles:
+            case NavFragments.AKTUELLES:
                 menu.findItem(R.id.eb_abmelden).setVisible(false);
                 menu.findItem(R.id.eb_account).setVisible(false);
                 menu.findItem(R.id.eb_bestellen).setVisible(false);
@@ -799,7 +830,7 @@ public class Util {
                 menu.findItem(R.id.show_all).setVisible(false);
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 break;
-            case R.id.nav_kontakt:
+            case NavFragments.KONTAKT: //TODO: Entfernen
                 menu.findItem(R.id.eb_abmelden).setVisible(false);
                 menu.findItem(R.id.eb_account).setVisible(false);
                 menu.findItem(R.id.eb_bestellen).setVisible(false);
@@ -815,7 +846,7 @@ public class Util {
                 menu.findItem(R.id.show_all).setVisible(false);
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 break;
-            case R.id.nav_klausuren:
+            case NavFragments.KLAUSUREN:
                 menu.findItem(R.id.eb_abmelden).setVisible(false);
                 menu.findItem(R.id.eb_account).setVisible(false);
                 menu.findItem(R.id.eb_bestellen).setVisible(false);
@@ -832,7 +863,7 @@ public class Util {
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 menu.findItem(R.id.action_klausur_toggle).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
                 break;
-            case R.id.nav_vplan:
+            case NavFragments.VERTRETUNGSPLAN:
                 menu.findItem(R.id.eb_abmelden).setVisible(false);
                 menu.findItem(R.id.eb_account).setVisible(false);
                 menu.findItem(R.id.eb_bestellen).setVisible(false);
@@ -985,157 +1016,6 @@ class TextDrawable extends Drawable {
     }
 
 }*/
-
-class GetDate extends AsyncTask<String, Void, String> {
-    Context cont;
-
-    GetDate(Context ct) {
-        this.cont = ct;
-    }
-
-    protected String doInBackground(String... message) {
-        HttpClient httpclient;
-        HttpGet request;
-        HttpResponse response = null;
-        String result = "";
-
-        try {
-            httpclient = new DefaultHttpClient();
-            request = new HttpGet("http://www.gymnasium-sonneberg.de/Informationen/vp.php5");
-            response = httpclient.execute(request);
-        } catch (Exception e) {
-            result = "error";
-        }
-
-        try {
-            BufferedReader rd = new BufferedReader(new InputStreamReader(
-                    response.getEntity().getContent()));
-            String line = "";
-            while ((line = rd.readLine()) != null) {
-                result = result + line + "\n";
-            }
-        } catch (Exception e) {
-            result = "error";
-        }
-        return result;
-    }
-
-
-    protected void onPostExecute(String result) {
-        try {
-            if (result.equals("error")) {
-                Timber.d("CheckService: RESULT ERROR");
-                return;
-            }
-            Document doc = Jsoup.parse(result); //td.rundeEckenOben.vpUeberschr
-            String gDate = doc.select("td[class*=vpUeberschr]").first().text().replace("Montag, den ", "").replace("Dienstag, den ", "").replace("Mittwoch, den ", "").replace("Donnerstag, den ", "").replace("Freitag, den ", "");
-            String serverDate = new SimpleDateFormat("yyyyMMdd").format(new SimpleDateFormat("dd.MM.yyyy").parse(gDate.replaceAll("[^0-9.]", "")));
-
-            Double serverDateI = Double.parseDouble(serverDate);
-            Timber.d( "gDate: *" + gDate.toLowerCase() + "*");
-            Double revision = Util.zähleVorkommen(gDate.toLowerCase(), "neu") * 0.1;
-            Double VPDateId = serverDateI + revision;
-
-            Timber.d("CheckService/GetDate: Datum von Server erhalten: +" + Util.DoubleToString(VPDateId) + "+");
-            Double readDate = CheckService.getLastDate();
-            Timber.d("CheckService/GetDate: Gespeichertes Datum: -" + Util.DoubleToString(readDate) + "-");
-            if (readDate.equals("ERR")) {
-                //CheckService.setRiddenDate(serverDate);
-                CheckService.setVPDate(VPDateId);
-                CheckService.PostNotification("Es ist ein neuer Vertretungsplan verf\u00fcgbar!", doc);
-            } else {
-                if (result.equals("error")) {
-                    Timber.e("CheckService/GetDate: Serverfehler (RD:" + readDate + ")");
-                } else {
-                    //Double rideDate = Double.parseDouble(readDate);
-                    //int rideDate = Integer.parseInt(readDate);
-                    //int newDate = Integer.parseInt(serverDate);
-                    //if (newDate > rideDate) {
-                    if(VPDateId > readDate) {
-                        Timber.d("CheckService/GetDate: Neuer Plan verf\u00fcgbar");
-                        CheckService.setVPDate(VPDateId);
-                        //SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(CheckService.MC).edit();
-                        //editor.putString("readDate", serverDate);
-                        //editor.putString("readDate", String.valueOf(VPDateId));
-                        //editor.commit();
-                        if (CheckService.getMode() != 1) {
-                            CheckService.PostNotification("Es ist ein neuer Vertretungsplan verf\u00fcgbar!", doc);
-                        } else if (CheckService.checkClass(doc, CheckService.getKlasse())) {
-                            CheckService.PostNotification("Du hast morgen Vertretung!", doc);
-                        }
-                        Timber.d("CheckService/GetDate: Neuer Plan verfügbar-POST NTF");
-                    } else {
-                        Timber.d("CheckService/GetDate: Kein neuer Plan verfügbar");
-                    }
-                }
-            }
-            CheckService.RemoveWakelock();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            CheckService.RemoveWakelock();
-        }
-    }
-
-
-    /*@Deprecated
-    protected void onPostExecute_legacy(String result) {
-        try {
-            char gf = (char) 34;
-            GALog loc = new GALog(CheckService.MC);
-
-            if (result != "E") {
-                String gPart = result.split("<td colspan=\"7\" class=\"vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
-                String gDate = gPart.replace("Montag, den ", "").replace("Dienstag, den ", "").replace("Mittwoch, den ", "").replace("Donnerstag, den ", "").replace("Freitag, den ", "")/*.split(".");
-                DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
-                DateFormat RC = new SimpleDateFormat("yyyyMMdd");
-                Date dt = df.parse(gDate);
-                String GRC = RC.format(dt);
-                loc.debug("CheckService/GetDate: Datum von Server erhalten: +" + GRC + "+");
-
-                String readDate = getLastDate(CheckService.MC);
-                loc.debug("CheckService/GetDate: Gespeichertes Datum: -" + readDate + "-");
-
-                if (readDate.equals("ERR")) {
-                    CheckService.setRiddenDate(GRC);
-                    //CheckService.PostNotification("Es ist ein neuer Vertretungsplan verfügbar!", GRC, result);
-                } else if (result.equals("error")) {
-                    loc.error("CheckService/GetDate: Serverfehler (RD:" + readDate + ")");
-                } else {
-                    int rideDate = Integer.parseInt(readDate);
-                    int newDate = Integer.parseInt(GRC);
-
-                    if (newDate > rideDate) {
-                        loc.debug("CheckService/GetDate: Neuer Plan verfügbar");
-                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(CheckService.MC).edit();
-                        editor.putString("readDate", GRC);
-                        editor.commit();
-                        if (CheckService.getMode() == 1) {
-                            if (CheckService.checkClass_legacy(result, CheckService.getKlasse())) {
-                                //CheckService.PostNotification("Du hast morgen Vertretung!", String.valueOf(newDate), result);
-                            }
-                        } else {
-                            //CheckService.PostNotification("Es ist ein neuer Vertretungsplan verfügbar!", String.valueOf(newDate), result);
-                        }
-                        loc.debug("CheckService/GetDate: Neuer Plan verfügbar-POST NTF");
-                    } else {
-                        loc.debug("CheckService/GetDate: Kein neuer Plan verfügbar");
-                    }
-                }
-            }
-            CheckService.RemoveWakelock();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            CheckService.RemoveWakelock();
-        }
-    }*/
-
-    /**
-     * Datum des zuletzt angesehenem Vertretungsplan auslesen
-     *
-     * @return Datum in YYYYMMDD
-     */
-
-}
 
 class SpMenu {
     int id;

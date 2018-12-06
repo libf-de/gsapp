@@ -84,6 +84,8 @@ public class KlausurenFragment extends Fragment {
         //setHasOptionsMenu(false);
     }
 
+
+
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -306,7 +308,8 @@ public class KlausurenFragment extends Fragment {
                     c.add(Calendar.DATE, thisDay);
 
 
-                    if (Util.isBeforeDay(Calendar.getInstance(), c))
+                    if (Util.isBeforeDay(c, Calendar.getInstance()))
+                    //if(c.before(new Date()))
                         continue;
                     else if (Pattern.compile("[^a-zA-Z0-9\\s]").matcher(klausur.text()).find() || klausur.text().equals("Ferien"))
                         continue;
@@ -421,26 +424,13 @@ public class KlausurenFragment extends Fragment {
         }
         displayAll();*/
 
-        Collections.sort(klausurs, (k1, k2) -> k2.getDate().compareTo(k1.getDate()));
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void prepareMovieData() {
-        Klausur movie = new Klausur("DE", new Date());
-        klausurs.add(movie);
-
-        movie = new Klausur("MA", new Date());
-        klausurs.add(movie);
-
-        movie = new Klausur("IF", new Date());
-        klausurs.add(movie);
-
+        Collections.sort(klausurs, (k1, k2) -> k1.getDate().compareTo(k2.getDate()));
         mAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
-        Util.prepareMenu(menu, R.id.nav_klausuren);
+        Util.prepareMenu(menu, Util.NavFragments.KLAUSUREN);
         super.onPrepareOptionsMenu(menu);
     }
 }

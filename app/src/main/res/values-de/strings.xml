@@ -15,5 +15,7 @@
     <string name="prefs_theme_light">Hell</string>
     <string name="prefs_theme_dark">Dunkel</string>
     <string name="prefs_theme_yellow">Gelb</string>
+    <string name="prefs_marquee">Kartentitel scrollen</string>
+    <string name="prefs_marquee_sum">Scrollt Vertretungsplantitel bei Überlänge</string>
 
 </resources>
