@@ -94,7 +94,7 @@ public class MainActivity2 extends AppCompatActivity {
 
     public String applyTheme(boolean shallRedraw) {
         String appTheme = PreferenceManager.getDefaultSharedPreferences(this).getString("pref_theme", Util.AppTheme.AUTO); //TODO: not gud"!
-        if (appTheme == Util.AppTheme.AUTO)
+        if (appTheme.equals(Util.AppTheme.AUTO))
             appTheme = Util.AppTheme.getAutoTheme();
         switch (appTheme) {
             case Util.AppTheme.DARK:
@@ -107,7 +107,7 @@ public class MainActivity2 extends AppCompatActivity {
                 setTheme(Util.AppThemeRes.YELLOW);
                 break;
             default:
-                Timber.i("Got invalid theme in MainActivity2:applyTheme, assuming LIGHT");
+                Timber.i("Got invalid theme %s in MainActivity2:applyTheme, assuming LIGHT", appTheme);
                 setTheme(Util.AppThemeRes.LIGHT);
                 break;
         }
@@ -123,7 +123,6 @@ public class MainActivity2 extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         first = System.currentTimeMillis();
         super.onCreate(savedInstanceState);
-        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         applicationTheme = applyTheme(false);
         setContentView(R.layout.activity_main2);
 
@@ -138,6 +137,20 @@ public class MainActivity2 extends AppCompatActivity {
             toolbar.setBackgroundResource(R.color.gsgelb);
 
         toolbarTextView = (TextView) findViewById(R.id.toolbar_title);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN)
+            toolbarTextView.setTypeface(Util.getTKFont(this, false));
+
+        toolbarTextView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if(fragm instanceof Settings2Fragment) {
+                    ((Settings2Fragment) fragm).toggleLehrer();
+                    return true;
+                }
+                return false;
+            }
+        });
+
 
         if(Timber.treeCount() < 1) {
             //if(BuildConfig.DEBUG) {
@@ -152,7 +165,7 @@ public class MainActivity2 extends AppCompatActivity {
         Toast.makeText(this, PreferenceManager.getDefaultSharedPreferences(this).getString("pref_klasse", "caput"), Toast.LENGTH_SHORT).show();
 
 
-        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Util.Preferences.FIRST_RUN2, true)) {
+        /*if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Util.Preferences.FIRST_RUN2, true)) {
             Intent intent = new Intent(this, FirstRunActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -170,7 +183,7 @@ public class MainActivity2 extends AppCompatActivity {
             }
             editor.commit();
             Toast.makeText(this, "Sollte der Vertretungsplan lange zum Anzeigen benötigen, melde dies bitte dem Entwickler!", Toast.LENGTH_LONG).show();
-        }
+        }*/
 
         /*DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -225,6 +238,8 @@ public class MainActivity2 extends AppCompatActivity {
 
     }
 
+
+
     public void changeTheme() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setExitTransition(new Fade());
@@ -237,6 +252,7 @@ public class MainActivity2 extends AppCompatActivity {
         if(this.toolbarTextView == null)
             return;
         this.toolbarTextView.setText(str);
+        setTitle("");
     }
 
     public void setupDrawer(long selectedItem) {
@@ -244,20 +260,13 @@ public class MainActivity2 extends AppCompatActivity {
         //FirebaseService.sendToken(this);
         ViewGroup fot = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.ferien_footer, null);
 
-        /*new Feriencounter.FeriencounterCallback(){
-            @Override
-            public void run() {
-                Toast.makeText(MainActivity2.this, daysUntil, Toast.LENGTH_SHORT).show();
-            }
-        };*/
-
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header_background)
                 .withSelectionListEnabled(false)
                 .withProfileImagesClickable(false)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("GSApp").withEmail("Woody Beta 1").withIcon(getResources().getDrawable(R.drawable.icon_tree))
+                        new ProfileDrawerItem().withName("GSApp").withEmail("TeKoop Release Candidate 1").withIcon(getResources().getDrawable(R.drawable.icon_tree))
                 )
                 .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
                     @Override
@@ -293,6 +302,7 @@ public class MainActivity2 extends AppCompatActivity {
                         ab
                 )
                 .withStickyFooter(fot)
+                .withStickyFooterShadow(false)
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
@@ -353,12 +363,6 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             }, 2000);
         }
-        /*DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-
-        }*/
     }
 
     @Override
@@ -382,57 +386,6 @@ public class MainActivity2 extends AppCompatActivity {
 
         }
     }
-
-    /*private void openFragment(int fragId) {
-        fragm = null;
-        switch (fragId) {
-            case R.id.nav_home:
-                fragm = new HomeFragment();
-                break;
-            case R.id.nav_vplan:
-                fragm = new VPlanFragment();
-                break;
-            case 631:
-                fragm = new VPlanFragment();
-                fragId = R.id.nav_vplan;
-                break;
-            case R.id.nav_speiseplan:
-                fragm = new SpeiseplanFragment();
-                break;
-            case R.id.nav_essenbest:
-                fragm = new EssenbestellungFragment();
-                break;
-            case R.id.nav_termine:
-                fragm = new TermineFragment();
-                break;
-            case R.id.nav_kontakt:
-                fragm = new KontaktFragment();
-                break;
-            case R.id.nav_klausuren:
-                fragm = new KlausurenFragment();
-                break;
-            case R.id.nav_aktuelles:
-                fragm = new AktuellesFragment();
-                break;
-            case R.id.nav_settings:
-                fragm = new Settings2Fragment();
-                break;
-            case R.id.nav_about:
-                fragm = new AboutFragment();
-                break;
-        }
-
-        if (fragm != null) {
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.replace(R.id.content_frame, fragm);
-            ft.commit();
-        }
-
-        shownFragment = fragId;
-
-        //DrawerLayout dw = (DrawerLayout) findViewById(R.id.drawer_layout);
-        //dw.closeDrawer(GravityCompat.START);
-    }*/
 
     private void showFragment(int fragId) {
         Bundle bundle = new Bundle();
@@ -483,7 +436,9 @@ public class MainActivity2 extends AppCompatActivity {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.setCustomAnimations(R.anim.fadein, R.anim.fadeout);
             ft.replace(R.id.content_frame, fragm);
-            ft.commit();
+            //ft.addToBackStack(null);
+            //&try { ft.commit(); } catch(IllegalStateException e) { ft.commitAllowingStateLoss(); e.printStackTrace(); return; }
+            ft.commitAllowingStateLoss();
         }
 
         shownFragment = fragId;
@@ -491,16 +446,7 @@ public class MainActivity2 extends AppCompatActivity {
         if(result != null) {
             result.closeDrawer();
         }
-        //DrawerLayout dw = (DrawerLayout) findViewById(R.id.drawer_layout);
-        //dw.closeDrawer(GravityCompat.START);
     }
-
-    /*@SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        openFragment(item.getItemId());
-        return true;
-    }*/
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

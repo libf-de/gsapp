@@ -4,8 +4,8 @@
     <string name="app_name">GSApp</string>
     <string name="VPlan">Vertretungsplan</string>
     <string name="aktualisiere">Aktualisieren</string>
-    <string name="version">6.0 A3 "Woody"</string>
-    <string name="build">WOODY6A3</string>
+    <string name="version">6.0 ReleaseCandidate "TeKoop"</string>
+    <string name="build">TEKOOP6RC1</string>
     <string name="klasse_desc">Wenn du nur deine Klasse im Vertretungsplan sehen möchtest, wähle sie hier aus:</string>
     <string name="ConfigVer">2</string>
 
@@ -27,5 +27,15 @@
     <string name="prefs_theme_yellow">Yellow</string>
     <string name="prefs_marquee">Scroll card title</string>
     <string name="prefs_marquee_sum">Scrolls Vertretungsplan-titles if too long</string>
+    <string name="prefs_teacher">Displayed teacher</string>
+    <string name="teacher_enable_msg">Do you want to enable teacher mode?</string>
+    <string name="teacher_title">Teacher mode</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="teacher_disable_msg">Do you want to disable teacher mode?</string>
+    <string name="prefs_klasse_header">My class</string>
+    <string name="prefs_teacher_header">Me</string>
+    <string name="ntf_channel">GSApp Notifications</string>
+    <string name="ntf_channel_desc">Displays teacher substition schedules</string>
 
 </resources>

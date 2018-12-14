@@ -4,13 +4,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <de.xorg.gsapp.SettingsHeader
-        android:title="@string/prefs_general">
-
+        android:title="@string/prefs_klasse_header"
+        android:key="sec_klasse">
         <ListPreference
             android:key="pref_klasse"
             android:title="@string/prefs_klasse"
             android:summary="%s"
             android:icon="@drawable/class_icon"/>
+    </de.xorg.gsapp.SettingsHeader>
+
+    <de.xorg.gsapp.SettingsHeader
+        android:title="@string/prefs_teacher_header"
+        android:key="sec_lehrer">
+        <EditTextPreference
+            android:key="pref_teacher"
+            android:title="@string/prefs_teacher"
+            android:icon="@drawable/class_icon" />
+    </de.xorg.gsapp.SettingsHeader>
+
+    <de.xorg.gsapp.SettingsHeader
+        android:title="@string/prefs_general"
+        android:key="sec_general">
 
         <DropDownPreference
             android:key="pref_push"
@@ -33,6 +47,12 @@
             android:title="@string/prefs_marquee"
             android:summary="@string/prefs_marquee_sum"
             android:icon="@drawable/marquee_icon" />
+
+        <Preference
+            android:key="pref_login"
+            android:title="Automatische Anmeldung"
+            android:summary="für Essenbestellung"
+            android:icon="@drawable/food_fork_drink" />
 
         <!--<Preference
             android:key="preference"

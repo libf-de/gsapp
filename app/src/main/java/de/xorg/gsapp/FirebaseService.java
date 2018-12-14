@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
@@ -55,28 +56,32 @@ import timber.log.Timber;
 
 public class FirebaseService extends FirebaseMessagingService {
     /**
-     * Called when message is received.
+     * Aufgerufen, wenn der Service eine Push-Benachrichtigung aus Firebase erhält
      *
      * @param remoteMessage Object representing the message received from Firebase Cloud Messaging.
      */
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        super.onMessageReceived(remoteMessage);
-        // TODO(developer): Handle FCM messages here.
-        // If the application is in the foreground handle both data and notification messages here.
-        // Also if you intend on generating your own notifications as a result of a received FCM
-        // message, here is where that should be initiated. See sendNotification method below.
+        super.onMessageReceived(remoteMessage); //TODO: Only parse classes/teachers in their respective mode
         RemoteMessage.Notification notification = remoteMessage.getNotification();
         Map<String, String> data = remoteMessage.getData();
 
         Timber.d("Received Push!");
+        Timber.d(data.get("forDate"));
 
         String[] klassen = {"ALL"};
+        String[] lehrer = {"ALL"};
         try {
             JSONArray recvClasses = new JSONArray(data.get("klassen"));
+            JSONArray recvLehrers = new JSONArray(data.get("lehrer"));
             klassen = new String[recvClasses.length()];
+            lehrer = new String[recvLehrers.length()];
+
             for(int i = 0; i < recvClasses.length(); i++) {
                 klassen[i] = recvClasses.getString(i);
+            }
+            for(int i = 0; i < recvLehrers.length(); i++) {
+                lehrer[i] = recvLehrers.getString(i);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -92,20 +97,29 @@ public class FirebaseService extends FirebaseMessagingService {
             Timber.w("Konnte Datum nicht verarbeiten");
         }
 
-        Timber.d("PM: %s", getPushMode());
-
-        if (getPushMode() == Util.PushMode.PUBLIC) {
-            Timber.d("Public");
+        if (getPushMode().equals(Util.PushMode.PUBLIC)) {
             PostNotification(this,"Neuer Vertretungsplan für " + getRelativeDateForNotification(forDate) + " verfügbar!");
-        } else if (Arrays.asList(klassen).contains(getKlasse())) {
-            Timber.d("Contains");
-            PostNotification(this,"Du hast " + getRelativeDateForNotification(forDate) + " Vertretung!");
+        } else {
+            if(Util.isLehrerModus(this)) {
+                if(Arrays.asList(lehrer).contains(getLehrer()))
+                    PostNotification(this,"Sie haben " + getRelativeDateForNotification(forDate) + " Vertretung!");
+            } else {
+                if (Arrays.asList(klassen).contains(getKlasse()))
+                    PostNotification(this,"Du hast " + getRelativeDateForNotification(forDate) + " Vertretung!");
+            }
         }
 
         //sendNotification(notification, data);
     }
 
+    /*
+     * Gibt das relative Datum bezogen auf d zurück (Heute, morgen, Montag, ...)
+     *
+     * @param d - Datum, auf das sich bezogen werden soll
+     */
     public static String getRelativeDateForNotification(Date d) {
+        Calendar c = Calendar.getInstance();
+
         Calendar c1 = Calendar.getInstance();
         c1.add(Calendar.DAY_OF_YEAR, 1);
 
@@ -114,6 +128,8 @@ public class FirebaseService extends FirebaseMessagingService {
 
         if (c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) && c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)) {
             return "morgen";
+        } else if(c.get(Calendar.YEAR) == c2.get(Calendar.YEAR) && c.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)) {
+            return "heute";
         } else {
             String[] days = {"", "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
             return days[c2.get(Calendar.DAY_OF_WEEK)];
@@ -134,13 +150,12 @@ public class FirebaseService extends FirebaseMessagingService {
         //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "channel_id")
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, Util.NTF_CHANNEL_ID)
                 .setContentTitle("Neuer Vertretungsplan!")
                 .setContentText(text)
                 .setAutoCancel(true)
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                 .setContentIntent(pIntent)
-                .setContentInfo("Yo")
                 .setColor(getResources().getColor(R.color.gsgelb))
                 .setLights(getResources().getColor(R.color.gsgelb), 1000, 300)
                 .setDefaults(Notification.DEFAULT_ALL)
@@ -151,9 +166,9 @@ public class FirebaseService extends FirebaseMessagingService {
         // Notification Channel is required for Android O and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    "channel_id", "channel_name", NotificationManager.IMPORTANCE_DEFAULT
+                    Util.NTF_CHANNEL_ID, getString(R.string.ntf_channel), NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("channel description");
+            channel.setDescription(getString(R.string.ntf_channel_desc));
             channel.setShowBadge(true);
             channel.canShowBadge();
             channel.enableLights(true);
@@ -176,59 +191,21 @@ public class FirebaseService extends FirebaseMessagingService {
     }
 
     /**
+     * Liest den gespeicherten Lehrer aus
+     *
+     * @return Gespeicherter Lehrer
+     */
+    public String getLehrer() {
+        return PreferenceManager.getDefaultSharedPreferences(this).getString(Util.Preferences.LEHRER, "");
+    }
+
+    /**
      * Überprüfungsmodus auslesen
      *
      * @return Überprüfungsmodus
      */
     public String getPushMode() {
         return PreferenceManager.getDefaultSharedPreferences(this).getString(Util.Preferences.PUSH_MODE, Util.PushMode.DISABLED);
-    }
-
-    /**
-     * Create and show a custom notification containing the received FCM message.
-     *
-     * @param notification FCM notification payload received.
-     * @param data FCM data payload received.
-     */
-    private void sendNotification(RemoteMessage.Notification notification, Map<String, String> data) {
-        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-
-        Intent intent = new Intent(this, MainActivity2.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-
-
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "channel_id")
-                .setContentTitle("Yo")
-                .setContentText(data.toString())
-                .setAutoCancel(true)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                .setContentIntent(pendingIntent)
-                .setContentInfo("Yo")
-                .setLargeIcon(icon)
-                .setColor(Color.RED)
-                .setLights(Color.RED, 1000, 300)
-                .setDefaults(Notification.DEFAULT_VIBRATE)
-                .setSmallIcon(R.mipmap.ic_launcher);
-
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        // Notification Channel is required for Android O and above
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    "channel_id", "channel_name", NotificationManager.IMPORTANCE_DEFAULT
-            );
-            channel.setDescription("channel description");
-            channel.setShowBadge(true);
-            channel.canShowBadge();
-            channel.enableLights(true);
-            channel.setLightColor(Color.RED);
-            channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{100, 200, 300, 400, 500});
-            notificationManager.createNotificationChannel(channel);
-        }
-
-        notificationManager.notify(0, notificationBuilder.build());
     }
 
     /**
@@ -242,13 +219,21 @@ public class FirebaseService extends FirebaseMessagingService {
         sendToken(this, token);
     }
 
+    /*
+     * De-/Aktiviert Push-Benachrichtigungen
+     *
+     * @param c - Anwendungskontext
+     * @param enable - De-/Aktivieren
+     */
     public static void changePush(Context c, boolean enable) {
+        boolean InDebug = (c.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE)!=0;
+
         if (enable) {
-            FirebaseMessaging.getInstance().subscribeToTopic("vertretung")
+            FirebaseMessaging.getInstance().subscribeToTopic(InDebug ? "vertretung_debug" : "vertretung")
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            String msg = c.getString(R.string.push_enable_success);
+                            String msg = c.getString(R.string.push_enable_success) + (InDebug ? " (DEBUG)" : "");
                             if (!task.isSuccessful()) {
                                 msg = c.getString(R.string.push_enable_failed);
                             }
@@ -257,11 +242,11 @@ public class FirebaseService extends FirebaseMessagingService {
                     });
 
         } else {
-            FirebaseMessaging.getInstance().unsubscribeFromTopic("vertretung")
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(InDebug ? "vertretung_debug" : "vertretung")
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            String msg = c.getString(R.string.push_disable_success);
+                            String msg = c.getString(R.string.push_disable_success) + (InDebug ? " (DEBUG)" : "");
                             if (!task.isSuccessful()) {
                                 msg = c.getString(R.string.push_disable_failed);
                             }
@@ -271,6 +256,10 @@ public class FirebaseService extends FirebaseMessagingService {
         }
     }
 
+    /*
+     * Erzeugt eine einzigartige Geräte-ID
+     * Kann eigentlich entfernt werden
+     */
     public static String getDeviceId(Context c) {
         String stored = PreferenceManager.getDefaultSharedPreferences(c).getString(Util.Preferences.DEVICE_ID, null);
         String returnValue;

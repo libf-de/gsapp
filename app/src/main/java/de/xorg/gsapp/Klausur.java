@@ -2,6 +2,10 @@ package de.xorg.gsapp;
 
 import android.graphics.Color;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -19,6 +23,18 @@ public class Klausur {
     public Klausur(String title, Date datum) {
         this.title = title;
         this.datum = datum;
+    }
+
+    public Klausur(JSONObject inp) throws JSONException, ParseException {
+        this.title = inp.getString("title");
+        this.datum = new SimpleDateFormat("dd/MM/yyyy").parse(inp.getString("date"));
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject outp = new JSONObject();
+        outp.put("title", title);
+        outp.put("date", new SimpleDateFormat("dd/MM/yyyy").format(datum));
+        return outp;
     }
 
     public String getTitle() {
@@ -69,7 +85,30 @@ public class Klausur {
         } else return "";
     }
 
+    //Kursarbeit = eA = GROSSGESCHRIEBEN
+    public boolean isKursarbeit() {
+        return Pattern.matches("([A-Z]+(?!.*[0-9]))", this.title);
+    }
+
+    public String getDesc() {
+        return getLongName() + " am " + getDateString();
+    }
+
+    public String getLongName() {
+        if(this.title.equals("Keine Klausuren mehr!"))  return "Keine Klausuren mehr!";
+        if(this.title.startsWith("Fehler:")) return this.title;
+        String fachName = Util.LongName(getFachShort());
+        if(Pattern.matches("[a-z].+N[0-9]", this.title)) fachName += " Neu";
+        return isKursarbeit() ? String.format("%s Kursarbeit", fachName) : String.format("%s %s Klausur", fachName, getKursNummer());
+    }
+
+    public String getIconText() {
+        if(this.title.equals("Keine Klausuren mehr!"))  return "\uD83D\uDE0A"; else if (this.title.startsWith("Fehler:")) return "\uD83D\uDE1E"; else return this.title; //😊/😞/Titel
+    }
+
     public String getFachShort() { //TODO: Crash-Safe?
+        if(this.title.equals("Keine Klausuren mehr!"))  return "et"; //gelb
+        if(this.title.startsWith("Fehler:"))  return "ma"; //rot
         if(Pattern.matches("[a-z].+N[0-9]", this.title)) { //frN1
             Matcher kursNeu = Pattern.compile(".+?(?=N)").matcher(this.title);
             return kursNeu.find() ? kursNeu.group() : this.title;

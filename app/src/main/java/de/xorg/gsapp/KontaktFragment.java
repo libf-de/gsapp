@@ -117,8 +117,6 @@ public class KontaktFragment extends Fragment {
                 }
             }
         });
-
-        getActivity().setTitle("GSApp - Kontakt");
     }
 
     @Override

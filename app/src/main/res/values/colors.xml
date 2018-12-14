@@ -18,8 +18,22 @@
     <color name="background_secondary_dark">#FF111111</color>
     <color name="background_white">#FFFFFFFF</color>
     <color name="background_secondary_white">#FFEEEEEE</color>
-    <color name="background_yellow">#FFFED21B</color>
+    <color name="background_yellow">#fed21b</color>
     <color name="background_secondary_yellow">#FFCBA815</color>
+
+    <color name="text_dark">#FFFFFFFF</color>
+    <color name="text_secondary_dark">#FFFFFFFF</color>
+    <color name="text_light">#FF000000</color>
+    <color name="text_secondary_light">#FF000000</color>
+
+    <color name="accent_light">#FFFED21B</color>
+    <color name="accent_dark">#FFFED21B</color>
+    <color name="accent_yellow">#FF1B47FE</color>
+
+    <color name="primary_light_light">#FFFED21B</color>
+    <color name="primary_light_dark">#ffcba815</color>
+    <color name="primary_dark_light">#FFFED21B</color>
+    <color name="primary_dark_dark">@color/background_dark</color>
 
     <color name="md_selected">#1FFED21B</color>
     <color name="md_selected_text">#FED21B</color>

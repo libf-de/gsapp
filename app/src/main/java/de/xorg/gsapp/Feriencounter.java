@@ -112,12 +112,11 @@ public class Feriencounter {
                     long timeRem = TimeUnit.MILLISECONDS.toDays(end.getTime() - now.getTime());
                     String timeSuff;
                     if (timeRem > 7) {
-                        timeRem = timeRem / 7;
-                        timeSuff = (timeRem == 1 ? "Woche" : "Wochen");
+                        timeSuff = String.format("noch %d %s, %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tage"));
                     } else {
-                        timeSuff = (timeRem == 1 ? "Tag" : "Tage");
+                        timeSuff = String.format("noch %d %s", timeRem, (timeRem == 1 ? "Tag" : "Tage"));
                     }
-                    announceDays(String.format("Noch %d %s", timeRem, timeSuff), capitalize(disFerien.getString("name")));
+                    announceDays(timeSuff, capitalize(disFerien.getString("name")));
                     return; //Funktion fertig, da "passende" Ferien definitiv gefunden
                 } else {
                     if (nearest == null) { //Setze das "Referenzdatum" auf das erste zukünftige Datum
@@ -137,15 +136,15 @@ public class Feriencounter {
         long timeRem = TimeUnit.MILLISECONDS.toDays(nearestDate.getTime() - now.getTime());
         String timeSuff;
         if (timeRem > 7) {
-            timeRem = timeRem / 7;
-            timeSuff = (timeRem == 1 ? "Woche" : "Wochen");
+            timeSuff = String.format("in %d %s, %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tage"));
         } else if(timeRem < 0) {
             Timber.w("Not displaying next holidays as remaining days is less than 0!");
-            return;
+            timeSuff = "ab heute";
+            //return;
         } else {
-            timeSuff = (timeRem == 1 ? "Tag" : "Tage");
+            timeSuff = String.format("in %d %s", timeRem, (timeRem == 1 ? "Tag" : "Tage"));
         }
-        announceDays(String.format("In %d %s", timeRem, timeSuff), capitalize(nearest.getString("name")));
+        announceDays(timeSuff, capitalize(nearest.getString("name")));
     }
 
     public void fetch() {

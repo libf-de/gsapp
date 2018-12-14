@@ -11,7 +11,7 @@
         android:layout_below="@+id/xorgButton"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="18dp"
-        android:text="GSApp"
+        android:text="GSAppTK"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textSize="32sp" />
 
@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
-        android:text="http://xorg.ga/" />
+        android:text="https://xorg.ga/" />
 
     <TextView
         android:id="@+id/VisitLabel"
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/homepageButton"
         android:layout_centerHorizontal="true"
-        android:text="Besuche Xorg&apos;s Webseite:" />
+        android:text="" /> <!-- TODO: Remove -->
 
     <Button
         android:id="@+id/xorgButton"
@@ -47,6 +47,7 @@
         android:layout_height="128dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dp"
         android:background="@mipmap/ic_launcher_round" />
 
     <TextView
@@ -55,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/versionText"
         android:layout_centerHorizontal="true"
-        android:text="Written by Xorg (Fabian S.)"
+        android:text="geschrieben von Fabian Schillig"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <Button

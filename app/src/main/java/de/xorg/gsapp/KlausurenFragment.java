@@ -4,7 +4,15 @@ import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.InsetDrawable;
@@ -22,12 +30,23 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,8 +74,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 import timber.log.Timber;
 
-//import android.support.v4.app.Fragment;
-
+/*
+ * Fragment Klausurenplan
+ */
 
 public class KlausurenFragment extends Fragment {
 
@@ -65,9 +85,93 @@ public class KlausurenFragment extends Fragment {
     private KlausurenAdapter mAdapter;
     private int shownPage = 0;
     private SwipeRefreshLayout swipeContainer;
+    private KlausurPlans kP;
 
-    public KlausurenFragment() {
-        // Required empty public constructor
+    public KlausurenFragment() { }
+
+    private class KlasseState {
+        public static final int UNCHANGED = 0;
+        public static final int CHANGED = 1;
+        public static final int ERROR = 2;
+    }
+
+    /*
+    "ADT" für Klausurpläne der Klassen 11 und 12
+     */
+    private class KlausurPlans {
+        List<Klausur> kl11;
+        List<Klausur> kl12;
+        String headr11;
+        String headr12;
+
+        class JSONKeys { //JSON-Schlüssel-Namen
+            public static final String KLAUSUR_11 = "klausuren-11";
+            public static final String KLAUSUR_12 = "klausuren-12";
+            public static final String HEADER_11 = "header-11";
+            public static final String HEADER_12 = "header-12";
+        }
+
+        KlausurPlans() { //Leer initialisieren
+            this.kl11 = new ArrayList<>();
+            this.kl12 = new ArrayList<>();
+            this.headr11 = "";
+            this.headr12 = "";
+        }
+
+        KlausurPlans(List<Klausur> k11, List<Klausur> k12, String h11, String h12) { //Eigentlich normaler Konstruktor, wird aber nicht verwendet
+            this.kl11 = k11;
+            this.kl12 = k12;
+            this.headr11 = h11;
+            this.headr12 = h12;
+        }
+
+        KlausurPlans(String error_message) { //Fügt nur eine Fehlermeldung ein
+            this.kl11 = new ArrayList<>(Collections.singletonList(new Klausur(String.format("Fehler: %s", error_message), new Date())));
+            this.kl12 = new ArrayList<>(Collections.singletonList(new Klausur(String.format("Fehler: %s", error_message), new Date())));
+            this.headr11 = "";
+            this.headr12 = "";
+        }
+
+        KlausurPlans(JSONObject root) throws JSONException, ParseException { //Füllt aus JSON-Cache
+            if(this.kl11 != null) this.kl11.clear(); else this.kl11 = new ArrayList<>();
+            if(this.kl12 != null) this.kl12.clear(); else this.kl12 = new ArrayList<>();
+
+            JSONArray k11 = root.getJSONArray(JSONKeys.KLAUSUR_11);
+            JSONArray k12 = root.getJSONArray(JSONKeys.KLAUSUR_12);
+            for (int i = 0; i < k11.length(); i++) { this.kl11.add(new Klausur(k11.getJSONObject(i))); }
+            for (int i = 0; i < k12.length(); i++) { this.kl12.add(new Klausur(k12.getJSONObject(i))); }
+
+            this.headr11 = root.getString(JSONKeys.HEADER_11);
+            this.headr12 = root.getString(JSONKeys.HEADER_12);
+        }
+
+        //Gibt Klausurplan bzw Header für entspr. Klasse zurück
+        public List<Klausur> getKl11() { if(this.kl11.size() > 0 ) return this.kl11; else return new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Keine Daten!", new Date()))); }
+        public List<Klausur> getKl12() { if(this.kl12.size() > 0 ) return this.kl12; else return new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Keine Daten!", new Date()))); }
+        public String getHeader11() { return this.headr11; }
+        public String getHeader12() { return this.headr12; }
+
+        //Setzt Klausurplan und/oder Header für entspr. Klasse
+        public void setKl11(List<Klausur> i) { this.kl11 = i; }
+        public void setKl11(List<Klausur> i, String h) { this.kl11 = i; this.headr11 = h; }
+        public void setHeadr11(String h) { this.headr11 = h; }
+        public void setHeadr12(String h) { this.headr12 = h; }
+        public void setKl12(List<Klausur> i) { this.kl12 = i; }
+        public void setKl12(List<Klausur> i, String h) { this.kl12 = i; this.headr12 = h; }
+
+        //Wandelt die Daten in JSON um (Für Cache)
+        public JSONObject toJSON() throws JSONException {
+            JSONObject root = new JSONObject();
+            JSONArray k11 = new JSONArray();
+            for (int i = 0; i < this.kl11.size(); i++) {  k11.put(this.kl11.get(i).toJSON()); }
+            root.put(JSONKeys.KLAUSUR_11, k11);
+            JSONArray k12 = new JSONArray();
+            for (int i = 0; i < this.kl12.size(); i++) {  k12.put(this.kl12.get(i).toJSON()); }
+            root.put(JSONKeys.KLAUSUR_12, k12);
+            root.put(JSONKeys.HEADER_11, this.headr11);
+            root.put(JSONKeys.HEADER_12, this.headr12);
+            return root;
+        }
     }
 
     @Nullable
@@ -85,21 +189,64 @@ public class KlausurenFragment extends Fragment {
     }
 
 
+    //Erstellt eine Grafik mit Text (durchsichtiger Text auf Weiß)
+    //Für Klassen-Umschalter
+    public static Bitmap textIconic(Context c, String text, float textSize, boolean darkBg) {
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setTextSize(textSize);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT));
+        paint.setTextAlign(Paint.Align.LEFT);
+        paint.setTypeface(Util.getTKFont(c, true));
+        Paint bg = new Paint(Paint.ANTI_ALIAS_FLAG);
+        bg.setStyle(Paint.Style.FILL);
+        bg.setColor(darkBg ? c.getResources().getColor(R.color.text_light) : c.getResources().getColor(R.color.text_dark));
+
+        float baseline = -paint.ascent(); // ascent() is negative
+        int width = (int) (paint.measureText(text) + 0.0f); // round
+        int height = (int) (baseline + paint.descent() + 0.0f);
+        int dpRd = Util.convertToPixels(c, 2);
+        int dpRd2 = Util.convertToPixels(c, 4);
+        Bitmap image = Bitmap.createBitmap(height + (2*dpRd), height + (2*dpRd), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(image);
+        canvas.drawRoundRect(new RectF(0, 0, height + (2*dpRd), height + (2*dpRd)), dpRd2, dpRd2, bg);
+        canvas.drawText(text, (height-width)/2, baseline + dpRd, paint);
+        return image;
+    }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         //you can set the title for your toolbar here for different fragments different titles
 
-        RecyclerView recyclerView = (RecyclerView) getView().findViewById(R.id.rv);
-        swipeContainer = (SwipeRefreshLayout) getView().findViewById(R.id.swipeContainer);
+        RecyclerView recyclerView = getView().findViewById(R.id.rv);
+        swipeContainer = getView().findViewById(R.id.swipeContainer);
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             public void onRefresh() {
-                Toast.makeText(getContext(), "Yo!", Toast.LENGTH_SHORT).show();
+                fetch(null, 0, true, null); //Erzwingt Aktualisierung
             }
         });
-        swipeContainer.setColorSchemeResources(new int[]{R.color.md_cyan_A200, R.color.md_light_green_A400, R.color.md_amber_300, R.color.md_red_A400});
+        swipeContainer.setColorSchemeResources(R.color.md_cyan_A200, R.color.md_light_green_A400, R.color.md_amber_300, R.color.md_red_A400); //Setzt Farben für Ladekreis
 
+        //Klassen-Umschalter
+        //TODO: Mit in den Einstellungen gewählter Klasse starten
+        FloatingActionButton fab = getView().findViewById(R.id.fab_class);
+        fab.setImageBitmap(textIconic(getContext(),"11", 120, false)); //Icon setzen
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(shownPage == 0) {
+                    //shownPage = 1;
+                    showKlasse(1);
+                    fab.setImageBitmap(textIconic(getContext(),"12", 120, false));
+                } else {
+                    //shownPage = 0;
+                    showKlasse(0);
+                    fab.setImageBitmap(textIconic(getContext(),"11", 120, false));
+                }
+            }
+        });
+
+        klausurs.add(new Klausur("Fehler: (Noch) keine Daten..", new Date()));
 
         mAdapter = new KlausurenAdapter(this.getContext(), klausurs);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this.getContext());
@@ -107,6 +254,8 @@ public class KlausurenFragment extends Fragment {
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
+        //Zwischen-Überschriften: Wenn Datum einer Klausur nicht mit dem der vorherigen übereinstimmt
+        //füge eine Zwischenüberschrift mit diesem Datum ein
         KlausurenDecoration klausurenDecoration = new KlausurenDecoration(Util.convertToPixels(this.getContext(), 20),
                 false, new KlausurenDecoration.SectionCallback() {
             @Override
@@ -126,15 +275,43 @@ public class KlausurenFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(mAdapter);
 
-        getActivity().setTitle("GSApp - Klausuren");
-
-        //prepareMovieData();
-
-        loadOk(true, false);
+        load();
     }
 
-    public void loadOk(boolean showDialog, boolean checkCache) {
-        //OkHttpClient client = new OkHttpClient();
+    /*
+    Lade-Prozedur:
+    Cache vorhanden? -(ja)-> Zeige Plan aus Cache -> Lade Plan aus Internet -> Geändert? -(ja)-> schreibe Cache -> neuen Anzeigen
+                     |                                                                  -(nein)-> tue nichts
+                     -(nein)-> Zeige Ladebildschirm -> Lade Plan aus Internet -> schreibe Cache -> Ladeb. schließen -> neuen Anzeigen
+     */
+    private void load() {
+        File klausurCache = new File(getContext().getCacheDir(), "klausuren.json");
+        if(klausurCache.exists()) {
+            try {
+                kP = new KlausurPlans(new JSONObject(new String(Files.toByteArray(klausurCache), Charset.forName("UTF-8"))));
+            } catch(IOException e) {
+                kP = new KlausurPlans("E/A-Fehler");
+            } catch(ParseException p) {
+                kP = new KlausurPlans("Verarbeitungsfehler");
+            } catch(JSONException j) {
+                kP = new KlausurPlans("JSON-Fehler");
+            }
+            showKlasse(shownPage);
+        }
+
+        fetch(klausurCache.exists() ? null : new ProgressDialog(getContext()), 0, false, null);
+
+    }
+
+    /*
+    Lädt aktuellen Plan aus Internet
+    ---
+    showDialog ist ein ProgressDialog wenn Ladebildschirm gezeigt werden soll, sonst null
+    page ist ein Zähler, ob die Seite für 11. oder 12. Klasse geladen wird (NUR für Selbstaufruf, muss von extern immer 0 sein)
+    force erzwingt eine Aktualisierung (=Wenn Nutzer das anfordert)
+    passData enthält den Quelltext der vorherigen Seite (11. Klasse)
+     */
+    public void fetch(ProgressDialog showDialog, int page, boolean force, String passData) {
         OkHttpClient.Builder b = new OkHttpClient.Builder();
         b.readTimeout(20, TimeUnit.SECONDS);
         b.connectTimeout(20, TimeUnit.SECONDS);
@@ -142,18 +319,19 @@ public class KlausurenFragment extends Fragment {
         OkHttpClient client = b.build();
 
         System.setProperty("http.keepAlive", "false");
-        if (showDialog) {
-            progressDialog = new ProgressDialog(this.getContext());
-            progressDialog.setProgressStyle(0);
-            progressDialog.setTitle("GSApp");
-            progressDialog.setMessage("Lade Daten...");
-            progressDialog.setCancelable(false);
-            progressDialog.setIndeterminate(true);
-            progressDialog.show();
+        if (showDialog != null) {
+            showDialog.setProgressStyle(0);
+            showDialog.setTitle("GSApp");
+            showDialog.setMessage("Lade Daten...");
+            showDialog.setCancelable(false);
+            showDialog.setIndeterminate(true);
+            showDialog.show();
+        } else {
+            if(swipeContainer != null) swipeContainer.setRefreshing(true);
         }
 
         Request request = new Request.Builder()
-                .url("https://www.gymnasium-sonneberg.de/Schueler/KursArb/ka.php5?seite=" + this.shownPage)
+                .url("https://www.gymnasium-sonneberg.de/Schueler/KursArb/ka.php5?seite=" + page)
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -173,8 +351,8 @@ public class KlausurenFragment extends Fragment {
                         }
 
 
-                        if (showDialog && progressDialog != null) {
-                            progressDialog.dismiss();
+                        if (showDialog != null) {
+                            showDialog.dismiss();
                         }
                         if (swipeContainer != null && swipeContainer.isRefreshing()) {
                             swipeContainer.setRefreshing(false);
@@ -189,54 +367,216 @@ public class KlausurenFragment extends Fragment {
                     Timber.e("onResponse FAILED (" + response.code() + ")");
                 final String result = response.body().string();
 
-                if(getActivity() == null)
-                    return;
-
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(checkCache) {
-                            /*if(!hasCacheChanged(result)) {
-                                Timber.d( "Cache has not changed");
-                                return;
-                            } else {
-                                Timber.d("Cache HAS changed...");
-                            }*/
-                        } else {
-                            Timber.d("Not checking cache...");
-                        }
-
-
-                        /*VPlanFragment.this.vplane.clear();
-                        saveToHtmlCache(result);*/
-
-                        try {
-                            parseResponse(result);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            e.printStackTrace();
-                            Timber.e("ArrayOutOfBounds Klausuren");
-                        } catch(Exception e) {
-                            Timber.d( "Failed on ParseResponse: " + e.getMessage());
-                            Timber.e(e);
-                            e.printStackTrace();
-                        }
-
-
-                        if (showDialog && progressDialog != null) {
-                            progressDialog.dismiss();
-                        }
+                    if(page == 0) {
+                        fetch(showDialog, 1, force, result);
+                        return;
                     }
-                });
+
+                    if(1 == page && passData != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (showDialog != null)
+                                    showDialog.dismiss();
+                                if (swipeContainer != null && swipeContainer.isRefreshing())
+                                    swipeContainer.setRefreshing(false);
+                            }
+                        });
+
+                        parseCache(passData, result, force);
+                    }
+
+
             }
 
         });
     }
 
-    public void parseResponse(String result) throws ArrayIndexOutOfBoundsException, ParseException {
-        //this.isFiltered = !this.Filter.isEmpty();
-        //if(this.showingAll)
-        ///    this.isFiltered = false;
-        //this.htmlSource = result;
+
+    /*
+    Verarbeitet die aktuellen Pläne (in den Cache und ggf. in die aktuelle Ansicht
+    page11 ist der Quelltext des Plans für Klasse 11
+    page12 ist der Quelltext des Plans für Klasse 12
+    force = Erzwingen?
+     */
+    private void parseCache(String page11, String page12, boolean force) {
+        if(kP == null)
+            kP = new KlausurPlans();
+
+        Document d11 = Jsoup.parse(page11);
+        Document d12 = Jsoup.parse(page12);
+
+        int state11 = KlasseState.UNCHANGED;
+        int state12 = KlasseState.UNCHANGED;
+
+        String header11 = parseHeader(d11);
+        String header12 = parseHeader(d12);
+
+        if(!header11.equals(kP.getHeader11()) || force) {
+            try {
+                kP.setKl11(parse(d11, header11, false), header11);
+                state11 = KlasseState.CHANGED;
+            } catch (ParseException e) {
+                kP.setKl11(new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Verarbeitungsfehler 11", new Date()))), "");
+                state11 = KlasseState.ERROR;
+            }
+        }
+
+        if(!header12.equals(kP.getHeader12()) || force) {
+            try {
+                kP.setKl12(parse(d12, header12, false), header12);
+                state12 = KlasseState.CHANGED;
+            } catch (ParseException e) {
+                kP.setKl12(new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Verarbeitungsfehler 12", new Date()))), "");
+                state12 = KlasseState.ERROR;
+            }
+        }
+
+        try { Log.d("GSApp", kP.toJSON().toString()); } catch(Exception e) { Log.d("GSApp", "ich bin dumm"); }
+
+        try {
+            Files.write(kP.toJSON().toString().getBytes(Charset.forName("UTF-8")), new File(getContext().getCacheDir(), "klausuren.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        if(getActivity() == null || (state11 == KlasseState.UNCHANGED && state12 == KlasseState.UNCHANGED))
+            return;
+
+        final int s11 = state11;
+        final int s12 = state12;
+
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (shownPage == 0 && s11 != KlasseState.UNCHANGED) { showKlasse(0); Toast.makeText(getContext(), "Neuer Plan gefunden!", Toast.LENGTH_SHORT).show(); }
+                if (shownPage == 1 && s12 != KlasseState.UNCHANGED) { showKlasse(1); Toast.makeText(getContext(), "Neuer Plan gefunden!", Toast.LENGTH_SHORT).show(); }
+            }
+        });
+    }
+
+    /*
+    Zeigt die gewünschte Klasse im Plan an
+    Die Pläne müssen zuvor in kP (klausurPlans) geladen worden sein
+     */
+    private void showKlasse(int klasse) {
+        Toast.makeText(getContext(), String.format("Showing %d", klasse),Toast.LENGTH_SHORT).show();
+        List<Klausur> al = (klasse == 0 ? kP.getKl11() : kP.getKl12());
+        this.klausurs.clear();
+        for(int i = 0; i < al.size(); i++) {
+            Calendar c = Calendar.getInstance();
+            c.setTime(al.get(i).getDate());
+            if(!Util.isBeforeDay(c, Calendar.getInstance())) {
+                this.klausurs.add(al.get(i));
+            }
+        }
+
+        if(this.klausurs.size() < 1) {
+            this.klausurs.add(new Klausur("Keine Klausuren mehr!", new Date()));
+        }
+
+        shownPage = klasse;
+
+        Collections.sort(klausurs, (k1, k2) -> k1.getDate().compareTo(k2.getDate()));
+        mAdapter.notifyDataSetChanged();
+    }
+
+    /*
+    Verarbeitet die Kopfzeile (für Jahreszahl und Änderungs-Überprüfung)
+    doc ist das HTML-Dokument
+     */
+    private String parseHeader(Document doc) {
+        return doc.select("td[class*=ueberschr]").first().html(); //Überschrift-Element finden
+    }
+
+    /*
+    Verarbeitet einen Klausurplan
+    doc ist das HTML-Dokument
+    ksHeader ist die Kopfzeile aus parseHeader
+    excludeOld schließt vergangene Klausuren aus (eigentlich nicht benutzt wegen Cache - könnte aber eigentlich gemacht werden?)
+     */
+    private List<Klausur> parse(Document doc, String ksHeader, boolean excludeOld) throws ArrayIndexOutOfBoundsException, ParseException {
+        List<Klausur> o = new ArrayList<>();
+        //Document doc = Jsoup.parse(result);
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+        List<Date> daten = new ArrayList<>(); //Enthält die jeweils ersten Tage der Wochen
+
+        String[] jahre;
+        Matcher jahreMatcher = Pattern.compile("[0-9]{4}\\/[0-9]{4}").matcher(ksHeader); //Regex-Suche nach Jahreszahlen (XXXX/XXXX)
+        if(jahreMatcher.matches())
+            jahre = jahreMatcher.group(0).split("/");
+        else
+            jahre = ksHeader.split("<br>")[1].replaceAll("[^\\d/]", "" ).split("/"); //Fallback-Methode: Überschrift bei Linebreak teilen, dann Jahre trennen
+
+        Elements vpEnts = doc.select("td[class=kopf] ~ td");
+        Iterator it = vpEnts.iterator();
+        while (it.hasNext()) {
+            //Matcher datums = Pattern.compile("[0-9]{2}\\.[0-9]{2}\\.").matcher(((Element) it.next()).html());
+            String weekStart = ((Element) it.next()).html().split("<br>")[0]; //TODO: Doof.
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(format.parse(weekStart + "2000"));
+            //int month = Integer.parseInt(Pattern.compile("([0-9]+)(?!.*[0-9])").matcher(weekStart).group(0));
+            if(8 <= cal.get(Calendar.MONTH) && cal.get(Calendar.MONTH) <= 12) //Wenn Monat zwischen 8 und 12 -> erstes Jahr, sonst 2. Jahr
+                cal.set(Calendar.YEAR, Integer.parseInt(jahre[0])); //1. Jahr setzen
+            else
+                cal.set(Calendar.YEAR, Integer.parseInt(jahre[1])); //2. Jahr setzen
+
+            daten.add(cal.getTime()); //Wochenstart-Datum hinzufügen
+        }
+
+        int numFirstDateRow = doc.select("td[class=kopf]").first().parent().children().size() - 1;
+        Element kartoffel = doc.select("td[class=kopf] ~ td").first().parent().nextElementSibling();
+        int day = 0;
+        while(kartoffel != kartoffel.lastElementSibling()) {
+            Elements klausuren = kartoffel.select("td:not(.tag,.kopf)");
+            Iterator klausurenIt = klausuren.iterator();
+            while (klausurenIt.hasNext()) {
+                Element klausur = ((Element) klausurenIt.next());
+                if(!klausur.html().equals("&nbsp;")) {
+                    Calendar c = Calendar.getInstance();
+                    int thisDay = day;
+                    int datePos = klausur.elementSiblingIndex();
+                    if(thisDay > 5) {
+                        datePos += numFirstDateRow;
+                        thisDay -= 6;
+                    }
+
+                    c.setTime(daten.get(datePos - 1));
+                    c.add(Calendar.DATE, thisDay);
+
+                    if (excludeOld && Util.isBeforeDay(c, Calendar.getInstance()))
+                        continue;
+                    else if (Pattern.compile("[^a-zA-Z0-9\\s]").matcher(klausur.text()).find() || klausur.text().equals("Ferien"))
+                        continue;
+                    else if (klausur.text().equals("Abgabe SF")) {
+                        o.add(new Klausur("Abgabe SF", c.getTime()));
+                    } else {
+                        for(String singleKlausur : klausur.text().split(" ")) {
+                            o.add(new Klausur(singleKlausur, c.getTime()));
+                        }
+                    }
+                }
+            }
+            day++;
+            kartoffel = kartoffel.nextElementSibling();
+        }
+
+        if(o.size() < 1) {
+            o.add(new Klausur("Keine Klausuren mehr!", new Date()));
+        }
+
+        Collections.sort(o, (k1, k2) -> k1.getDate().compareTo(k2.getDate()));
+        return o;
+    }
+
+    /*
+    Deprecated: Wird entfernt
+    Verarbeitet den Quellcode in die aktuelle Anzeige (kein Caching)
+     */
+    private void parseResponse(String result) throws ArrayIndexOutOfBoundsException, ParseException {
         Document doc = Jsoup.parse(result);
         SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
         List<Date> daten = new ArrayList<>(); //Enthält die jeweils ersten Tage der Wochen
@@ -256,7 +596,6 @@ public class KlausurenFragment extends Fragment {
             String weekStart = ((Element) it.next()).html().split("<br>")[0]; //TODO: Doof.
             Calendar cal = Calendar.getInstance();
             cal.setTime(format.parse(weekStart + "2000"));
-            Log.d("Klausuren", "WS:" + (weekStart + "2000"));
             //int month = Integer.parseInt(Pattern.compile("([0-9]+)(?!.*[0-9])").matcher(weekStart).group(0));
             if(8 <= cal.get(Calendar.MONTH) && cal.get(Calendar.MONTH) <= 12) //Wenn Monat zwischen 8 und 12 -> erstes Jahr, sonst 2. Jahr
                 cal.set(Calendar.YEAR, Integer.parseInt(jahre[0])); //1. Jahr setzen
@@ -266,36 +605,17 @@ public class KlausurenFragment extends Fragment {
             daten.add(cal.getTime()); //Wochenstart-Datum hinzufügen
         }
 
-
-
-        for (int i = 0; i < daten.size(); i++) {
-            Log.d("KlausurenDaten", "At " + i + " there is " + format.format(daten.get(i)));
-        }
-
-        //Elements curRow = ;
-
-
-        //while (true) {
-        //    Elements tablRow = curRow.children();
-        //    Log.d("Klausuren", tablRow.html());
-        //}
-
-        //Elements klausurs = doc.select("td[class=kopf] ~ td").first().parent().siblingElements();
         int numFirstDateRow = doc.select("td[class=kopf]").first().parent().children().size() - 1;
-        Log.d("Klausuren", "nFDR=" + numFirstDateRow);
 
         Element kartoffel = doc.select("td[class=kopf] ~ td").first().parent().nextElementSibling();
         int day = 0;
-        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+        klausurs.clear();
         while(kartoffel != kartoffel.lastElementSibling()) {
             Elements klausuren = kartoffel.select("td:not(.tag,.kopf)");
             Iterator klausurenIt = klausuren.iterator();
             while (klausurenIt.hasNext()) {
                 Element klausur = ((Element) klausurenIt.next());
                 if(!klausur.html().equals("&nbsp;")) {
-                    Klausur thisKlausur;
-                    //Klausur movie = new Klausur(klausur.text(), new Date());
-                    //klausurs.add(movie);
                     Calendar c = Calendar.getInstance();
                     int thisDay = day;
                     int datePos = klausur.elementSiblingIndex();
@@ -320,109 +640,15 @@ public class KlausurenFragment extends Fragment {
                             klausurs.add(new Klausur(singleKlausur, c.getTime()));
                         }
                     }
-
-                    Log.d("Klausuren", "pos (day,week)=" + thisDay + ", " + klausur.elementSiblingIndex() + "-RALF-" + klausur.text());
-
-                    Log.d("Klausuren", klausur.text() + " ON " + sdf.format(c.getTime()));
                 }
-                //Log.d("Klausuren", klausur.html());
             }
             day++;
             kartoffel = kartoffel.nextElementSibling();
         }
 
-
-        //Iterator its = klausurs.iterator();
-        //while (its.hasNext()) {
-        //    Log.d("Klausuren", ((Element) it.next()).html());
-        //}
-        //Element date = doc.select("td[class*=vpUeberschr]").first();
-        //Element bemerk = doc.select("td[class=vpTextLinks]").first();
-        /*String bemerkText;
-        String dateText;
-
-        try {
-            if(bemerk.hasText()) { bemerkText = bemerk.text().replace("Hinweis:", "").trim(); } else { Timber.d("ParseResponse: bemerk has no text"); bemerkText = ""; }
-        } catch(Exception e) {
-            bemerkText = "";
-            e.printStackTrace();
+        if(klausurs.size() < 1) {
+            klausurs.add(new Klausur("Keine Klausuren mehr!", new Date()));
         }
-
-        try {
-            if(date.hasText()) { dateText = date.text(); } else { Timber.d( "ParseResponse: date has no text"); dateText = "Fehler, den 01.01.2000"; }
-        } catch(Exception e) {
-            dateText = "CFehler, den 01.01.2000";
-        }
-
-
-        if (dateText.equals("Beschilderung beachten!")) {
-            Toast.makeText(getContext(), "Es sind Ferien!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        this.dateD = dateText;
-        this.hinweisD = bemerkText.replace("Hinweis: ", "");
-
-
-        Elements vpEnts = doc.select("tr[id=Svertretungen], tr[id=Svertretungen] ~ tr");
-        if(vpEnts.size() < 1) {
-            Timber.d( "ParseResponse: No entries found, trying fallback method...");
-            Element par = null;
-            try {
-                par = doc.select("td[class*=vpTextZentriert]").first().parent();
-            } catch(NullPointerException npe) {
-                Timber.e("ParseResponse: Fallback failed, html is shown below: ");
-                Timber.e(result);
-            }
-            vpEnts = doc.select(par.cssSelector() + ", " + par.cssSelector() + " ~ tr");
-        }
-
-
-
-        Timber.d( "vpEnts size is " + vpEnts.size());
-        Iterator it;
-        Elements d;
-        String[] data;
-        boolean isNew;
-        int dID;
-        Iterator it2;
-        if (this.isFiltered) {
-            it = vpEnts.iterator();
-            while (it.hasNext()) {
-                d = ((Element) it.next()).children();
-                data = new String[7];
-                isNew = false;
-                dID = 0;
-                it2 = d.iterator();
-                while (it2.hasNext()) {
-                    data[dID] = ((Element) it2.next()).text();
-                    dID++;
-                }
-                if (d.html().contains("<strong>")) {
-                    isNew = true;
-                }
-                if (Util.applyFilter(getContext(), data)) {
-                    vplane.add(new Eintrag(data[0], data[1], data[2], data[3], data[4], data[5], data[6], isNew));
-                }
-            }
-        } else {
-            it = vpEnts.iterator();
-            while (it.hasNext()) {
-                d = ((Element) it.next()).children();
-                data = new String[7];
-                isNew = false;
-                dID = 0;
-                it2 = d.iterator();
-                while (it2.hasNext()) {
-                    data[dID] = ((Element) it2.next()).text();
-                    dID++;
-                }
-                if (d.html().contains("<strong>")) {
-                    isNew = true;
-                }
-                this.vplane.add(new Eintrag(data[0], data[1], data[2], data[3], data[4], data[5], data[6], isNew));
-            }
-        }
-        displayAll();*/
 
         Collections.sort(klausurs, (k1, k2) -> k1.getDate().compareTo(k2.getDate()));
         mAdapter.notifyDataSetChanged();

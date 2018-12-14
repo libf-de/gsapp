@@ -120,7 +120,10 @@ public class DrawerUIUtils {
             states.addState(new int[]{android.R.attr.state_selected}, selected);
             states.addState(new int[]{}, unselected);
 
-            view.setBackground(states);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+                view.setBackground(states);
+            else
+                view.setBackgroundDrawable(states);
         }
     }
 

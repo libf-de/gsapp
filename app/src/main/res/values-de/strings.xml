@@ -8,8 +8,8 @@
     <string name="prefs_klasse">Angezeigte Klasse</string>
     <string name="prefs_pushmode">Push-Benachrichtigungen</string>
     <string name="prefs_pushmode_disabled">Deaktiviert</string>
-    <string name="prefs_pushmode_own">Für eigene Klasse</string>
-    <string name="prefs_pushmode_all">Für alle Klassen</string>
+    <string name="prefs_pushmode_own">Wenn es mich betrifft</string>
+    <string name="prefs_pushmode_all">Immer</string>
     <string name="prefs_theme">App-Design</string>
     <string name="prefs_theme_auto">Automatisch</string>
     <string name="prefs_theme_light">Hell</string>
@@ -17,5 +17,15 @@
     <string name="prefs_theme_yellow">Gelb</string>
     <string name="prefs_marquee">Kartentitel scrollen</string>
     <string name="prefs_marquee_sum">Scrollt Vertretungsplantitel bei Überlänge</string>
+    <string name="prefs_teacher">Angezeigter Lehrer</string>
+    <string name="teacher_enable_msg">Möchten Sie den Lehrermodus aktivieren? In diesem Modus können Sie ihr Kürzel eingeben, sehen nur die Stunden, die Sie vertreten müssen und werden über diese benachrichtigt.</string>
+    <string name="teacher_title">Lehrermodus</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+    <string name="teacher_disable_msg">Möchten Sie den Lehrermodus deaktivieren?</string>
+    <string name="prefs_klasse_header">Meine Klasse</string>
+    <string name="prefs_teacher_header">Ich</string>
+    <string name="ntf_channel">GSApp Vertretungsplan-Benachrichtigung</string>
+    <string name="ntf_channel_desc">Zeigt Benachrichtigungen über neue Vertretungspläne an</string>
 
 </resources>

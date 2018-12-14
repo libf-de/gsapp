@@ -13,10 +13,11 @@
         android:elevation="4dp">
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="GSApp"
+            android:text="title"
             android:gravity="center"
+            android:layout_gravity="center"
             style="@style/TkToolbar"
             android:singleLine="true"
             android:ellipsize="marquee"
@@ -24,8 +25,8 @@
             android:scrollHorizontally="true"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:paddingRight="?android:attr/actionBarSize"
-            android:id="@+id/toolbar_title"/><!--  -->
+
+            android:id="@+id/toolbar_title"/><!-- android:paddingRight="?android:attr/actionBarSize" -->
 
         <!--<ImageView
             android:layout_width="match_parent"

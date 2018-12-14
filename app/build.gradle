@@ -7,8 +7,8 @@ android {
         applicationId "de.xorg.gsapp"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 5902
-        versionName '6.0 A3 »Woody«'
+        versionCode 5906
+        versionName '6.0 RC 1 »TeKoop«'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
@@ -39,8 +39,8 @@ dependencies {
     implementation project(':cardsuilib')
     implementation project(':materialdrawer')
     implementation 'com.mikepenz:crossfader:1.6.0'
-    implementation 'com.google.firebase:firebase-core:16.0.4'
-    implementation 'com.google.firebase:firebase-ads:17.0.0'
+    implementation 'com.google.firebase:firebase-core:16.0.6'
+    implementation 'com.google.firebase:firebase-ads:17.1.2'
     implementation 'com.google.firebase:firebase-messaging:17.3.4'
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
     //implementation 'com.squareup.okhttp:okhttp:2.7.5'

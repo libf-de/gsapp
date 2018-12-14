@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
 //import android.support.v4.widget.SwipeRefreshLayout;
 //import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,6 +48,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +69,7 @@ import timber.log.Timber;
 
 public class VPlanFragment extends Fragment {
     public static final String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
-    private String Filter = null;
+    //private String Filter = null;
     //private Context c;
     public Activity actv = null;
     public String cBiologie = "#4caf50";
@@ -125,6 +128,14 @@ public class VPlanFragment extends Fragment {
             istDunkel = (themeId.equals(Util.AppTheme.DARK));
         }
 
+        //MobileAds.initialize(getContext(), "ca-app-pub-3940256099942544/6300978111");
+        MobileAds.initialize(getContext(), "ca-app-pub-6538125936915221~2281967739");
+        AdView mAdView = getView().findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("F42D4035C5B8ABF685658DE77BCB840A")
+                /*.addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")*/
+                .build();
+        mAdView.loadAd(adRequest);
+
         swipeContainer = (SwipeRefreshLayout) getView().findViewById(R.id.swipeContainer);
         swipeContainer.setOnRefreshListener(new OnRefreshListener() {
             public void onRefresh() {
@@ -133,7 +144,7 @@ public class VPlanFragment extends Fragment {
             }
         });
         swipeContainer.setColorSchemeResources(new int[]{R.color.md_cyan_A200, R.color.md_light_green_A400, R.color.md_amber_300, R.color.md_red_A400});
-        Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString("klasse", "");
+        //Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "");
         cardMarquee = PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(Util.Preferences.MARQUEE, false);
 
 
@@ -201,11 +212,15 @@ public class VPlanFragment extends Fragment {
                 VPlanFragment.this.getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(e.getMessage().contains("timeout")) {
-                            Toast.makeText(VPlanFragment.this.getContext(), "Der Vertretungsplan konnte nicht neu geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
-                        } else {
+                        if(e instanceof SocketTimeoutException)
+                            Toast.makeText(VPlanFragment.this.getContext(), "Timeout exception", Toast.LENGTH_SHORT).show();
+                        else
                             Toast.makeText(VPlanFragment.this.getContext(), "Der Vertretungsplan konnte nicht neu geladen werden!", Toast.LENGTH_SHORT).show();
-                        }
+                        //if(e.getMessage().contains("timeout")) {
+                            //Toast.makeText(VPlanFragment.this.getContext(), "Der Vertretungsplan konnte nicht neu geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
+                        //} else {
+
+                        //}
 
 
                         if (showDialog && VPlanFragment.this.progressDialog != null) {
@@ -296,7 +311,7 @@ public class VPlanFragment extends Fragment {
         Timber.d("Loading start after " + (System.currentTimeMillis() - appStart) + "ms");
         if (Util.hasInternet(getContext())) {
             //this.mCardView.clearCards();
-            Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "");
+            ///Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "");
             //if (PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("loadAsync", false)) {
                 if (!isRefresh) {
                     boolean cacheState = loadFromHtmlCache();
@@ -364,7 +379,8 @@ public class VPlanFragment extends Fragment {
     }
 
     public void parseResponse(String result) throws ArrayIndexOutOfBoundsException {
-        this.isFiltered = !this.Filter.isEmpty();
+        //this.isFiltered = !this.Filter.isEmpty();
+        this.isFiltered = Util.isFiltered(getContext());
         if(this.showingAll)
             this.isFiltered = false;
         this.htmlSource = result;
@@ -419,6 +435,7 @@ public class VPlanFragment extends Fragment {
         int dID;
         Iterator it2;
         if (this.isFiltered) {
+            Log.d("VPL", "isFiltered!");
             it = vpEnts.iterator();
             while (it.hasNext()) {
                 d = ((Element) it.next()).children();
@@ -438,6 +455,7 @@ public class VPlanFragment extends Fragment {
                 }
             }
         } else {
+            Log.d("VPL", "no filter!");
             it = vpEnts.iterator();
             while (it.hasNext()) {
                 d = ((Element) it.next()).children();
@@ -455,7 +473,10 @@ public class VPlanFragment extends Fragment {
                 this.vplane.add(new Eintrag(data[0], data[1], data[2], data[3], data[4], data[5], data[6], isNew));
             }
         }
-        displayAll();
+        if (this.isFiltered && Util.isLehrerModus(getContext()))
+            displayAllTeacher();
+        else
+            displayAll();
     }
 
     private void fallbackLoad(String result) {
@@ -569,6 +590,8 @@ public class VPlanFragment extends Fragment {
         return URL;
     }
 
+
+
     private void displayAll() {
         mCardView.clearCards();
         CardStack dateHead = new CardStack(istDunkel);
@@ -603,20 +626,20 @@ public class VPlanFragment extends Fragment {
         }
 
         try {
-            if(isFiltered) {
+            if(this.isFiltered) {
                 CardStack stacky = new CardStack(istDunkel);
                 stacky.setTypeface(Util.getTKFont(this.getContext(), false));
-                stacky.setTitle("Vertretungen für Klasse " + Filter);
+                stacky.setTitle("Vertretungen für Klasse " + Util.getKlasse(getContext()) );
                 mCardView.addStack(stacky);
             }
             for(String klassee : vplane.getKlassen()) {
-                if(!isFiltered) {
+                if(!this.isFiltered) {
                     CardStack stacky = new CardStack(istDunkel);
                     stacky.setTypeface(Util.getTKFont(this.getContext(), false));
                     stacky.setTitle("Klasse " + klassee);
                     mCardView.addStack(stacky);
                 }
-                final ArrayList<Eintrag> tc = vplane.getKlasseGruppe(klassee, !isFiltered);
+                final ArrayList<Eintrag> tc = vplane.getKlasseGruppe(klassee, !this.isFiltered);
                 for(final Eintrag single : tc) {
                     MyPlayCard card;
                     String note = "";
@@ -640,11 +663,11 @@ public class VPlanFragment extends Fragment {
                     } else if(single.getBemerkung().equals("AA") || single.getBemerkung().equals("Arbeitsauftrag")) {
                         card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Arbeitsauftrag im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
                     } else if(single.getFachNormal().equals(single.getFachVertretung())) {
-                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Du hast " + LongName(single.getFachNormal()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Du hast " + LongName(single.getFachNormal()) + " bei " + Util.getTeacherName(single.getVertretung(), true) + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
                     } else {
-                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + Util.getTeacherName(single.getVertretung(), true) + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
                     }
-                    if(isFiltered) {
+                    if(this.isFiltered) {
                         card.setOnClickListener(new OnClickListener() {
 
                             @Override
@@ -680,11 +703,11 @@ public class VPlanFragment extends Fragment {
             e.printStackTrace();
         }
 
-        CardStack adStack = new CardStack(istDunkel);
-        adStack.setTypeface(Util.getTKFont(this.getContext(), false));
-        adStack.setTitle("Werbung zur Serverfinanzierung");
-        mCardView.addStack(adStack);
-        mCardView.addCardToLastStack(new AdCard(this.getContext(), false, false));
+        //CardStack adStack = new CardStack(istDunkel);
+        //adStack.setTypeface(Util.getTKFont(this.getContext(), false));
+        //adStack.setTitle("Werbung zur Serverfinanzierung");
+        //mCardView.addStack(adStack);
+        //mCardView.addCardToLastStack(new AdCard(this.getContext(), false, false));
         mCardView.refresh();
         mCardView.getScrollView().computeScrollY();
 
@@ -699,14 +722,121 @@ public class VPlanFragment extends Fragment {
         Timber.d("Displayed after " + (System.currentTimeMillis() - appStart) + "ms");
     }
 
+    private void displayAllTeacher() {
+        mCardView.clearCards();
+        CardStack dateHead = new CardStack(istDunkel);
+        dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
+        dateHead.setTitle("Für " + dateD);
+        mCardView.addStack(dateHead);
+
+        //if(!hinweisD.equals("Hinweis:")) {
+        Timber.d("Hinweis= +" + hinweisD + "+");
+        if(!hinweisD.isEmpty()) {
+            MyPlayCard card = new MyPlayCard(istDunkel,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\\\r\\\n]+","").trim(), "#00FF00", "#00FF00", true, false, false, cardMarquee);
+            card.setOnClickListener(new OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    AlertDialog ad = new AlertDialog.Builder(VPlanFragment.this.getContext()).create();
+                    ad.setCancelable(true);
+                    ad.setTitle("Hinweis");
+                    ad.setMessage(hinweisD);
+
+                    ad.setButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    ad.show();
+                }
+
+            });
+            mCardView.addCard(card);
+        }
+
+        try {
+            if(this.isFiltered) {
+                CardStack stacky = new CardStack(istDunkel);
+                stacky.setTypeface(Util.getTKFont(this.getContext(), false));
+                stacky.setTitle("Vertretungen für " + Util.getTeacherName(Util.getLehrer(getContext()) ,true));
+                mCardView.addStack(stacky);
+            }
+
+            for(String stundee : vplane.getStunden()) {
+                //CardStack stacky = new CardStack(istDunkel);
+                //stacky.setTypeface(Util.getTKFont(this.getContext(), false));
+                //stacky.setTitle("Klasse " + klassee);
+                //mCardView.addStack(stacky);
+                //final ArrayList<Eintrag> tc = vplane.getKlasseGruppe(klassee, !isFiltered);
+                String prevStd = "";
+                final ArrayList<Eintrag> tc = vplane.getStundeGruppe(stundee, !this.isFiltered);
+                for(final Eintrag single : tc) {
+                    MyPlayCard card;
+                    String note = "";
+
+                    if(single.getKlasse().matches("([0-9]{2}[A-Z]+[0-9]{1})+")) {
+                        note = " (" + single.getKlasse().replaceAll("([0-9]{2})+", "") + ")";
+                    }
+
+                    if(single.getBemerkung().equals("Ausfall")) {
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Std. - Kl. " + single.getKlasse() + " - Ausfall!" + note, LongName(single.getFachNormal()) + " fällt aus (Raum " + single.getRaum() + ")" + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
+                    } else if(single.getBemerkung().equals("Stillbesch.") || single.getBemerkung().equals("Stillbeschäftigung")) {
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Std. - Kl. " + single.getKlasse() + " - Stillb.!" + note, "Sie sind zuständig für Stillbeschäftigung in Raum " + single.getRaum() + " (statt " + LongName(single.getFachNormal()) + ")" + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
+                    } else if(single.getBemerkung().equals("AA") || single.getBemerkung().equals("Arbeitsauftrag")) {
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Std. - Kl. " + single.getKlasse() + note, "Sie erteilen einen Arbeitsauftrag in Raum " + single.getRaum() + " (statt " + LongName(single.getFachNormal()) + ")" + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
+                    } else if(single.getFachNormal().equals(single.getFachVertretung())) {
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Std. - Kl. " + single.getKlasse() + note, "Sie vertreten " + LongName(single.getFachVertretung()) + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
+                    } else {
+                        card = new MyPlayCard(istDunkel,single.getStunde() + ". Std. - Kl. " + single.getKlasse() + note, "Sie vertreten " + LongName(single.getFachVertretung()) + " für " + LongName(single.getFachNormal()) + " in Raum " + single.getRaum() + "." + single.getBemerkungForCard(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
+                    }
+                    card.setOnClickListener(new OnClickListener() {
+
+                        @Override
+                        public void onClick(View arg0) {
+                            if(tc.size() > 1) {
+                                displaySingleClass(single.getKlasse());
+                            } else {
+                                displayMoreInformation(single);
+                            }
+
+                        }
+
+                    });
+                    if(!prevStd.equals(single.getStunde())) {
+                        prevStd = single.getStunde();
+                        mCardView.addCard(card);
+                    } else {
+                        mCardView.addCardToLastStack(card);
+                    }
+                }
+            }
+        } catch (KeineKlassenException e) {
+            mCardView.addCard(new MyPlayCard(istDunkel,"Keine Vertretungen", "", cMNT, cMNT, false, false, false, cardMarquee));
+            e.printStackTrace();
+        } catch (KeineEintrageException e) {
+            mCardView.addCard(new MyPlayCard(istDunkel,"ERROR", "KeineEinträgeException", "#FF0000", "#FF0000", false, false, false, cardMarquee));
+            e.printStackTrace();
+        }
+
+        //CardStack adStack = new CardStack(istDunkel);
+        //adStack.setTypeface(Util.getTKFont(this.getContext(), false));
+        //adStack.setTitle("Werbung zur Serverfinanzierung");
+        //mCardView.addStack(adStack);
+        //mCardView.addCardToLastStack(new AdCard(this.getContext(), false, false));
+        mCardView.refresh();
+        mCardView.getScrollView().computeScrollY();
+
+        if (swipeContainer != null && swipeContainer.isRefreshing()) {
+            swipeContainer.setRefreshing(false);
+        }
+
+        saveToCache();
+
+        Timber.d("Displayed after " + (System.currentTimeMillis() - appStart) + "ms");
+    }
+
     private void displaySingleClass(String klasse) {
-        //final Dialog scv = new Dialog(getContext(), R.style.FragDialog);
-        //scv.setContentView(R.layout.cards_dialog);
-        //CardUI dcv = (CardUI) scv.findViewById(R.id.cv_dialog);
-        //LayoutParams lp = new LayoutParams();
-        //lp.copyFrom(scv.getWindow().getAttributes());
-        //lp.width = -1;
-        //lp.height = -1;
         VPDetailSheet vds = new VPDetailSheet();
         ArrayList<Eintrag> inp = null;
         try {

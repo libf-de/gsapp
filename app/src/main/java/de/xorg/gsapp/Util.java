@@ -56,6 +56,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -94,6 +95,7 @@ public class Util {
     public static String cWirtschaftRecht = "#ff5722";
     public static String cGeschichte = "#9c27b0";
     public static String cFRL = "#558b2f";
+
 
 
     /*public static String getLastDate(Context c) {
@@ -136,30 +138,46 @@ public class Util {
         return obj == null;
     }
 
-    public static String getTeacherName(String sht) {
-        final String HR = "Herrn ";
+    public static String getTeacherName(String sht, boolean appendN) {
+        final String HR = appendN ? "Herrn " : "Herr ";
         final String FR = "Frau ";
-        switch(sht) {
+        switch(sht.toUpperCase()) {
             case "BÖA":
                 return FR + "Böhlein";
             case "AMB":
                 return HR + "Amberg";
-            case "JAA":
+            /*case "JAA":
                 return "???JAA???";
             case "GLÄ":
                 return "???GLÄ???";
             case "BAR":
                 return "???BAR???";
             case "LUT":
-                return "???LUT???";
+                return "???LUT???";*/
             case "RUS":
                 return FR + "Rust";
-            case "WAL":
-                return "???WAL???";
+            /*case "WAL":
+                return "???WAL???";*/
             case "ZETC":
                 return FR + "Zettler";
             case "ROß":
+                Timber.d("Java nimmt Roß mit ß");
                 return FR + "Roß";
+            case "ROẞ":
+                Timber.d("Java nimmt Roß mit großem ẞ");
+                return FR + "Roß";
+            case "GIE":
+                return FR + "Giernoth";
+            case "WEL":
+                return HR + "Welsch";
+            case "OBE":
+                return HR + "Oberender";
+            case "SCB":
+                return FR + "Schott";
+            case "SCG":
+                return HR + "Schott";
+            case "KEI":
+                return FR + "Keiderling";
             default:
                 return sht;
         }
@@ -208,6 +226,8 @@ public class Util {
         public static final String THEME = "pref_theme";
         public static final String FERIEN_FETCHED = "ferien_fetched";
         public static final String MARQUEE = "pref_marquee";
+        public static final String LEHRER = "pref_teacher";
+        public static final String IS_LEHRER = "pref_teacher_mode";
     }
 
     public static interface PushMode {
@@ -527,6 +547,22 @@ public class Util {
         }
     }
 
+    public static boolean isFiltered(Context c) {
+        return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(Preferences.IS_LEHRER, false) ? PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "").length() > 2 : PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.KLASSE, "").length() > 2;
+    }
+
+    public static boolean isLehrerModus(Context c) { //Wahr, wenn Lehrermodus aktiviert ist und eingegebener Lehrer mehr als 2 Zeichen enthält, sonst falsch
+        return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(Preferences.IS_LEHRER, false) ? PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "").length() > 2 : false;
+    }
+
+    public static String getLehrer(Context c) {
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "");
+    }
+
+    public static String getKlasse(Context c) {
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "");
+    }
+
     public static boolean isNumeric(String str)
     {
         return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
@@ -652,7 +688,14 @@ public class Util {
     }
 
     public static boolean applyFilter(Context c, String[] dataSet) {
-        String Filter = PreferenceManager.getDefaultSharedPreferences(c).getString("klasse", "");
+        Log.d("FILTER", "applyFilter start");
+        if(isLehrerModus(c))
+            return dataSet[3].toLowerCase().contains(PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "").toLowerCase());
+
+        Log.d("FILTER", "applyFilter continue");
+
+        String Filter = PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.KLASSE, "");
+
         Matcher matcher = Pattern.compile("\\d+").matcher(dataSet[0]);
         matcher.find();
         String skl = Integer.valueOf(matcher.group()).toString();
@@ -696,6 +739,8 @@ public class Util {
                     return true;
                 }
             }
+        } else {
+            Log.d("VPL", "Komischer filter *" + Filter + "*");
         }
 
 
@@ -1280,7 +1325,7 @@ class Eintrag implements Serializable  {
     }
 
     public Boolean isKlasse(String input) {
-        return Klasse == input;
+        return Klasse.equals(input);
     }
 
     public String[] toSaveString() {
@@ -1319,6 +1364,25 @@ class Eintrage extends ArrayList<Eintrag> {
         }
     }
 
+    public ArrayList<Eintrag> getStundeGruppe(String stunde, Boolean reverse) throws KeineEintrageException {
+        ArrayList<Eintrag> outp = new ArrayList<Eintrag>();
+        for (Eintrag single : this) {
+            //Log.d("GSApp", "ET: " + single.getKlasse() + " vs SUCH: " + klasse);
+            if (single.getStunde().equals(stunde)) {
+                outp.add(single);
+            }
+        }
+
+        if (outp.size() < 1) {
+            throw new KeineEintrageException();
+        } else {
+            if (reverse) {
+                Collections.reverse(outp);
+            }
+            return outp;
+        }
+    }
+
     public ArrayList<Eintrag> getKlasseGruppeS(String klasse) throws KeineEintrageException {
         ArrayList<Eintrag> outp = new ArrayList<Eintrag>();
         for (Eintrag single : this) {
@@ -1336,6 +1400,19 @@ class Eintrage extends ArrayList<Eintrag> {
     }
 
     public ArrayList<String> getKlassen() throws KeineKlassenException {
+        ArrayList<String> outp = new ArrayList<String>();
+        for (Eintrag single : this) {
+            if (!outp.contains(single.getKlasse()))
+                outp.add(single.getKlasse());
+        }
+
+        if (outp.isEmpty())
+            throw new KeineKlassenException();
+
+        return outp;
+    }
+
+    public ArrayList<String> getKlassenLegacy() throws KeineKlassenException {
         String liste = "";
         for (Eintrag single : this) {
             if (!liste.contains(single.getKlasse())) {
@@ -1351,6 +1428,21 @@ class Eintrage extends ArrayList<Eintrag> {
             Collections.addAll(outp, liste.split(","));
             return outp;
         }
+    }
+
+    public ArrayList<String> getStunden() throws KeineKlassenException { //TODO: Neu schreiben mit weniger sinnlosen Zählschleifen
+        ArrayList<String> outp = new ArrayList<String>();
+        for (Eintrag single : this) {
+            if (!outp.contains(single.getStunde()))
+                outp.add(single.getStunde());
+        }
+
+        if (outp.isEmpty())
+            throw new KeineKlassenException();
+
+        Collections.sort(outp, (s1, s2) -> s1.compareToIgnoreCase(s2));
+
+        return outp;
     }
 
     public String method(String str) {

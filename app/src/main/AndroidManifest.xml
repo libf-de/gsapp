@@ -80,7 +80,7 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".WebViewActivity"></activity>
+        <activity android:name=".WebViewActivity" android:theme="@style/WebViewTheme"></activity>
     </application>
 
 </manifest>

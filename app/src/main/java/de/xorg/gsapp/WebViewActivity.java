@@ -2,8 +2,13 @@ package de.xorg.gsapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -28,7 +33,6 @@ public class WebViewActivity extends AppCompatActivity {
         String title = intent.getStringExtra(Util.EXTRA_NAME);
         String url = intent.getStringExtra(Util.EXTRA_URL);
 
-        setTitle(title);
         wv.loadUrl(url);
     }
 
@@ -49,8 +53,25 @@ public class WebViewActivity extends AppCompatActivity {
         }
 
         @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            findViewById(R.id.WebView_Root).setBackgroundColor(Color.WHITE);
+            findViewById(R.id.WebView_Loader).setVisibility(View.VISIBLE);
+            findViewById(R.id.WebView).setVisibility(View.INVISIBLE);
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            findViewById(R.id.WebView_Root).setBackgroundResource(R.drawable.background_splash);
+            findViewById(R.id.WebView_Loader).setVisibility(View.GONE);
+            findViewById(R.id.WebView).setVisibility(View.VISIBLE);
+        }
+
+        @Override
         public void onReceivedError (WebView view, int errorCode,
                                      String description, String failingUrl) {
+            findViewById(R.id.WebView_Root).setBackgroundColor(Color.WHITE);
+            findViewById(R.id.WebView_Loader).setVisibility(View.GONE);
+            findViewById(R.id.WebView).setVisibility(View.VISIBLE);
             if (errorCode == ERROR_TIMEOUT) {
                 view.stopLoading();
                 view.loadData(TIMEOUT.replace("$URL", failingUrl), "text/html", "utf-8");

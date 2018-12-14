@@ -27,9 +27,10 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignRight="@+id/timespan"
             android:layout_centerVertical="true"
             android:layout_marginLeft="16dp"
-            android:layout_toEndOf="@+id/iconView"
+            android:layout_marginRight="200dp"
             android:layout_toRightOf="@+id/iconView"
             android:text="Kurs"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />

@@ -35,6 +35,7 @@
     <style name="AppThemeLight" parent="AppTheme">
         <item name="android:windowBackground">@color/background_white</item>
         <item name="bottomSheetDialogTheme">@style/SheetThemeLight</item>
+        <item name="colorAccent">@color/accent_light</item>
     </style>
 
     <style name="AppThemeDark" parent="MaterialDrawerTheme"> <!-- Theme.MaterialComponents.NoActionBar -->
@@ -54,6 +55,7 @@
         <item name="material_drawer_selected">@color/md_selected</item>
         <item name="material_drawer_selected_text">@color/md_selected_text</item>
         <item name="android:fontFamily">@font/google_sans</item>
+        <item name="colorAccent">@color/accent_dark</item>
     </style>
 
     <style name="ActionBarDark" parent="Base.Widget.AppCompat.ActionBar">
@@ -67,6 +69,7 @@
     <style name="AppThemeYellow" parent="AppTheme">
         <item name="android:windowBackground">@color/background_yellow</item>
         <item name="bottomSheetDialogTheme">@style/SheetThemeYellow</item>
+        <item name="colorAccent">@color/accent_yellow</item>
     </style>
 
     <style name="CardTitle">

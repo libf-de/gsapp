@@ -393,8 +393,6 @@ public class SettingsFragment extends Fragment {
                 }
             }
         });
-
-        getActivity().setTitle("GSApp - Einstellungen");
     }
 
     @Override

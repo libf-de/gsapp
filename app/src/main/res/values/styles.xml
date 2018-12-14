@@ -9,6 +9,11 @@
         <item name="pageMarginBottom">0dp</item>
     </style> -->
 
+    <style name="WebViewTheme" parent="Theme.MaterialComponents.Light">
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="colorPrimaryDark">@color/gsgelbdark</item>
+    </style>
+
     <style name="TkToolbar" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
 
     </style>
@@ -60,6 +65,7 @@
     <style name="AppThemeLight" parent="AppTheme">
         <item name="android:windowBackground">@color/background_white</item>
         <item name="bottomSheetDialogTheme">@style/SheetThemeLight</item>
+        <item name="colorAccent">@color/accent_light</item>
     </style>
 
     <style name="AppThemeDark" parent="MaterialDrawerTheme"> <!-- Theme.MaterialComponents.NoActionBar -->
@@ -73,7 +79,7 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:actionBarStyle">@style/ActionBarDark</item>
-
+        <item name="colorAccent">@color/accent_dark</item>
         <item name="material_drawer_selected">@color/md_selected</item>
         <item name="material_drawer_selected_text">@color/md_selected_text</item>
     </style>
@@ -89,6 +95,7 @@
     <style name="AppThemeYellow" parent="AppTheme">
         <item name="android:windowBackground">@color/background_yellow</item>
         <item name="bottomSheetDialogTheme">@style/SheetThemeYellow</item>
+        <item name="colorAccent">@color/accent_yellow</item>
     </style>
 
     <!-- Application theme. -->
