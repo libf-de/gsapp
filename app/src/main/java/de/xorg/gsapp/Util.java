@@ -7,7 +7,6 @@ import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -22,7 +21,6 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
@@ -34,75 +32,63 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import androidx.core.content.res.ResourcesCompat;
+import androidx.fragment.app.Fragment;
 import timber.log.Timber;
 
 public class Util {
 
-    public static final int PERMISSION_DEBUG = 2226;
-    public static final int PERMISSION_CALL = 2202;
+    static final int PERMISSION_DEBUG = 2226;
+    static final int PERMISSION_CALL = 2202;
+    static final int FIRSTRUN_ACTIVITY = 392;
 
-    public static final int FIRSTRUN_ACTIVITY = 392;
+    static final String NTF_CHANNEL_ID = "gsapp_notifications";
 
-    public static final String NTF_CHANNEL_ID = "gsapp_notifications";
+    final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
+    final static String EXTRA_NAME = "de.xorg.gsapp.MESSAGENAME";
 
-    public final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
-    public final static String EXTRA_NAME = "de.xorg.gsapp.MESSAGENAME";
+    private static String cDeutsch = "#2196F3";
+    private static String cMathe = "#f44336";
+    private static String cMusik = "#9e9e9e";
+    private static String cKunst = "#673ab7";
+    private static String cGeografie = "#9e9d24";
+    private static String cReligion = "#ff8f00";
+    private static String cEthik = "#ff8f00";
+    private static String cMNT = "#4caf50";
+    private static String cEnglisch = "#ff9800";
+    private static String cSport = "#607d8b";
+    private static String cBiologie = "#4caf50";
+    private static String cChemie = "#e91e63";
+    private static String cPhysik = "#009688";
+    private static String cSozialkunde = "#795548";
+    private static String cInformatik = "#03a9f4";
+    private static String cWirtschaftRecht = "#ff5722";
+    private static String cGeschichte = "#9c27b0";
+    private static String cFRL = "#558b2f";
 
-    public static String cDeutsch = "#2196F3";
-    public static String cMathe = "#f44336";
-    public static String cMusik = "#9e9e9e";
-    public static String cKunst = "#673ab7";
-    public static String cGeografie = "#9e9d24";
-    public static String cReligion = "#ff8f00";
-    public static String cEthik = "#ff8f00";
-    public static String cMNT = "#4caf50";
-    public static String cEnglisch = "#ff9800";
-    public static String cSport = "#607d8b";
-    public static String cBiologie = "#4caf50";
-    public static String cChemie = "#e91e63";
-    public static String cPhysik = "#009688";
-    public static String cSozialkunde = "#795548";
-    public static String cInformatik = "#03a9f4";
-    public static String cWirtschaftRecht = "#ff5722";
-    public static String cGeschichte = "#9c27b0";
-    public static String cFRL = "#558b2f";
-
-
-
-    /*public static String getLastDate(Context c) {
-        return PreferenceManager.getDefaultSharedPreferences(c).getString("readDate", "ERR");
-    }*/
-
-    public static int convertToPixels(Context context, int nDP)
+    static int convertToPixels(Context context, int nDP)
     {
         final float conversionScale = context.getResources().getDisplayMetrics().density;
 
@@ -121,7 +107,7 @@ public class Util {
      * @return true if cal1 date is before cal2 date ignoring time.
      * @throws IllegalArgumentException if either of the calendars are <code>null</code>
      */
-    public static boolean isBeforeDay(Calendar cal1, Calendar cal2) {
+    static boolean isBeforeDay(Calendar cal1, Calendar cal2) {
         if (cal1 == null || cal2 == null) {
             throw new IllegalArgumentException("The dates must not be null");
         }
@@ -132,13 +118,7 @@ public class Util {
         return cal1.get(Calendar.DAY_OF_YEAR) < cal2.get(Calendar.DAY_OF_YEAR);
     }
 
-    /* Returns true if the provided reference is null otherwise returns false.*/
-
-    public static boolean isNull(Object obj) {
-        return obj == null;
-    }
-
-    public static String getTeacherName(String sht, boolean appendN) {
+    static String getTeacherName(String sht, boolean appendN) {
         final String HR = appendN ? "Herrn " : "Herr ";
         final String FR = "Frau ";
         switch(sht.toUpperCase()) {
@@ -183,12 +163,12 @@ public class Util {
         }
     }
 
-    public static interface AppTheme {
-        public static final String AUTO = "AUTO";
-        public static final String LIGHT = "LIGHT";
-        public static final String DARK = "DARK";
-        public static final String YELLOW = "YELLOW";
-        public static String getAutoTheme() {
+    public interface AppTheme {
+        String AUTO = "AUTO";
+        String LIGHT = "LIGHT";
+        String DARK = "DARK";
+        String YELLOW = "YELLOW";
+        static String getAutoTheme() {
             int hr = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
             if (hr > 17 || hr < 7)
                 return AppTheme.DARK;
@@ -197,43 +177,65 @@ public class Util {
         }
     }
 
-    public static interface AppThemeRes {
-        public static final int LIGHT = R.style.AppThemeLight;
-        public static final int DARK = R.style.AppThemeDark;
-        public static final int YELLOW = R.style.AppThemeYellow;
+    public interface AppThemeRes {
+        int LIGHT = R.style.AppThemeLight;
+        int DARK = R.style.AppThemeDark;
+        int YELLOW = R.style.AppThemeYellow;
     }
 
 
 
-    public static interface NavFragments {
-        public static final int VERTRETUNGSPLAN = 1;
-        public static final int SPEISEPLAN = 2;
-        public static final int BESTELLUNG = 3;
-        public static final int AKTUELLES = 4;
-        public static final int TERMINE = 5;
-        public static final int KONTAKT = 6;
-        public static final int SETTINGS = 7;
-        public static final int ABOUT = 8;
-        public static final int KLAUSUREN = 9;
+    public interface NavFragments {
+        int VERTRETUNGSPLAN = 1;
+        int SPEISEPLAN = 2;
+        int BESTELLUNG = 3;
+        int AKTUELLES = 4;
+        int TERMINE = 5;
+        int KONTAKT = 6;
+        int SETTINGS = 7;
+        int ABOUT = 8;
+        int KLAUSUREN = 9;
+        static int getIdentifier(Fragment f) {
+            if(f instanceof VPlanFragment)
+                return VERTRETUNGSPLAN;
+            else if(f instanceof SpeiseplanFragment)
+                return SPEISEPLAN;
+            else if(f instanceof EssenbestellungFragment)
+                return BESTELLUNG;
+            else if(f instanceof AktuellesFragment)
+                return AKTUELLES;
+            else if(f instanceof TermineFragment)
+                return TERMINE;
+            else if(f instanceof Settings2Fragment)
+                return SETTINGS;
+            else if(f instanceof AboutFragment)
+                return ABOUT;
+            else if(f instanceof KlausurenFragment)
+                return KLAUSUREN;
+            else if(f == null)
+                return 0;
+            else
+                return VERTRETUNGSPLAN;
+        }
     }
 
-    public static interface Preferences {
-        public static final String DEVICE_ID = "device-id";
-        public static final String HAS_REGISTERED = "fcm-has-registered";
-        public static final String PUSH_MODE = "pref_push";
-        public static final String FIRST_RUN2 = "first-run-v2";
-        public static final String KLASSE = "pref_klasse";
-        public static final String THEME = "pref_theme";
-        public static final String FERIEN_FETCHED = "ferien_fetched";
-        public static final String MARQUEE = "pref_marquee";
-        public static final String LEHRER = "pref_teacher";
-        public static final String IS_LEHRER = "pref_teacher_mode";
+    public interface Preferences {
+        String DEVICE_ID = "device-id";
+        String HAS_REGISTERED = "fcm-has-registered";
+        String PUSH_MODE = "pref_push";
+        String FIRST_RUN2 = "first-run-v2";
+        String KLASSE = "pref_klasse";
+        String THEME = "pref_theme";
+        String FERIEN_FETCHED = "ferien_fetched";
+        String MARQUEE = "pref_marquee";
+        String LEHRER = "pref_teacher";
+        String IS_LEHRER = "pref_teacher_mode";
     }
 
-    public static interface PushMode {
-        public static final String DISABLED = "DISABLED";
-        public static final String PRIVATE = "PRIVATE";
-        public static final String PUBLIC = "PUBLIC";
+    public interface PushMode {
+        String DISABLED = "DISABLED";
+        String PRIVATE = "PRIVATE";
+        String PUBLIC = "PUBLIC";
     }
 
     public static Typeface getTKFont(Context c) {
@@ -540,11 +542,7 @@ public class Util {
     }
 
     public static boolean StrToBol(String value) {
-        if(value.toLowerCase().equals("true")) {
-            return true;
-        } else {
-            return false;
-        }
+        return value.toLowerCase().equals("true");
     }
 
     public static boolean isFiltered(Context c) {
@@ -552,7 +550,7 @@ public class Util {
     }
 
     public static boolean isLehrerModus(Context c) { //Wahr, wenn Lehrermodus aktiviert ist und eingegebener Lehrer mehr als 2 Zeichen enthält, sonst falsch
-        return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(Preferences.IS_LEHRER, false) ? PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "").length() > 2 : false;
+        return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(Preferences.IS_LEHRER, false) && PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "").length() > 2;
     }
 
     public static String getLehrer(Context c) {
@@ -579,7 +577,7 @@ public class Util {
         } else {
             MORE = "asyncLoad";
         }
-        return "GSApp " + getVersion(c) + " on " + getDeviceName() + " (Android " + Build.VERSION.RELEASE.toString() + ") " + MORE;
+        return "GSApp " + getVersion(c) + " on " + getDeviceName() + " (Android " + Build.VERSION.RELEASE + ") " + MORE;
     }
 
     public static boolean hasInternet(Context _context){
@@ -709,35 +707,23 @@ public class Util {
         if(Filter.matches("(^[0-9]{1}\\.[0-9])+")) {
             //9.2, 8.1 etc
             if (SUCL.length() == 1) {
-                if (Filter.startsWith(SUCL)) {
-                    return true;
-                }
+                return Filter.startsWith(SUCL);
             } else {
-                if (SUCL.contains(Filter)) {
-                    return true;
-                }
+                return SUCL.contains(Filter);
             }
         } else if(Filter.matches("([0-9]{2}\\.[0-9])+")) {
             if (SUCL.length() == 2) {
-                if (Filter.startsWith(SUCL)) {
-                    return true;
-                }
+                return Filter.startsWith(SUCL);
             } else {
-                if (SUCL.contains(Filter)) {
-                    return true;
-                }
+                return SUCL.contains(Filter);
             }
             //10.2 10.3 etc
         } else if(Filter.matches("([A-Z][0-9]{2})+")) {
             //A18, A19 etc
             if(dataSet[0].matches("([A-Z][0-9]{2})+")) {
-                if(dataSet[0].endsWith(Filter.replaceAll("[^\\d.]", ""))) {
-                    return true;
-                }
+                return dataSet[0].endsWith(Filter.replaceAll("[^\\d.]", ""));
             } else {
-                if(dataSet[0].startsWith(Filter.replaceAll("[^\\d.]", ""))) {
-                    return true;
-                }
+                return dataSet[0].startsWith(Filter.replaceAll("[^\\d.]", ""));
             }
         } else {
             Log.d("VPL", "Komischer filter *" + Filter + "*");

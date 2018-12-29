@@ -1,39 +1,22 @@
 package de.xorg.gsapp;
 
 import android.app.ProgressDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.InsetDrawable;
-import android.graphics.drawable.LayerDrawable;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.common.base.Charsets;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import org.json.JSONArray;
@@ -60,10 +43,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -216,14 +197,12 @@ public class KlausurenFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        //you can set the title for your toolbar here for different fragments different titles
+        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Klausurenplan");
 
         RecyclerView recyclerView = getView().findViewById(R.id.rv);
         swipeContainer = getView().findViewById(R.id.swipeContainer);
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            public void onRefresh() {
-                fetch(null, 0, true, null); //Erzwingt Aktualisierung
-            }
+        swipeContainer.setOnRefreshListener(() -> {
+            fetch(null, 0, true, null); //Erzwingt Aktualisierung
         });
         swipeContainer.setColorSchemeResources(R.color.md_cyan_A200, R.color.md_light_green_A400, R.color.md_amber_300, R.color.md_red_A400); //Setzt Farben für Ladekreis
 
@@ -231,18 +210,15 @@ public class KlausurenFragment extends Fragment {
         //TODO: Mit in den Einstellungen gewählter Klasse starten
         FloatingActionButton fab = getView().findViewById(R.id.fab_class);
         fab.setImageBitmap(textIconic(getContext(),"11", 120, false)); //Icon setzen
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(shownPage == 0) {
-                    //shownPage = 1;
-                    showKlasse(1);
-                    fab.setImageBitmap(textIconic(getContext(),"12", 120, false));
-                } else {
-                    //shownPage = 0;
-                    showKlasse(0);
-                    fab.setImageBitmap(textIconic(getContext(),"11", 120, false));
-                }
+        fab.setOnClickListener(v -> {
+            if(shownPage == 0) {
+                //shownPage = 1;
+                showKlasse(1);
+                fab.setImageBitmap(textIconic(getContext(),"12", 120, false));
+            } else {
+                //shownPage = 0;
+                showKlasse(0);
+                fab.setImageBitmap(textIconic(getContext(),"11", 120, false));
             }
         });
 
@@ -271,7 +247,6 @@ public class KlausurenFragment extends Fragment {
             }
         });
         recyclerView.addItemDecoration(klausurenDecoration);
-        //recyclerView.addItemDecoration(new DividerItemDecoration(this.getContext(), DividerItemDecoration.HORIZONTAL));
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(mAdapter);
 

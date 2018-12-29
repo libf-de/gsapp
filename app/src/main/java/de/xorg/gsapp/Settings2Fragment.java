@@ -1,7 +1,6 @@
 package de.xorg.gsapp;
 
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -33,7 +32,6 @@ import androidx.preference.PreferenceManager;
 public class Settings2Fragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
     @Override
     public void onCreatePreferences(Bundle bundle, String s) {
-        // Load the Preferences from the XML file
         addPreferencesFromResource(R.xml.tk_prefs);
 
         if (getArguments() != null && getArguments().containsKey("theme") && (getArguments().getString("theme").equals(Util.AppTheme.DARK))) {
@@ -47,24 +45,19 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
 
             setListPreferenceData(listPreference);
 
-            listPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    setListPreferenceData(listPreference);
-                    return false;
-                }
+            listPreference.setOnPreferenceClickListener(preference -> {
+                setListPreferenceData(listPreference);
+                return false;
             });
 
         } else { getPreferenceScreen().removePreference(findPreference("sec_klasse")); findPreference(Util.Preferences.LEHRER).setSummary(Util.getTeacherName(getPreferenceManager().getSharedPreferences().getString(Util.Preferences.LEHRER, ""), false)); }
 
 
 
-        Preference myPref = (Preference) findPreference("pref_login");
-        myPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            public boolean onPreferenceClick(Preference preference) {
-                showEBLogin(); //TODO: Legacy-Mist!!
-                return true;
-            }
+        Preference myPref = findPreference("pref_login");
+        myPref.setOnPreferenceClickListener(preference -> {
+            showEBLogin(); //TODO: Legacy-Mist!!
+            return true;
         });
 
     }
@@ -84,21 +77,13 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
         super.onPause();
     }
 
-    /*@Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = super.onCreateView(inflater, container, savedInstanceState);
-        view.setBackgroundColor(Color.WHITE);
-
-        return view;
-    }*/
-
     /*
     https://stackoverflow.com/questions/6474707/how-to-fill-listpreference-dynamically-when-onpreferenceclick-is-triggered
      */
 
-    protected static void setListPreferenceData(ListPreference lp) {
-        CharSequence[] entries = { "keine", ":HAR","5.1", "5.2", "5.3", "5.4", "5.5", "6.1", "6.2", "6.3", "6.4", "6.5", "7.1", "7.2", "7.3", "7.4", "7.5", "8.1", "8.2", "8.3", "8.4", "8.5", "9.1", "9.2", "9.3", "9.4", "9.5", "10.1", "10.2", "10.3", "10.4", "10.5", "A" + (Calendar.getInstance().get(Calendar.YEAR) % 100), "A" + ((Calendar.getInstance().get(Calendar.YEAR) % 100) + 1), "A" + ((Calendar.getInstance().get(Calendar.YEAR) % 100) + 2) };
-        CharSequence[] entryValues = { "", ":HAR", "5.1", "5.2", "5.3", "5.4", "5.5", "6.1", "6.2", "6.3", "6.4", "6.5", "7.1", "7.2", "7.3", "7.4", "7.5", "8.1", "8.2", "8.3", "8.4", "8.5", "9.1", "9.2", "9.3", "9.4", "9.5", "10.1", "10.2", "10.3", "10.4", "10.5", "A" + (Calendar.getInstance().get(Calendar.YEAR) % 100), "A" + ((Calendar.getInstance().get(Calendar.YEAR) % 100) + 1), "A" + ((Calendar.getInstance().get(Calendar.YEAR) % 100) + 2) };
+    private static void setListPreferenceData(ListPreference lp) {
+        CharSequence[] entries = { "keine", "5.1", "5.2", "5.3", "5.4", "5.5", "6.1", "6.2", "6.3", "6.4", "6.5", "7.1", "7.2", "7.3", "7.4", "7.5", "8.1", "8.2", "8.3", "8.4", "8.5", "9.1", "9.2", "9.3", "9.4", "9.5", "10.1", "10.2", "10.3", "10.4", "10.5", "A" + (Calendar.getInstance().get(Calendar.YEAR) % 100), "A" + ((Calendar.getInstance().get(Calendar.YEAR) % 100) + 1), "A" + ((Calendar.getInstance().get(Calendar.YEAR) % 100) + 2) };
+        CharSequence[] entryValues = { "", "5.1", "5.2", "5.3", "5.4", "5.5", "6.1", "6.2", "6.3", "6.4", "6.5", "7.1", "7.2", "7.3", "7.4", "7.5", "8.1", "8.2", "8.3", "8.4", "8.5", "9.1", "9.2", "9.3", "9.4", "9.5", "10.1", "10.2", "10.3", "10.4", "10.5", "A" + (Calendar.getInstance().get(Calendar.YEAR) % 100), "A" + ((Calendar.getInstance().get(Calendar.YEAR) % 100) + 1), "A" + ((Calendar.getInstance().get(Calendar.YEAR) % 100) + 2) };
         lp.setEntries(entries);
         lp.setDefaultValue("");
         lp.setEntryValues(entryValues);
@@ -123,27 +108,36 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Einstellungen");
+
         setDivider(new ColorDrawable(Color.TRANSPARENT));
         setDividerHeight(0);
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(Util.Preferences.PUSH_MODE)) {
-            String val = sharedPreferences.getString(key, Util.PushMode.DISABLED);
-            FirebaseService.changePush(this.getContext(), (val.equals(Util.PushMode.PRIVATE) || val.equals(Util.PushMode.PUBLIC)));
-        } else if (key.equals(Util.Preferences.THEME)) {
-            ((MainActivity2) getActivity()).changeTheme();
-        } else if (key.equals(Util.Preferences.LEHRER)) {
-            String val = sharedPreferences.getString(key,"");
-            findPreference(key).setSummary(Util.getTeacherName(val, false));
-            if(val.length() < 3) {
-                Toast.makeText(getContext(), "Lehrerkürzel ungültig, da kürzer als 3 Zeichen! Filter deaktiviert!", Toast.LENGTH_SHORT).show();
+        switch (key) {
+            case Util.Preferences.PUSH_MODE: {
+                String val = sharedPreferences.getString(key, Util.PushMode.DISABLED);
+                FirebaseService.changePush(this.getContext(), (val.equals(Util.PushMode.PRIVATE) || val.equals(Util.PushMode.PUBLIC)));
+                break;
+            }
+            case Util.Preferences.THEME:
+                ((MainActivity2) getActivity()).changeTheme();
+                break;
+            case Util.Preferences.LEHRER: {
+                String val = sharedPreferences.getString(key, "");
+                findPreference(key).setSummary(Util.getTeacherName(val, false));
+                if (val.length() < 3) {
+                    Toast.makeText(getContext(), "Lehrerkürzel ungültig, da kürzer als 3 Zeichen! Filter deaktiviert!", Toast.LENGTH_SHORT).show();
+                }
+                break;
             }
         }
     }
 
-    public void toggleLehrer() {
+    void toggleLehrer() {
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean isEnabled = sp.getBoolean(Util.Preferences.IS_LEHRER, false);
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -162,7 +156,7 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
 
 
     //Legacy Stuff
-    public void convertPref(Preference somePreference) {
+    private void convertPref(Preference somePreference) {
         CustomTypefaceSpan customTypefaceSpan = new CustomTypefaceSpan("", Util.getTKFont(this.getContext(), false));
 
         SpannableStringBuilder ss;
@@ -183,7 +177,7 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
 
         private final Typeface newType;
 
-        public CustomTypefaceSpan(String family, Typeface type) {
+        CustomTypefaceSpan(String family, Typeface type) {
             super(family);
             newType = type;
         }
@@ -221,14 +215,13 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
     }
 
 
-    public void showEBLogin() {
+    private void showEBLogin() {
         final Dialog dialog = new Dialog(getContext());
         dialog.setContentView(R.layout.anmeldung);
         dialog.setTitle("Automatische Anmeldung");
 
-        // set the custom dialog components - text, image and button
-        final TextView User = (TextView) dialog.findViewById(R.id.username);
-        final CheckBox Use = (CheckBox) dialog.findViewById(R.id.autologinEnable);
+        final TextView User = dialog.findViewById(R.id.username);
+        final CheckBox Use = dialog.findViewById(R.id.autologinEnable);
         String Username = Datenspeicher.getUser(getContext());
         if (Username.equalsIgnoreCase("")) {
             Use.setChecked(false);
@@ -256,30 +249,22 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
             }
         }
 
-        Button saveButton = (Button) dialog.findViewById(R.id.serverSave);
-        Button cancelButton = (Button) dialog.findViewById(R.id.serverCancel);
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (Use.isChecked()) {
-                    Datenspeicher.saveUser(User.getText().toString(), getContext());
-                    if (!Datenspeicher.savePassword(((TextView) dialog.findViewById(R.id.password)).getText().toString(), getContext())) {
-                        Toast.makeText(getContext(), "Fehler beim Verschlüsseln des Passworts", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Datenspeicher.savePassword("", getContext());
-                    Datenspeicher.saveUser("", getContext());
+        Button saveButton = dialog.findViewById(R.id.serverSave);
+        Button cancelButton = dialog.findViewById(R.id.serverCancel);
+        saveButton.setOnClickListener(v -> {
+            if (Use.isChecked()) {
+                Datenspeicher.saveUser(User.getText().toString(), getContext());
+                if (!Datenspeicher.savePassword(((TextView) dialog.findViewById(R.id.password)).getText().toString(), getContext())) {
+                    Toast.makeText(getContext(), "Fehler beim Verschlüsseln des Passworts", Toast.LENGTH_SHORT).show();
                 }
-                dialog.dismiss();
+            } else {
+                Datenspeicher.savePassword("", getContext());
+                Datenspeicher.saveUser("", getContext());
             }
+            dialog.dismiss();
         });
 
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
 }

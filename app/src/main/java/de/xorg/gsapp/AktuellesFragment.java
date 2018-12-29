@@ -1,18 +1,7 @@
 package de.xorg.gsapp;
 
 import android.app.ProgressDialog;
-import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import timber.log.Timber;
-
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,25 +16,31 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import timber.log.Timber;
 
 public class AktuellesFragment extends Fragment {
 
     String URI;
     private boolean isConnected = true;
-    int lastID = 260;
-    int PostID = 260;
+    private int lastID = 260;
+    private int PostID = 260;
     private ProgressDialog progressDialog;
-    boolean isDark = false;
-    String themeId;
+    private boolean isDark = false;
+    private String themeId;
 
 
-    public AktuellesFragment() {
-        // Required empty public constructor
-    }
+    public AktuellesFragment() { }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,23 +50,25 @@ public class AktuellesFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_web, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Aktuelles");
+
         if (getArguments() != null && getArguments().containsKey("theme")) {
             themeId = getArguments().getString("theme");
             isDark = (themeId.equals(Util.AppTheme.DARK));
         }
 
         //Variablen
-        WebView Termine = (WebView) getView().findViewById(R.id.WebView);
-        RelativeLayout FragFrm = (RelativeLayout) getView().findViewById(R.id.withers);
+        WebView Termine = getView().findViewById(R.id.WebView);
+        RelativeLayout FragFrm = getView().findViewById(R.id.withers);
 
         switch(themeId) {
             case Util.AppTheme.DARK:
@@ -98,10 +95,10 @@ public class AktuellesFragment extends Fragment {
         if(isConnected)
             fetchLastPost();
 
-        Termine.loadUrl("http://www.gymnasium-sonneberg.de/Informationen/Term/ausgebenK.php5");
+        Termine.loadUrl("https://www.gymnasium-sonneberg.de/Informationen/Term/ausgebenK.php5");
     }
 
-    public void fetchLastPost() {
+    private void fetchLastPost() {
         OkHttpClient.Builder b = new OkHttpClient.Builder();
         b.readTimeout(20, TimeUnit.SECONDS);
         b.connectTimeout(20, TimeUnit.SECONDS);
@@ -110,19 +107,12 @@ public class AktuellesFragment extends Fragment {
         OkHttpClient client = b.build();
 
         System.setProperty("http.keepAlive", "false");
-        //Create a new progress dialog
         progressDialog = new ProgressDialog(AktuellesFragment.this.getContext());
-        //Set the progress dialog to display a horizontal progress bar
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        //Set the dialog title to 'Loading...'
         progressDialog.setTitle("GSApp");
-        //Set the dialog message to 'Loading application View, please wait...'
         progressDialog.setMessage("Lade Daten...");
-        //This dialog can't be canceled by pressing the back key
         progressDialog.setCancelable(false);
-        //This dialog isn't indeterminate
         progressDialog.setIndeterminate(true);
-        //Display the progress dialog
         progressDialog.show();
 
         Request request = new Request.Builder()
@@ -131,7 +121,7 @@ public class AktuellesFragment extends Fragment {
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Timber.e(e);
                 if(AktuellesFragment.this.getActivity() == null)
                     return;
@@ -154,7 +144,7 @@ public class AktuellesFragment extends Fragment {
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if(!response.isSuccessful()) {
                     Timber.e("onResponse FAILED (" + response.code() + ")");
                     Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
@@ -175,7 +165,7 @@ public class AktuellesFragment extends Fragment {
                             String ID = ifr.attr("src").split("id=")[1];
                             lastID = Integer.parseInt(ID);
                             PostID = Integer.parseInt(ID);
-                            openUrl("http://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + ID);
+                            openUrl("https://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + ID);
                         } catch(Exception e) { //TODO: Besseres Fehler-Catchen
                             Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen (JAVAEXC) - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
                         }
@@ -193,7 +183,7 @@ public class AktuellesFragment extends Fragment {
                     Toast.makeText(AktuellesFragment.this.getContext(), "Fehler: Dies ist der erste Post!", Toast.LENGTH_SHORT).show();
                 } else {
                     PostID = PostID - 1;
-                    openUrl("http://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + PostID);
+                    openUrl("https://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + PostID);
                 }
                 return true;
             case R.id.br_fwd:
@@ -201,7 +191,7 @@ public class AktuellesFragment extends Fragment {
                     Toast.makeText(AktuellesFragment.this.getContext(), "Fehler: Dies ist der letzte Post!", Toast.LENGTH_SHORT).show();
                 } else {
                     PostID = PostID + 1;
-                    openUrl("http://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + PostID);
+                    openUrl("https://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + PostID);
                 }
                 return true;
             default:
@@ -217,8 +207,8 @@ public class AktuellesFragment extends Fragment {
         super.onPrepareOptionsMenu(menu);
     }
 
-    public void openUrl(String url) {
-        WebView Speisen = (WebView) getView().findViewById(R.id.WebView);
+    private void openUrl(String url) {
+        WebView Speisen = getView().findViewById(R.id.WebView);
         Speisen.loadUrl(url);
     }
 

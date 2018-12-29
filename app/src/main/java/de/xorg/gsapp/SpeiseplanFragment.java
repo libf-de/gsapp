@@ -3,15 +3,9 @@ package de.xorg.gsapp;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.preference.PreferenceManager;
-import androidx.annotation.Nullable;
-//import android.support.v4.app.Fragment;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +15,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import de.xorg.cardsuilib.objects.CardStack;
-import de.xorg.cardsuilib.views.CardUI;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -32,19 +24,23 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import de.xorg.cardsuilib.objects.CardStack;
+import de.xorg.cardsuilib.views.CardUI;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import timber.log.Timber;
+
+//import android.support.v4.app.Fragment;
 
 public class SpeiseplanFragment extends Fragment {
 
@@ -63,10 +59,7 @@ public class SpeiseplanFragment extends Fragment {
     private ProgressDialog progressDialog;
     boolean istDark = false;
 
-    public SpeiseplanFragment() {
-        // Required empty public constructor
-
-    }
+    public SpeiseplanFragment() { }
 
     public void fetchSpeiseplan() {
         OkHttpClient.Builder b = new OkHttpClient.Builder();
@@ -141,13 +134,14 @@ public class SpeiseplanFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_speiseplan, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Speiseplan");
 
         if (getArguments() != null && getArguments().containsKey("theme")) {
             istDark = (getArguments().getString("theme").equals(Util.AppTheme.DARK));

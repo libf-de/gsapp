@@ -1,1 +1,1 @@
-include ':app', ':cardsuilib', ':materialdrawer'
+include ':app', ':cardsuilib', ':materialdrawer', ':wear'

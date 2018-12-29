@@ -7,8 +7,8 @@ android {
         applicationId "de.xorg.gsapp"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 5906
-        versionName '6.0 RC 1 »TeKoop«'
+        versionCode 5907
+        versionName '6.0 Beta 4 »Finn«'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }

@@ -53,7 +53,7 @@ public class Feriencounter {
         public void setName(String _name) { this.nameFerien = _name; }
 
         public void run() {
-            Log.d("Feriencounter", daysUntil + " Tage bis/noch " + nameFerien);
+            Timber.d(daysUntil + " Tage bis/noch " + nameFerien);
         }
     }
 
@@ -63,40 +63,38 @@ public class Feriencounter {
     }
 
 
-    public void requestFerien() {
+    void requestFerien() {
         Handler handler = new Handler();
 
-        final Runnable r = new Runnable() {
-            public void run() {
-                File ferien = new File(mActivity.getCacheDir(), "ferien.json");
-                long age = new Date().getTime() - PreferenceManager.getDefaultSharedPreferences(mActivity).getLong(Util.Preferences.FERIEN_FETCHED, 0);
+        final Runnable r = () -> {
+            File ferien = new File(mActivity.getCacheDir(), "ferien.json");
+            long age = new Date().getTime() - PreferenceManager.getDefaultSharedPreferences(mActivity).getLong(Util.Preferences.FERIEN_FETCHED, 0);
 
-                if(!ferien.exists() || TimeUnit.MILLISECONDS.toDays(age) > 14) {
-                    fetch();
-                } else {
-                    try {
-                        parseFerien(new String(Files.toByteArray(ferien), Charset.forName("UTF-8")));
-                    } catch(IOException e) {
-                        e.printStackTrace();
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+            if(!ferien.exists() || TimeUnit.MILLISECONDS.toDays(age) > 14) {
+                fetch();
+            } else {
+                try {
+                    parseFerien(new String(Files.toByteArray(ferien), Charset.forName("UTF-8")));
+                } catch(IOException e) {
+                    e.printStackTrace();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-
-
             }
+
+
         };
 
         handler.postDelayed(r, 1000);
     }
 
-    public String capitalize(String inp) {
+    private String capitalize(String inp) {
         return inp.substring(0, 1).toUpperCase() + inp.substring(1).toLowerCase();
     }
 
-    public void parseFerien(String jsonInp) throws JSONException, ParseException {
+    private void parseFerien(String jsonInp) throws JSONException, ParseException {
         JSONArray root = new JSONArray(jsonInp);
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
         JSONObject nearest = null;
@@ -136,13 +134,12 @@ public class Feriencounter {
         long timeRem = TimeUnit.MILLISECONDS.toDays(nearestDate.getTime() - now.getTime());
         String timeSuff;
         if (timeRem > 7) {
-            timeSuff = String.format("in %d %s, %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tage"));
+            timeSuff = String.format("in %d %s und %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tagen"));
         } else if(timeRem < 0) {
             Timber.w("Not displaying next holidays as remaining days is less than 0!");
             timeSuff = "ab heute";
-            //return;
         } else {
-            timeSuff = String.format("in %d %s", timeRem, (timeRem == 1 ? "Tag" : "Tage"));
+            timeSuff = String.format("in %d %s", timeRem, (timeRem == 1 ? "Tag" : "Tagen"));
         }
         announceDays(timeSuff, capitalize(nearest.getString("name")));
     }
@@ -179,7 +176,7 @@ public class Feriencounter {
 
                 SharedPreferences.Editor ed = PreferenceManager.getDefaultSharedPreferences(mActivity).edit(); //Zeitpunkt des Ferien-JSON-Downloads speichern
                 ed.putLong(Util.Preferences.FERIEN_FETCHED, new Date().getTime());
-                ed.commit();
+                ed.apply();
 
                 try {
                     parseFerien(result);

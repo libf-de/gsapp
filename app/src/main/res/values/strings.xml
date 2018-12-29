@@ -4,8 +4,8 @@
     <string name="app_name">GSApp</string>
     <string name="VPlan">Vertretungsplan</string>
     <string name="aktualisiere">Aktualisieren</string>
-    <string name="version">6.0 ReleaseCandidate "TeKoop"</string>
-    <string name="build">TEKOOP6RC1</string>
+    <string name="version">6.0 Beta 4 "Finn"</string>
+    <string name="build">FINN6B4</string>
     <string name="klasse_desc">Wenn du nur deine Klasse im Vertretungsplan sehen möchtest, wähle sie hier aus:</string>
     <string name="ConfigVer">2</string>
 

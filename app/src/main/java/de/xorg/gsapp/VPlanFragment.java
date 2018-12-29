@@ -2,24 +2,12 @@ package de.xorg.gsapp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.graphics.Color;
-import android.os.Build.VERSION;
 import android.os.Bundle;
-import android.os.StrictMode;
-import android.os.StrictMode.ThreadPolicy.Builder;
+import android.os.Looper;
 import android.preference.PreferenceManager;
-import androidx.annotation.Nullable;
-//import android.support.v4.app.Fragment;
-import androidx.fragment.app.Fragment;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener;
-//import android.support.v4.widget.SwipeRefreshLayout;
-//import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -27,31 +15,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.WindowManager.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
-import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.Toast;
-import de.xorg.cardsuilib.objects.CardStack;
-import de.xorg.cardsuilib.views.CardUI;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -60,12 +34,28 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import de.xorg.cardsuilib.objects.CardStack;
+import de.xorg.cardsuilib.views.CardUI;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import timber.log.Timber;
+
+//import android.support.v4.app.Fragment;
+//import android.support.v4.widget.SwipeRefreshLayout;
+//import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 
 public class VPlanFragment extends Fragment {
     public static final String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
@@ -132,16 +122,14 @@ public class VPlanFragment extends Fragment {
         MobileAds.initialize(getContext(), "ca-app-pub-6538125936915221~2281967739");
         AdView mAdView = getView().findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().addTestDevice("F42D4035C5B8ABF685658DE77BCB840A")
-                /*.addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")*/
+                .addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")
                 .build();
         mAdView.loadAd(adRequest);
 
         swipeContainer = (SwipeRefreshLayout) getView().findViewById(R.id.swipeContainer);
-        swipeContainer.setOnRefreshListener(new OnRefreshListener() {
-            public void onRefresh() {
-                VPlanFragment.this.vplane.clear();
-                VPlanFragment.this.magic(true);
-            }
+        swipeContainer.setOnRefreshListener(() -> {
+            VPlanFragment.this.vplane.clear();
+            new Thread(() -> loadData(true)).start();
         });
         swipeContainer.setColorSchemeResources(new int[]{R.color.md_cyan_A200, R.color.md_light_green_A400, R.color.md_amber_300, R.color.md_red_A400});
         //Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "");
@@ -176,11 +164,35 @@ public class VPlanFragment extends Fragment {
             }
         });
         this.vplane = new Eintrage();
-        magic(false);
-
+        /*Runnable runnable = () -> magic(false);
+        Thread mythread = new Thread(runnable);
+        mythread.start();*/
+        new Thread(() -> loadData(false)).start();
+        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Vertretungsplan");
     }
 
-    public void loadOk(boolean showDialog, boolean checkCache) {
+    /**
+     * Zeigt den Lade-Dialog an
+     */
+    //(Looper.getMainLooper().getThread() == Thread.currentThread())
+    private void showLdDialog() {
+        VPlanFragment.this.progressDialog = new ProgressDialog(VPlanFragment.this.getContext());
+        VPlanFragment.this.progressDialog.setProgressStyle(0);
+        VPlanFragment.this.progressDialog.setTitle("GSApp");
+        VPlanFragment.this.progressDialog.setMessage("Lade Daten...");
+        VPlanFragment.this.progressDialog.setCancelable(false);
+        VPlanFragment.this.progressDialog.setIndeterminate(true);
+        VPlanFragment.this.progressDialog.show();
+    }
+
+    private void loadOk(boolean showDialog, boolean checkCache) {
+        if(showDialog)
+            if(Looper.getMainLooper().getThread() != Thread.currentThread()) {
+                VPlanFragment.this.getActivity().runOnUiThread(this::showLdDialog);
+            } else {
+                Timber.w("loadOk sollte nicht im Hauptthread ausgeführt werden!");
+                showLdDialog();
+            }
         OkHttpClient.Builder b = new OkHttpClient.Builder();
         b.readTimeout(20, TimeUnit.SECONDS);
         b.connectTimeout(20, TimeUnit.SECONDS);
@@ -188,15 +200,6 @@ public class VPlanFragment extends Fragment {
         OkHttpClient client = b.build();
 
         System.setProperty("http.keepAlive", "false");
-        if (showDialog) {
-            VPlanFragment.this.progressDialog = new ProgressDialog(VPlanFragment.this.getContext());
-            VPlanFragment.this.progressDialog.setProgressStyle(0);
-            VPlanFragment.this.progressDialog.setTitle("GSApp");
-            VPlanFragment.this.progressDialog.setMessage("Lade Daten...");
-            VPlanFragment.this.progressDialog.setCancelable(false);
-            VPlanFragment.this.progressDialog.setIndeterminate(true);
-            VPlanFragment.this.progressDialog.show();
-        }
 
         Request request = new Request.Builder()
                 .url(VPlanFragment.this.getURL())
@@ -216,21 +219,14 @@ public class VPlanFragment extends Fragment {
                             Toast.makeText(VPlanFragment.this.getContext(), "Timeout exception", Toast.LENGTH_SHORT).show();
                         else
                             Toast.makeText(VPlanFragment.this.getContext(), "Der Vertretungsplan konnte nicht neu geladen werden!", Toast.LENGTH_SHORT).show();
-                        //if(e.getMessage().contains("timeout")) {
-                            //Toast.makeText(VPlanFragment.this.getContext(), "Der Vertretungsplan konnte nicht neu geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
-                        //} else {
-
-                        //}
 
 
                         if (showDialog && VPlanFragment.this.progressDialog != null) {
                             VPlanFragment.this.progressDialog.dismiss();
                         }
-                        if (swipeContainer != null && swipeContainer.isRefreshing()) {
-                            swipeContainer.setRefreshing(false);
-                        }
 
                         if(mCardView.getChildCount() < 2) {
+                            if(VPlanFragment.this.swipeContainer != null && VPlanFragment.this.swipeContainer.isRefreshing()) VPlanFragment.this.swipeContainer.setRefreshing(false);
                             mCardView.clearCards();
                             mCardView.addCard(new MyPlayCard(istDunkel,"Interner Fehler", "Es ist ein Fehler beim Herunterladen des Vertretungsplans aufgetreten!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
                             Toast.makeText(getContext(), "Vertretungsplan konnte nicht angezeigt werden, zeige im Browser..", Toast.LENGTH_SHORT).show();
@@ -298,14 +294,39 @@ public class VPlanFragment extends Fragment {
         });
     }
 
-    public void doRefresh() {
+    /*public void doRefresh() {
         Toast.makeText(VPlanFragment.this.getContext(), "Refresh!", Toast.LENGTH_SHORT).show();
-        if (swipeContainer != null)
-            swipeContainer.setRefreshing(true);
-        magic(true);
-    }
 
-    //toobar
+        magic(true);
+    }*/
+
+    void loadData(boolean isRefresh) {
+        if (Thread.currentThread() != Looper.getMainLooper().getThread())
+            VPlanFragment.this.getActivity().runOnUiThread(() -> {
+                if (swipeContainer != null) swipeContainer.setRefreshing(true);
+            });
+
+        if(Util.hasInternet(getContext())) {
+            if (!isRefresh) {
+                boolean cacheState = loadFromHtmlCache();
+                Timber.d("Cache loaded after " + (System.currentTimeMillis() - appStart) + "ms");
+                loadOk(!cacheState, cacheState);
+            } else {
+                loadOk(false, false);
+            }
+        } else {
+            boolean cs = loadFromHtmlCache();
+            if (Thread.currentThread() != Looper.getMainLooper().getThread())
+                VPlanFragment.this.getActivity().runOnUiThread(() -> {
+                    if(!cs) {
+                        this.mCardView.clearCards();
+                        this.mCardView.addCard(new MyPlayCard(istDunkel, "Fehler", "Es besteht keine Internetverbindung und es wurde noch kein Vertretungsplan zwischengespeichert!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
+                        this.mCardView.refresh();
+                    } else Toast.makeText(getContext(), "Vertretungsplan aus dem Zwischenspeicher geladen!", Toast.LENGTH_SHORT).show();
+
+                });
+        }
+    }
 
     public void magic(boolean isRefresh) {
         Timber.d("Loading start after " + (System.currentTimeMillis() - appStart) + "ms");
@@ -473,10 +494,13 @@ public class VPlanFragment extends Fragment {
                 this.vplane.add(new Eintrag(data[0], data[1], data[2], data[3], data[4], data[5], data[6], isNew));
             }
         }
-        if (this.isFiltered && Util.isLehrerModus(getContext()))
-            displayAllTeacher();
-        else
-            displayAll();
+        if (Thread.currentThread() != Looper.getMainLooper().getThread())
+            VPlanFragment.this.getActivity().runOnUiThread(() -> {
+                if (VPlanFragment.this.isFiltered && Util.isLehrerModus(getContext()))
+                    displayAllTeacher();
+                else
+                    displayAll();
+            });
     }
 
     private void fallbackLoad(String result) {
@@ -591,8 +615,20 @@ public class VPlanFragment extends Fragment {
     }
 
 
+    /*
+    Runnable runnable = new Runnable() {
+    public void run() {
+        // Insert network call here!
+    }
+};
+Thread mythread = new Thread(runnable);
+mythread.start();
+     */
+
+    //********************
 
     private void displayAll() {
+        Timber.d("Display start after " + (System.currentTimeMillis() - appStart) + "ms");
         mCardView.clearCards();
         CardStack dateHead = new CardStack(istDunkel);
         dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
@@ -717,7 +753,7 @@ public class VPlanFragment extends Fragment {
             swipeContainer.setRefreshing(false);
         }
 
-        saveToCache();
+        //saveToCache();
 
         Timber.d("Displayed after " + (System.currentTimeMillis() - appStart) + "ms");
     }
@@ -831,7 +867,7 @@ public class VPlanFragment extends Fragment {
             swipeContainer.setRefreshing(false);
         }
 
-        saveToCache();
+        //saveToCache();
 
         Timber.d("Displayed after " + (System.currentTimeMillis() - appStart) + "ms");
     }
@@ -1200,6 +1236,7 @@ public class VPlanFragment extends Fragment {
     }
 
     public boolean loadFromHtmlCache() {
+        Timber.d("loadHtml begin after " + (System.currentTimeMillis() - appStart) + "ms");
         try {
             File hcache = new File(getContext().getCacheDir(), "vpl.fbcache");
 
@@ -1212,11 +1249,13 @@ public class VPlanFragment extends Fragment {
             try {
                 Timber.d("Loading from cache (M1)");
                 VPlanFragment.this.parseResponse(html);
+                Timber.d("Parsed after " + (System.currentTimeMillis() - appStart) + "ms");
                 return true;
             } catch (ArrayIndexOutOfBoundsException e) {
                 try {
                     Timber.d("Loading from cache (M2)");
-                    VPlanFragment.this.fallbackLoad(html);
+                    if(Looper.getMainLooper().getThread() != Thread.currentThread())
+                        VPlanFragment.this.getActivity().runOnUiThread(() -> VPlanFragment.this.fallbackLoad(html));
                     return true;
                 } catch(Exception exo) {
                     Timber.d( "Failed on fallbackLoad: " + exo.getMessage());

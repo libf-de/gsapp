@@ -20,15 +20,13 @@ import java.net.URLEncoder;
 
 public class EssenbestellungFragment extends Fragment {
 
-    String URI;
+    private String URI;
     private boolean isConnected = true;
-    boolean isDark = false;
-    String themeId;
+    private boolean isDark = false;
+    private String themeId;
 
 
-    public EssenbestellungFragment() {
-        // Required empty public constructor
-    }
+    public EssenbestellungFragment() { }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,8 +52,8 @@ public class EssenbestellungFragment extends Fragment {
 
 
         //Variablen
-        WebView Speisen = (WebView) getView().findViewById(R.id.WebView);
-        RelativeLayout FragFrm = (RelativeLayout) getView().findViewById(R.id.withers);
+        WebView Speisen = getView().findViewById(R.id.WebView);
+        RelativeLayout FragFrm = getView().findViewById(R.id.withers);
 
         switch(themeId) {
             case Util.AppTheme.DARK:
@@ -79,7 +77,7 @@ public class EssenbestellungFragment extends Fragment {
 
         isConnected = Util.hasInternet(this.getContext());
 
-        URI = "http://www.schulkueche-bestellung.de/";
+        URI = "https://www.schulkueche-bestellung.de/";
 
         String ALOGUSER = Datenspeicher.getUser(this.getContext());
         String ALOGPASS = Datenspeicher.getPassword(this.getContext());
@@ -92,7 +90,7 @@ public class EssenbestellungFragment extends Fragment {
                 Speisen.loadUrl(URI);
             } else {
                 try {
-                    Speisen.postUrl("http://www.schulkueche-bestellung.de/index.php?ear_a=akt_login", ("Login_Name=" + URLEncoder.encode(ALOGUSER, "UTF-8") + "&Login_Passwort=" + URLEncoder.encode(ALOGPASS, "UTF-8")).getBytes()); //TODO: Funktioniert das?
+                    Speisen.postUrl("https://www.schulkueche-bestellung.de/index.php?ear_a=akt_login", ("Login_Name=" + URLEncoder.encode(ALOGUSER, "UTF-8") + "&Login_Passwort=" + URLEncoder.encode(ALOGPASS, "UTF-8")).getBytes()); //TODO: Funktioniert das?
                 } catch (UnsupportedEncodingException e) {
                     Toast.makeText(this.getContext(), "Automatische Anmeldung fehlgeschlagen (UnsupportedEncoding)", Toast.LENGTH_SHORT).show();
                     Speisen.loadUrl(URI);
@@ -142,8 +140,8 @@ public class EssenbestellungFragment extends Fragment {
 
     }
 
-    public void openUrl(String url) {
-        WebView Speisen = (WebView) getView().findViewById(R.id.WebView);
+    private void openUrl(String url) {
+        WebView Speisen = getView().findViewById(R.id.WebView);
         Speisen.loadUrl(url);
     }
 

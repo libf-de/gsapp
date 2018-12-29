@@ -1,58 +1,34 @@
 package de.xorg.gsapp;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-//import android.support.v4.app.Fragment;
-//import android.support.v4.app.FragmentTransaction;
-import androidx.appcompat.app.AppCompatDelegate;
-import androidx.appcompat.widget.LinearLayoutCompat;
-import androidx.core.app.TaskStackBuilder;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-//import android.support.design.widget.NavigationView;
-import androidx.core.view.GravityCompat;
-//import android.support.v4.widget.DrawerLayout;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 import android.transition.Fade;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-//import android.view.ViewGroup;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.animation.AlphaAnimation;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mikepenz.crossfader.Crossfader;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
-import com.mikepenz.materialdrawer.MiniDrawer;
 import com.mikepenz.materialdrawer.model.DividerDrawerItem;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
-import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
-import com.mikepenz.materialdrawer.model.interfaces.IProfile;
-import com.mikepenz.materialize.util.UIUtils;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import timber.log.Timber;
 
 public class MainActivity2 extends AppCompatActivity {
@@ -60,12 +36,12 @@ public class MainActivity2 extends AppCompatActivity {
     Fragment fragm;
     Toolbar toolbar;
     int shownFragment = -1;
-    int defaultFragment = Util.NavFragments.VERTRETUNGSPLAN;
     Drawer result;
     String applicationTheme;
     boolean doubleBackToExitPressedOnce = false;
     long first;
     Typeface tkFont;
+    boolean popBs = false;
 
     TextView toolbarTextView;
 
@@ -74,25 +50,20 @@ public class MainActivity2 extends AppCompatActivity {
         Timber.d("Got Intent...");
         if(i.hasExtra("FRAG_SHOW") && (i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN) == Util.NavFragments.VERTRETUNGSPLAN)) {
             Timber.d("To VPlan...");
-//            if(i.hasExtra("FROM_NTF")) {
-//                Timber.d("From Notification...");
                 if (fragm instanceof VPlanFragment) {
                     Timber.d("Showing VPlan...");
                     VPlanFragment vpf = (VPlanFragment) fragm;
-                    // Pass intent or its data to the fragment's method
-                    vpf.doRefresh();
+                    new Thread(() -> vpf.loadData(true)).start();
                 } else {
                     Timber.d("Opening VPlan...");
-                    showFragment(Util.NavFragments.VERTRETUNGSPLAN);
-                    //openFragment(R.id.nav_vplan);
+                    showFragment(Util.NavFragments.VERTRETUNGSPLAN, false);
                 }
-//            }
         } else if(i.hasExtra("FRAG_SHOW")) {
-            showFragment(i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN));
+            showFragment(i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN), false);
         }
     }
 
-    public String applyTheme(boolean shallRedraw) {
+    public String applyTheme() {
         String appTheme = PreferenceManager.getDefaultSharedPreferences(this).getString("pref_theme", Util.AppTheme.AUTO); //TODO: not gud"!
         if (appTheme.equals(Util.AppTheme.AUTO))
             appTheme = Util.AppTheme.getAutoTheme();
@@ -112,23 +83,18 @@ public class MainActivity2 extends AppCompatActivity {
                 break;
         }
         return appTheme;
-        /*if (shallRedraw) {
-            ViewGroup vg = findViewById (R.id.rootLayout);
-            vg.invalidate();
-        }*/
-
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         first = System.currentTimeMillis();
         super.onCreate(savedInstanceState);
-        applicationTheme = applyTheme(false);
+        applicationTheme = applyTheme();
         setContentView(R.layout.activity_main2);
 
         tkFont = Util.getTKFont(this);
 
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (applicationTheme.equals(Util.AppTheme.DARK)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) toolbar.setElevation(0.0f);
@@ -136,35 +102,29 @@ public class MainActivity2 extends AppCompatActivity {
         } else
             toolbar.setBackgroundResource(R.color.gsgelb);
 
-        toolbarTextView = (TextView) findViewById(R.id.toolbar_title);
+        toolbarTextView = findViewById(R.id.toolbar_title);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN)
             toolbarTextView.setTypeface(Util.getTKFont(this, false));
 
-        toolbarTextView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if(fragm instanceof Settings2Fragment) {
-                    ((Settings2Fragment) fragm).toggleLehrer();
-                    return true;
-                }
-                return false;
+        toolbarTextView.setOnLongClickListener(v -> {
+            if(fragm instanceof Settings2Fragment) {
+                ((Settings2Fragment) fragm).toggleLehrer();
+                return true;
             }
-        });
+            return false;
+            });
+
+        popBs = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_popbs", false);
 
 
         if(Timber.treeCount() < 1) {
-            //if(BuildConfig.DEBUG) {
                 Timber.plant(new Timber.DebugTree());
                 Timber.plant(new FileLogTree(this));
-            //}
-            Timber.tag("GSApp");
+                Timber.tag("GSApp");
         }
 
-        Timber.d("HELLO");
 
-        Toast.makeText(this, PreferenceManager.getDefaultSharedPreferences(this).getString("pref_klasse", "caput"), Toast.LENGTH_SHORT).show();
-
-
+        //TODO: First-Run-Zeug
         /*if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Util.Preferences.FIRST_RUN2, true)) {
             Intent intent = new Intent(this, FirstRunActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
@@ -208,6 +168,12 @@ public class MainActivity2 extends AppCompatActivity {
         /*NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);*/
 
+        getSupportFragmentManager().addOnBackStackChangedListener(
+                () -> {
+                    if(result != null)
+                        result.setSelection(Util.NavFragments.getIdentifier(getSupportFragmentManager().findFragmentById(R.id.content_frame)),false);
+                });
+
         Intent i = getIntent();
 
 
@@ -221,21 +187,9 @@ public class MainActivity2 extends AppCompatActivity {
                 shownFragment = Util.NavFragments.VERTRETUNGSPLAN;
 
         setupDrawer(shownFragment);
-        showFragment(shownFragment);
+        showFragment(shownFragment, true);
 
         Timber.d("onCreate finished after " + (System.currentTimeMillis() - first) + "ms");
-
-        //if(shownFragment == -1) {
-        //    if(i.hasExtra("FRAG_SHOW")) {
-        //        showFragment();
-        //    } else {
-        //        showFragment(defaultFragment);
-        //    }
-        //} else {
-        //    showFragment(shownFragment);
-        //}
-
-
     }
 
 
@@ -244,7 +198,6 @@ public class MainActivity2 extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setExitTransition(new Fade());
         }
-        //overridePendingTransition(R.anim.fadein, R.anim.fadeout);
         this.recreate();
     }
 
@@ -256,8 +209,6 @@ public class MainActivity2 extends AppCompatActivity {
     }
 
     public void setupDrawer(long selectedItem) {
-        //FirebaseService.checkAppSignature(this);
-        //FirebaseService.sendToken(this);
         ViewGroup fot = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.ferien_footer, null);
 
         AccountHeader headerResult = new AccountHeaderBuilder()
@@ -266,14 +217,9 @@ public class MainActivity2 extends AppCompatActivity {
                 .withSelectionListEnabled(false)
                 .withProfileImagesClickable(false)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("GSApp").withEmail("TeKoop Release Candidate 1").withIcon(getResources().getDrawable(R.drawable.icon_tree))
+                        new ProfileDrawerItem().withName("GSApp").withEmail("Finn Beta 4").withIcon(getResources().getDrawable(R.drawable.icon_tree))
                 )
-                .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
-                    @Override
-                    public boolean onProfileChanged(View view, IProfile profile, boolean currentProfile) {
-                        return false;
-                    }
-                })
+                .withOnAccountHeaderListener((view, profile, currentProfile) -> false)
                 .build();
 
         PrimaryDrawerItem vp = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.VERTRETUNGSPLAN).withName("Vertretungsplan").withIcon(Util.getThemedDrawable(this, R.drawable.school, applicationTheme)).withTypeface(tkFont);
@@ -281,7 +227,6 @@ public class MainActivity2 extends AppCompatActivity {
         PrimaryDrawerItem eb = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.BESTELLUNG).withName("Essenbestellung").withIcon(Util.getThemedDrawable(this,R.drawable.shopping, applicationTheme)).withTypeface(tkFont);
         PrimaryDrawerItem ak = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.AKTUELLES).withName("Aktuelles").withIcon(Util.getThemedDrawable(this,R.drawable.newspaper, applicationTheme)).withTypeface(tkFont);
         PrimaryDrawerItem tm = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.TERMINE).withName("Termine").withIcon(Util.getThemedDrawable(this,R.drawable.calendar_clock, applicationTheme)).withTypeface(tkFont);
-        //PrimaryDrawerItem kt = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.KONTAKT).withName("Kontakt").withIcon(Util.getThemedDrawable(this,R.drawable.phone_in_talk, applicationTheme));
         PrimaryDrawerItem ks = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.KLAUSUREN).withName("Klausuren").withIcon(Util.getThemedDrawable(this, R.drawable.ic_klausur, applicationTheme)).withTypeface(tkFont);
         SecondaryDrawerItem st = new SecondaryDrawerItem().withIdentifier(Util.NavFragments.SETTINGS).withName("Einstellungen").withIcon(Util.getThemedDrawable(this,R.drawable.settings, applicationTheme)).withTypeface(tkFont);
         SecondaryDrawerItem ab = new SecondaryDrawerItem().withIdentifier(Util.NavFragments.ABOUT).withName("Über...").withIcon(Util.getThemedDrawable(this,R.drawable.information, applicationTheme)).withTypeface(tkFont);
@@ -295,7 +240,6 @@ public class MainActivity2 extends AppCompatActivity {
                         eb,
                         ak,
                         tm,
-                        //kt,
                         ks,
                         new DividerDrawerItem(),
                         st,
@@ -303,15 +247,10 @@ public class MainActivity2 extends AppCompatActivity {
                 )
                 .withStickyFooter(fot)
                 .withStickyFooterShadow(false)
-                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
-                    @Override
-                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
-                        // do something with the clicked item :D
-                        showFragment(Integer.parseInt(String.valueOf(drawerItem.getIdentifier())));
-                        //result.closeDrawer();
-                        return true;
-                    }
-                })
+                .withOnDrawerItemClickListener((view, position, drawerItem) -> {
+                    showFragment(Integer.parseInt(String.valueOf(drawerItem.getIdentifier())), false);
+                    return true;
+                            })
                 .withAccountHeader(headerResult)
                 .withSelectedItem(selectedItem)
                 .build();
@@ -335,9 +274,6 @@ public class MainActivity2 extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(Bundle out) {
         out.putInt("GSAPP_MRLN_FRAGMENT", shownFragment);
-
-        //Toast.makeText(this, "onSaveInstanceState", Toast.LENGTH_SHORT).show();
-
         // call superclass to save any view hierarchy
         super.onSaveInstanceState(out);
     }
@@ -347,27 +283,24 @@ public class MainActivity2 extends AppCompatActivity {
         if(result != null && result.isDrawerOpen())
             result.closeDrawer();
         else {
-            if (doubleBackToExitPressedOnce) {
+            if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
+                if (doubleBackToExitPressedOnce) {
+                    finish();
+                    return;
+                }
+                this.doubleBackToExitPressedOnce = true;
+                Toast.makeText(this, "Erneut Zurück drücken um GSApp zu beenden.", Toast.LENGTH_SHORT).show();
+
+                new Handler().postDelayed(() -> doubleBackToExitPressedOnce=false, 2000);
+            } else {
                 super.onBackPressed();
-                return;
             }
 
-            this.doubleBackToExitPressedOnce = true;
-            Toast.makeText(this, "Erneut Zurück drücken um GSApp zu beenden.", Toast.LENGTH_SHORT).show();
-
-            new Handler().postDelayed(new Runnable() {
-
-                @Override
-                public void run() {
-                    doubleBackToExitPressedOnce=false;
-                }
-            }, 2000);
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_fragments, menu);
         return true;
     }
@@ -376,9 +309,6 @@ public class MainActivity2 extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch(id) {
             default:
@@ -387,47 +317,49 @@ public class MainActivity2 extends AppCompatActivity {
         }
     }
 
-    private void showFragment(int fragId) {
+    private void showFragment(int fragId, boolean first) {
         Bundle bundle = new Bundle();
         bundle.putString("theme", applicationTheme);
+
+        if(fragId == Util.NavFragments.getIdentifier(fragm)) return;
 
         fragm = null;
         switch (fragId) {
             case Util.NavFragments.VERTRETUNGSPLAN:
                 fragm = new VPlanFragment();
-                setBarTitle("Vertretungsplan");
+                //setBarTitle("Vertretungsplan");
                 break;
             case 631:
                 fragm = new VPlanFragment();
-                setBarTitle("Vertretungsplan");
+                //setBarTitle("Vertretungsplan");
                 break;
             case Util.NavFragments.SPEISEPLAN:
                 fragm = new SpeiseplanFragment();
-                setBarTitle("Speiseplan");
+                //setBarTitle("Speiseplan");
                 break;
             case Util.NavFragments.BESTELLUNG:
                 fragm = new EssenbestellungFragment();
-                setBarTitle("Essenbestellung");
+                //setBarTitle("Essenbestellung");
                 break;
             case Util.NavFragments.TERMINE:
                 fragm = new TermineFragment();
-                setBarTitle("Termine");
+                //setBarTitle("Termine");
                 break;
             case Util.NavFragments.AKTUELLES:
                 fragm = new AktuellesFragment();
-                setBarTitle("Aktuelles");
+                //setBarTitle("Aktuelles");
                 break;
             case Util.NavFragments.SETTINGS:
                 fragm = new Settings2Fragment();
-                setBarTitle("Einstellungen");
+                //setBarTitle("Einstellungen");
                 break;
             case Util.NavFragments.KLAUSUREN:
                 fragm = new KlausurenFragment();
-                setBarTitle("Klausurenplan");
+                //setBarTitle("Klausurenplan");
                 break;
             case Util.NavFragments.ABOUT:
                 fragm = new AboutFragment();
-                setBarTitle("Über GSApp...");
+                //setBarTitle("Über GSApp...");
                 break;
         }
 
@@ -435,10 +367,35 @@ public class MainActivity2 extends AppCompatActivity {
             fragm.setArguments(bundle);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.setCustomAnimations(R.anim.fadein, R.anim.fadeout);
+
+            if(this.popBs) {
+                if (getSupportFragmentManager().popBackStackImmediate(fragm.getClass().getName(), 0)) {
+                    shownFragment = fragId;
+
+                    if (result != null) {
+                        result.closeDrawer();
+                    }
+                    return;
+                }
+            }
+
             ft.replace(R.id.content_frame, fragm);
+
+            if( ft.isAddToBackStackAllowed()) ft.addToBackStack(fragm.getClass().getName()); else Toast.makeText(this, "addToBackStack not allowed, gib mir bitte Bescheid wann diese Meldung kommt", Toast.LENGTH_LONG).show();
+            try {
+                if( getSupportFragmentManager().isStateSaved() ) {
+                    Toast.makeText(this, "BackStack in isStateSaved, gib mir bitte einmalig Bescheid wann diese Meldung kommt (App von Benachrichtigung geöffnet, ...)", Toast.LENGTH_LONG).show();
+                    ft.commitAllowingStateLoss();
+                } else
+                    ft.commit();
+            } catch( IllegalStateException ise ) {
+                ise.printStackTrace();
+                Toast.makeText(this, "BackStack caught IllegalStateException, gib mir bitte Bescheid wenn und wann dies auftritt :-)", Toast.LENGTH_LONG).show();
+                ft.commitAllowingStateLoss();
+            }
             //ft.addToBackStack(null);
             //&try { ft.commit(); } catch(IllegalStateException e) { ft.commitAllowingStateLoss(); e.printStackTrace(); return; }
-            ft.commitAllowingStateLoss();
+            //ft.commitAllowingStateLoss();
         }
 
         shownFragment = fragId;

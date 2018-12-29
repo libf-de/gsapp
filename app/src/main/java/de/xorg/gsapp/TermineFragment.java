@@ -2,28 +2,25 @@ package de.xorg.gsapp;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-//import android.support.v4.app.Fragment;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
 
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 public class TermineFragment extends Fragment {
 
     String URI;
     private boolean isConnected = true;
-    boolean isYellow = false;
+    private boolean isYellow = false;
 
 
-    public TermineFragment() {
-        // Required empty public constructor
-    }
+    public TermineFragment() { }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,21 +32,23 @@ public class TermineFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_web, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Termine");
+
         if (getArguments() != null && getArguments().containsKey("theme")) {
             isYellow = (getArguments().getString("theme").equals(Util.AppTheme.YELLOW));
         }
         Util.setOrientation(this.getActivity());
 
         //Variablen
-        WebView Termine = (WebView) getView().findViewById(R.id.WebView);
-        RelativeLayout FragFrm = (RelativeLayout) getView().findViewById(R.id.withers);
+        WebView Termine = getView().findViewById(R.id.WebView);
+        RelativeLayout FragFrm = getView().findViewById(R.id.withers);
 
         if(isYellow) FragFrm.setBackgroundColor(Color.parseColor("#fed21b"));
         if(isYellow) Termine.setBackgroundColor(Color.parseColor("#fed21b"));
@@ -61,40 +60,7 @@ public class TermineFragment extends Fragment {
 
         isConnected = Util.hasInternet(this.getContext());
 
-        Termine.loadUrl("http://www.gymnasium-sonneberg.de/Informationen/Term/ausgebenK.php5");
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.eb_refresh:
-                openUrl(URI);
-                return true;
-            case R.id.eb_gotoo:
-                return true;
-            case R.id.eb_startseite:
-                URI = "http://www.schulkueche-bestellung.de/index.php?m=2;0";
-                openUrl(URI);
-                return true;
-            case R.id.eb_bestellen:
-                URI = "http://www.schulkueche-bestellung.de/index.php?m=2;2";
-                openUrl(URI);
-                return true;
-            case R.id.eb_plan:
-                URI = "http://www.schulkueche-bestellung.de/index.php?m=2;1";
-                openUrl(URI);
-                return true;
-            case R.id.eb_account:
-                URI = "http://www.schulkueche-bestellung.de/index.php?m=2;5";
-                openUrl(URI);
-                return true;
-            case R.id.eb_abmelden:
-                URI = "http://www.schulkueche-bestellung.de/?a=login/logout";
-                openUrl(URI);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+        Termine.loadUrl("https://www.gymnasium-sonneberg.de/Informationen/Term/ausgebenK.php5");
     }
 
     @Override
@@ -102,11 +68,6 @@ public class TermineFragment extends Fragment {
         Util.prepareMenu(menu, Util.NavFragments.TERMINE);
         super.onPrepareOptionsMenu(menu);
 
-    }
-
-    public void openUrl(String url) {
-        WebView Speisen = (WebView) getView().findViewById(R.id.WebView);
-        Speisen.loadUrl(url);
     }
 
     private class MyWebViewClient extends WebViewClient {

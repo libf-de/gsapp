@@ -77,6 +77,16 @@
             app:singleLineTitle="true"/>-->
     </de.xorg.gsapp.SettingsHeader>
 
+    <de.xorg.gsapp.SettingsHeader
+        android:title="Debug options"
+        android:key="debug_prefs">
+        <SwitchPreferenceCompat
+            android:key="pref_popbs"
+            android:title="Enable popping existing fragments"
+            android:summary="in backstack"
+            android:icon="@drawable/arrow_back" />
+    </de.xorg.gsapp.SettingsHeader>
+
     <!--<PreferenceCategory
         android:title="@string/widgets">
 
