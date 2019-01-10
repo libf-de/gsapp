@@ -32,7 +32,7 @@ public class WelcomeActivity extends AppIntro2 {
         SliderPage sp1 = new SliderPage();
         sp1.setTitle("Willkommen");
         sp1.setDescription("Wir stellen vor: die neue GSApp!");
-        sp1.setImageDrawable(R.mipmap.ic_launcher);
+        sp1.setImageDrawable(R.mipmap.ic_launcher_round);
         sp1.setBgColor(gsgelb); //schöne farbe?
         addSlide(AppIntro2Fragment.newInstance(sp1));
 
@@ -81,7 +81,7 @@ public class WelcomeActivity extends AppIntro2 {
         sp8.setBgColor(gsgelb);
         addSlide(AppIntro2Fragment.newInstance(sp8));
 
-        setDepthAnimation();
+        setFadeAnimation();
     }
 
     @Override

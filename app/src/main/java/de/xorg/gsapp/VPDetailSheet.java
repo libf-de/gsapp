@@ -2,10 +2,8 @@ package de.xorg.gsapp;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +12,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.ArrayList;
 
-import androidx.annotation.Nullable;
 import de.xorg.cardsuilib.objects.Card;
 import de.xorg.cardsuilib.objects.CardStack;
 import de.xorg.cardsuilib.views.CardUI;
@@ -109,7 +106,7 @@ public class VPDetailSheet extends BottomSheetDialogFragment {
             } else if(single.getBemerkung().equals("AA")) {
                 card = new MyPlayCard(istDark,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du Arbeitsauftrag im Raum " + single.getRaum(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
             } else {
-                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + single.getVertretung() + " in Raum " + single.getRaum() + ".\n\n" + single.getBemerkung(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
+                card = new MyPlayCard(istDark,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + Util.getTeacherName(single.getVertretung(), true) + " in Raum " + single.getRaum() + ".\n\n" + single.getBemerkung(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
             }
             card.setOnClickListener(new View.OnClickListener() {
 

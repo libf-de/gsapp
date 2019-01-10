@@ -66,6 +66,15 @@
         <item name="colorAccent">@color/accent_yellow</item>
     </style>
 
+    <style name="AppIntroTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/accent_yellow</item>
+        <item name="colorPrimaryDark">@color/gsgelbdark</item>
+        <item name="colorAccent">@color/accent_yellow</item>
+        <item name="android:navigationBarColor">@color/gsgelb</item>
+        <item name="android:statusBarColor">@color/gsgelb</item>
+        <item name="android:windowBackground">@color/background_yellow</item>
+    </style>
+
     <!--<style name="AppTheme" parent="AppBaseTheme">
         -<item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowTranslucentStatus">true</item>

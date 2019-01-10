@@ -29,7 +29,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewConfiguration;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -63,6 +62,15 @@ public class Util {
     static final int PERMISSION_DEBUG = 2226;
     static final int PERMISSION_CALL = 2202;
     static final int FIRSTRUN_ACTIVITY = 392;
+
+    static final String CHANGELOG = ""
+            + "Fehlende Klausuren behoben\n"
+            + "Hinzufügen von Klausuren in Kalender\n"
+            + "Laden des Vertretungsplans behoben\n"
+            + "Layout der Einführung behoben\n"
+            + "Layout des Ferien-Countdowns behoben\n"
+            + "Wochentag im Klausurenplan hinzugefügt\n"
+            + "Anwenden des Designs behoben\n";
 
     static final String NTF_CHANNEL_ID = "gsapp_notifications";
 
@@ -126,8 +134,35 @@ public class Util {
                 return FR + "Böhlein";
             case "AMB":
                 return HR + "Amberg";
-            /*case "JAA":
-                return "???JAA???";
+            case "SRÖ":
+                return FR + "Schrön";
+            case "SEL":
+                return HR + "Seliger";
+            case "GRL":
+                return FR + "Grell";
+            case "SAT":
+                return FR + "Sauerteig";
+            case "BUF":
+                return FR + "Buff";
+            case "SEM":
+                return FR + "Sesselmann";
+            case "DIE":
+                return FR + "Dietrich";
+            case "END":
+                return HR + "End";
+            case "BAA":
+                return FR + "Bauer";
+            case "HAU":
+                return HR + "Hausdörfer";
+            case "JAA":
+                return FR + "Janusch";
+            case "KRO":
+                return FR + "Kropp";
+            case "LEI":
+                return FR + "Leipold";
+            case "MAG":
+                return HR + "Maier";
+            /*
             case "GLÄ":
                 return "???GLÄ???";
             case "BAR":
@@ -146,6 +181,12 @@ public class Util {
             case "ROẞ":
                 Timber.d("Java nimmt Roß mit großem ẞ");
                 return FR + "Roß";
+            case "HEß":
+                Timber.d("Java nimmt Roß mit ß");
+                return FR + "Heß";
+            case "HEẞ":
+                Timber.d("Java nimmt Roß mit großem ẞ");
+                return FR + "Heß";
             case "GIE":
                 return FR + "Giernoth";
             case "WEL":
@@ -158,6 +199,8 @@ public class Util {
                 return HR + "Schott";
             case "KEI":
                 return FR + "Keiderling";
+            case "SLI":
+                return HR + "Schliewe";
             default:
                 return sht;
         }
@@ -230,6 +273,9 @@ public class Util {
         String MARQUEE = "pref_marquee";
         String LEHRER = "pref_teacher";
         String IS_LEHRER = "pref_teacher_mode";
+        String KLAUSUR_PLAN = "pref_klausur_selected";
+        String KLAUSUR_TIP = "pref_klausur_tip";
+        String LAST_VERSION = "pref_last_version";
     }
 
     public interface PushMode {
@@ -558,7 +604,7 @@ public class Util {
     }
 
     public static String getKlasse(Context c) {
-        return PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "");
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.KLASSE, "");
     }
 
     public static boolean isNumeric(String str)
@@ -638,17 +684,17 @@ public class Util {
     public static void setThemeUI(Activity a) {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = a.getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(a.getResources().getColor(R.color.gsgelbdark));
-            window.setNavigationBarColor(a.getResources().getColor(R.color.gsgelbdark));
+            //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            //window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            //window.setStatusBarColor(a.getResources().getColor(R.color.gsgelbdark));
+            //window.setNavigationBarColor(a.getResources().getColor(R.color.gsgelbdark));
         }
         switch (PreferenceManager.getDefaultSharedPreferences(a).getString("themeMode", "android")) {
             case "android":
                 if(hasSoftNavigation(a)) {
                     a.setTheme(R.style.AppTheme);
                 } else {
-                    a.setTheme(R.style.PAppThemeLight); //TODO: In neues Themen-System einbauen?
+                    //a.setTheme(R.style.PAppThemeLight); //TODO: In neues Themen-System einbauen?
                 }
                 break;
             default:

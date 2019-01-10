@@ -1,9 +1,5 @@
 package de.xorg.gsapp;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -11,6 +7,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class WebViewActivity extends AppCompatActivity {
 
@@ -26,12 +24,13 @@ public class WebViewActivity extends AppCompatActivity {
         isConnected = Util.hasInternet(getApplicationContext());
 
         wv.setWebViewClient( new MyWebViewClient() );
-        wv.getSettings().setJavaScriptEnabled(false);
-        wv.getSettings().setBuiltInZoomControls(true);
 
         Intent intent = getIntent();
         String title = intent.getStringExtra(Util.EXTRA_NAME);
         String url = intent.getStringExtra(Util.EXTRA_URL);
+
+        wv.getSettings().setJavaScriptEnabled(!title.startsWith("[!]"));
+        wv.getSettings().setBuiltInZoomControls(title.startsWith("[!]"));
 
         wv.loadUrl(url);
     }

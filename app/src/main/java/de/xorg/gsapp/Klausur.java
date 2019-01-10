@@ -1,7 +1,5 @@
 package de.xorg.gsapp;
 
-import android.graphics.Color;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -9,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,7 +52,9 @@ public class Klausur {
         this.datum = datum;
     }
 
-    public String getDateString() { return new SimpleDateFormat("dd.MM.yyyy").format(this.datum); }
+    public String getDateString() { return new SimpleDateFormat("E, dd.MM.yyyy", Locale.GERMAN).format(this.datum); }
+
+    public String getDateStringLong() { return new SimpleDateFormat("EEEE, 'den' dd.MM.yyyy", Locale.GERMAN).format(this.datum); }
 
     //https://stackoverflow.com/questions/23323792/android-days-between-two-dates
     public String getRemainingTime() {
@@ -91,7 +92,7 @@ public class Klausur {
     }
 
     public String getDesc() {
-        return getLongName() + " am " + getDateString();
+        return getLongName() + " am " + getDateStringLong();
     }
 
     public String getLongName() {

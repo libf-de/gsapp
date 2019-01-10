@@ -145,12 +145,12 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
                 .setPositiveButton(R.string.yes, (dialog, which) -> {
                     SharedPreferences.Editor editor = sp.edit();
                     editor.putBoolean(Util.Preferences.IS_LEHRER, !isEnabled);
+                    if(isEnabled) editor.remove(Util.Preferences.LEHRER);
                     editor.apply();
                     Toast.makeText(getContext(), isEnabled ? "Lehrermodus deaktiviert" : "Lehrermodus aktiviert", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                     getActivity().recreate();
                 }).setNegativeButton(R.string.no, (dialog, which) -> dialog.dismiss()).show();
-        Toast.makeText(getContext(), "TOGGLE!", Toast.LENGTH_SHORT).show();
     }
 
 

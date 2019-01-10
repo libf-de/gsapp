@@ -7,10 +7,11 @@ android {
         applicationId "de.xorg.gsapp"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 6000
-        versionName '6.0 RC2 »Melady«'
+        versionCode 6001
+        versionName '6.0 RC3 »Melady«'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        multiDexKeepFile file('multidex-config.txt')
     }
     buildTypes {
         release {

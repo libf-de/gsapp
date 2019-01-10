@@ -48,6 +48,13 @@
         <item name="android:windowBackground">@drawable/background_splash</item>
     </style>
 
+    <style name="AppIntroTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/gsgelb</item>
+        <item name="colorPrimaryDark">@color/gsgelbdark</item>
+        <item name="colorAccent">@color/accent_yellow</item>
+        <item name="android:background">@color/gsgelb</item>
+    </style>
+
     <!-- Application theme. -->
     <style name="AppTheme" parent="MaterialDrawerTheme.Light"> <!-- Theme.MaterialComponents.Light.NoActionBar -->
         <item name="pageMargin">0dp</item>

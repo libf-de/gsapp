@@ -42,11 +42,7 @@
             android:label="GDevSetting"
             android:noHistory="true"
             android:screenOrientation="portrait" />
-        <activity
-            android:name=".FirstRunActivity"
-            android:label="GSApp"
-            android:noHistory="true"
-            android:screenOrientation="portrait" />
+
         <activity android:name=".PermissionManager" />
         <activity
             android:name=".MainActivity2"
@@ -86,7 +82,7 @@
 
         <activity android:name=".WelcomeActivity"
             android:noHistory="true"
-            android:theme="@style/AppMainTheme">
+            android:theme="@style/AppIntroTheme">
         </activity>
     </application>
 

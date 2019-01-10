@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <!--android:background="@android:color/white">-->
@@ -10,20 +9,22 @@
         android:id="@+id/fab_class"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|right"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="16dp"
         android:alpha="0.7"
         android:clickable="true"
+        android:focusable="true"
         app:backgroundTint="@color/gsgelb"
-        app:rippleColor="@color/gsgelbdark"
-        android:layout_margin="16dp"
         app:elevation="4dp"
         app:fabSize="normal"
-        android:focusable="true" />
+        app:rippleColor="@color/gsgelbdark" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_above="@id/adView">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv"
@@ -35,6 +36,15 @@
         </androidx.recyclerview.widget.RecyclerView>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        ads:adSize="SMART_BANNER"
+        ads:adUnitId="ca-app-pub-6538125936915221/5657648453" />
 
     <!--<com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_switch"
@@ -48,4 +58,4 @@
         android:layout_alignParentLeft="true"
         android:layout_margin="2dp"
         app:rippleColor="@color/gsgelbdark" />-->
-</FrameLayout>
+</RelativeLayout>

@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Looper;
 import android.preference.PreferenceManager;
@@ -123,6 +124,7 @@ public class VPlanFragment extends Fragment {
         AdView mAdView = getView().findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().addTestDevice("F42D4035C5B8ABF685658DE77BCB840A")
                 .addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")
+                .addTestDevice("ED9E21C114D9DE1A8C0695C4607CD141")
                 .build();
         mAdView.loadAd(adRequest);
 
@@ -635,6 +637,26 @@ mythread.start();
     private void displayAll() {
         Timber.d("Display start after " + (System.currentTimeMillis() - appStart) + "ms");
         mCardView.clearCards();
+
+        //Temporär - Umfrage
+        if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("hasUmfrage", true)) {
+            MyPlayCard card = new MyPlayCard(istDunkel,"Umfrage", "Solltest du einen kurzen Moment Zeit haben, sag mir doch bitte deine Meinung zur App. (Klicken zum Öffnen)", "#00EEEE", "#00EEEE", true, true, true, cardMarquee);
+            card.setOnClickListener(v -> {
+                SharedPreferences.Editor edit = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
+                edit.putBoolean("hasUmfrage", false);
+                edit.apply();
+                Toast.makeText(getContext(), "Die Anmerkung verschwindet sobald der Vertretungsplan neu geladen wird :-)", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getContext(), WebViewActivity.class);
+                intent.putExtra(EXTRA_URL, "https://goo.gl/forms/31qUU2YhucKpE9hp1");
+                intent.putExtra(Util.EXTRA_NAME, "Umfrage");
+                getContext().startActivity(intent);
+            });
+            mCardView.addCard(card);
+        }
+
+
+
+
         CardStack dateHead = new CardStack(istDunkel);
         dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
         dateHead.setTitle("Für " + dateD);
@@ -644,28 +666,17 @@ mythread.start();
         Timber.d("Hinweis= +" + hinweisD + "+");
         if(!hinweisD.isEmpty()) {
             MyPlayCard card = new MyPlayCard(istDunkel,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\\\r\\\n]+","").trim(), "#00FF00", "#00FF00", true, false, false, cardMarquee);
-            card.setOnClickListener(new OnClickListener() {
+            card.setOnClickListener(v -> {
+                AlertDialog ad = new AlertDialog.Builder(VPlanFragment.this.getContext()).create();
+                ad.setCancelable(true);
+                ad.setTitle("Hinweis");
+                ad.setMessage(hinweisD);
 
-                @Override
-                public void onClick(View v) {
-                    AlertDialog ad = new AlertDialog.Builder(VPlanFragment.this.getContext()).create();
-                    ad.setCancelable(true);
-                    ad.setTitle("Hinweis");
-                    ad.setMessage(hinweisD);
-
-                    ad.setButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    ad.show();
-                }
-
+                ad.setButton("OK", (dialog, which) -> dialog.dismiss());
+                ad.show();
             });
             mCardView.addCard(card);
         }
-
         try {
             if(this.isFiltered) {
                 CardStack stacky = new CardStack(istDunkel);
@@ -765,6 +776,23 @@ mythread.start();
 
     private void displayAllTeacher() {
         mCardView.clearCards();
+
+        //Temporär - Umfrage
+        if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("hasUmfrage", true)) {
+            MyPlayCard card = new MyPlayCard(istDunkel,"Umfrage", "Sollten Sie einen kurzen Moment Zeit haben, sagen Sie mir doch bitte Ihre Meinung zur App. (Klicken zum Öffnen)", "#00EEEE", "#00EEEE", true, true, true, cardMarquee);
+            card.setOnClickListener(v -> {
+                SharedPreferences.Editor edit = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
+                edit.putBoolean("hasUmfrage", false);
+                edit.apply();
+                Toast.makeText(getContext(), "Die Anmerkung verschwindet sobald der Vertretungsplan neu geladen wird :-)", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getContext(), WebViewActivity.class);
+                intent.putExtra(EXTRA_URL, "https://goo.gl/forms/31qUU2YhucKpE9hp1");
+                intent.putExtra(Util.EXTRA_NAME, "Umfrage");
+                getContext().startActivity(intent);
+            });
+            mCardView.addCard(card);
+        }
+
         CardStack dateHead = new CardStack(istDunkel);
         dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
         dateHead.setTitle("Für " + dateD);

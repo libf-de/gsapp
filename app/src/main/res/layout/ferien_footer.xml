@@ -4,21 +4,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:visibility="gone"
-    android:padding="12dp">
+    android:visibility="gone">
 
-
-    <TextView
-        android:id="@+id/footer_head"
-        style="@style/TextAppearance.MaterialComponents.Subtitle1"
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Weihnachtsferien" />
+        android:orientation="vertical"
+        android:layout_margin="12dp">
+        <TextView
+            android:id="@+id/footer_head"
+            style="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Weihnachtsferien" />
 
-    <TextView
-        android:id="@+id/footer_body"
-        style="@style/TextAppearance.MaterialComponents.Subtitle2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="in 5 Tagen" />
+        <TextView
+            android:id="@+id/footer_body"
+            style="@style/TextAppearance.MaterialComponents.Subtitle2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="in 5 Tagen" />
+
+    </LinearLayout>
 </LinearLayout>

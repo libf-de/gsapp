@@ -3,17 +3,19 @@ package de.xorg.gsapp;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.preference.PreferenceManager;
+import android.provider.CalendarContract;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import java.util.Calendar;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -68,16 +70,24 @@ public class KlausurenAdapter extends RecyclerView.Adapter<KlausurenAdapter.View
         holder.titleView.setLayoutParams(p);
         holder.titleView.requestLayout();
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AlertDialog ad = new AlertDialog.Builder(mContext).create();
-                ad.setCancelable(true);
-                ad.setMessage(klausurs.get(position).getDesc());
+        holder.itemView.setOnClickListener(view -> {
+            AlertDialog ad = new AlertDialog.Builder(mContext).create();
+            ad.setCancelable(true);
+            ad.setMessage(klausurs.get(position).getDesc());
 
-                ad.setButton("OK", (dialog, which) -> dialog.dismiss());
-                ad.show();
-            }
+            ad.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (dialog, which) -> dialog.dismiss());
+            ad.setButton(DialogInterface.BUTTON_NEUTRAL, "Zum Kalender hinzufg.", (dialog, which) -> {
+                Calendar kc = Calendar.getInstance();
+                kc.setTime(klausurs.get(position).getDate());
+                Intent intent = new Intent(Intent.ACTION_INSERT)
+                        .setData(CalendarContract.Events.CONTENT_URI)
+                        .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, kc.getTimeInMillis())
+                        .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, kc.getTimeInMillis())
+                        .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true)
+                        .putExtra(CalendarContract.Events.TITLE, klausurs.get(position).getLongName());
+                mContext.startActivity(intent);
+            });
+            ad.show();
         });
     }
 

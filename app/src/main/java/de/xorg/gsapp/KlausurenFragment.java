@@ -2,6 +2,7 @@ package de.xorg.gsapp;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -9,13 +10,18 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.io.Files;
 
@@ -44,6 +50,7 @@ import java.util.regex.Pattern;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -63,6 +70,7 @@ public class KlausurenFragment extends Fragment {
 
     private ProgressDialog progressDialog;
     private List<Klausur> klausurs = new ArrayList<>();
+    private FloatingActionButton fab;
     private KlausurenAdapter mAdapter;
     private int shownPage = 0;
     private SwipeRefreshLayout swipeContainer;
@@ -169,6 +177,33 @@ public class KlausurenFragment extends Fragment {
         //setHasOptionsMenu(false);
     }
 
+    /*
+    Also, wenn es a20 ist, dann machen die 2020 Abi und haben 2 Jahre vorher in der 11. angefangen.
+    Wenn also 2018 August bis Dezember oder 2019 Januar bis Juli ist, dann sind die in der 11.
+    Rest ist klar.
+     */
+    public int getPageFromKlasse(String inp) {
+        try {
+            if(!inp.toUpperCase().startsWith("A")) //Keine Abiturklasse / Nicht 11./12. Klasse
+                return 0;
+
+            Calendar now = Calendar.getInstance();
+            int abiJahr = Integer.parseInt(inp.replaceAll("\\D+",""));
+
+            if( (abiJahr - 2) == (now.get(Calendar.YEAR) % 100) ) //Zweites Jahr vor Abi -> 11. Klasse
+                //11. Klasse
+                return 0;
+            else if( ((abiJahr - 1) == (now.get(Calendar.YEAR) % 100)) && now.get(Calendar.MONTH) <= 7 ) //Erstes Jahr vor Abi und spätestens Juli -> 11. Klasse
+                return 0;
+            else
+                return 1;
+        } catch(Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+
+    }
+
 
     //Erstellt eine Grafik mit Text (durchsichtiger Text auf Weiß)
     //Für Klassen-Umschalter
@@ -199,6 +234,17 @@ public class KlausurenFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Klausurenplan");
 
+        shownPage = PreferenceManager.getDefaultSharedPreferences(getContext()).getInt(Util.Preferences.KLAUSUR_PLAN, getPageFromKlasse(PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "KEINE")));
+
+        MobileAds.initialize(getContext(), "ca-app-pub-6538125936915221~2281967739");
+        AdView mAdView = getView().findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("F42D4035C5B8ABF685658DE77BCB840A")
+                .addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")
+                .addTestDevice("ED9E21C114D9DE1A8C0695C4607CD141")
+                .build();
+        mAdView.loadAd(adRequest);
+
+
         RecyclerView recyclerView = getView().findViewById(R.id.rv);
         swipeContainer = getView().findViewById(R.id.swipeContainer);
         swipeContainer.setOnRefreshListener(() -> {
@@ -208,8 +254,11 @@ public class KlausurenFragment extends Fragment {
 
         //Klassen-Umschalter
         //TODO: Mit in den Einstellungen gewählter Klasse starten
-        FloatingActionButton fab = getView().findViewById(R.id.fab_class);
+        fab = getView().findViewById(R.id.fab_class);
         fab.setImageBitmap(textIconic(getContext(),"11", 120, false)); //Icon setzen
+        RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) fab.getLayoutParams();
+        lp.setMargins(lp.leftMargin, lp.topMargin, lp.rightMargin, AdSize.SMART_BANNER.getHeightInPixels(getContext()) + lp.bottomMargin);
+        fab.setLayoutParams(lp);
         fab.setOnClickListener(v -> {
             if(shownPage == 0) {
                 //shownPage = 1;
@@ -251,6 +300,7 @@ public class KlausurenFragment extends Fragment {
         recyclerView.setAdapter(mAdapter);
 
         load();
+        considerTip();
     }
 
     /*
@@ -260,7 +310,7 @@ public class KlausurenFragment extends Fragment {
                      -(nein)-> Zeige Ladebildschirm -> Lade Plan aus Internet -> schreibe Cache -> Ladeb. schließen -> neuen Anzeigen
      */
     private void load() {
-        File klausurCache = new File(getContext().getCacheDir(), "klausuren.json");
+        File klausurCache = new File(getContext().getCacheDir(), "klausur.json");
         if(klausurCache.exists()) {
             try {
                 kP = new KlausurPlans(new JSONObject(new String(Files.toByteArray(klausurCache), Charset.forName("UTF-8"))));
@@ -295,12 +345,15 @@ public class KlausurenFragment extends Fragment {
 
         System.setProperty("http.keepAlive", "false");
         if (showDialog != null) {
-            showDialog.setProgressStyle(0);
-            showDialog.setTitle("GSApp");
-            showDialog.setMessage("Lade Daten...");
-            showDialog.setCancelable(false);
-            showDialog.setIndeterminate(true);
-            showDialog.show();
+            getActivity().runOnUiThread(() -> {
+                showDialog.setProgressStyle(0);
+                showDialog.setTitle("GSApp");
+                showDialog.setMessage("Lade Daten...");
+                showDialog.setCancelable(false);
+                showDialog.setIndeterminate(true);
+                showDialog.show();
+                    });
+
         } else {
             if(swipeContainer != null) swipeContainer.setRefreshing(true);
         }
@@ -316,22 +369,19 @@ public class KlausurenFragment extends Fragment {
                 if(getActivity() == null)
                     return;
 
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(e.getMessage().contains("timeout")) {
-                            Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
-                        } else {
-                            Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden!", Toast.LENGTH_SHORT).show();
-                        }
+                getActivity().runOnUiThread(() -> {
+                    if(e.getMessage().contains("timeout")) {
+                        Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
+                    } else {
+                        Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden!", Toast.LENGTH_SHORT).show();
+                    }
 
 
-                        if (showDialog != null) {
-                            showDialog.dismiss();
-                        }
-                        if (swipeContainer != null && swipeContainer.isRefreshing()) {
-                            swipeContainer.setRefreshing(false);
-                        }
+                    if (showDialog != null) {
+                        showDialog.dismiss();
+                    }
+                    if (swipeContainer != null && swipeContainer.isRefreshing()) {
+                        swipeContainer.setRefreshing(false);
                     }
                 });
             }
@@ -348,14 +398,11 @@ public class KlausurenFragment extends Fragment {
                     }
 
                     if(1 == page && passData != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (showDialog != null)
-                                    showDialog.dismiss();
-                                if (swipeContainer != null && swipeContainer.isRefreshing())
-                                    swipeContainer.setRefreshing(false);
-                            }
+                        getActivity().runOnUiThread(() -> {
+                            if (showDialog != null)
+                                showDialog.dismiss();
+                            if (swipeContainer != null && swipeContainer.isRefreshing())
+                                swipeContainer.setRefreshing(false);
                         });
 
                         parseCache(passData, result, force);
@@ -407,10 +454,10 @@ public class KlausurenFragment extends Fragment {
             }
         }
 
-        try { Log.d("GSApp", kP.toJSON().toString()); } catch(Exception e) { Log.d("GSApp", "ich bin dumm"); }
+        //try { Log.d("GSApp", kP.toJSON().toString()); } catch(Exception e) { Log.d("GSApp", "ich bin dumm"); }
 
         try {
-            Files.write(kP.toJSON().toString().getBytes(Charset.forName("UTF-8")), new File(getContext().getCacheDir(), "klausuren.json"));
+            Files.write(kP.toJSON().toString().getBytes(Charset.forName("UTF-8")), new File(getContext().getCacheDir(), "klausur.json"));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (JSONException e) {
@@ -424,13 +471,22 @@ public class KlausurenFragment extends Fragment {
         final int s11 = state11;
         final int s12 = state12;
 
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (shownPage == 0 && s11 != KlasseState.UNCHANGED) { showKlasse(0); Toast.makeText(getContext(), "Neuer Plan gefunden!", Toast.LENGTH_SHORT).show(); }
-                if (shownPage == 1 && s12 != KlasseState.UNCHANGED) { showKlasse(1); Toast.makeText(getContext(), "Neuer Plan gefunden!", Toast.LENGTH_SHORT).show(); }
-            }
+        getActivity().runOnUiThread(() -> {
+            if (shownPage == 0 && s11 != KlasseState.UNCHANGED) { showKlasse(0); Toast.makeText(getContext(), "Neuer Plan gefunden!", Toast.LENGTH_SHORT).show(); }
+            if (shownPage == 1 && s12 != KlasseState.UNCHANGED) { showKlasse(1); Toast.makeText(getContext(), "Neuer Plan gefunden!", Toast.LENGTH_SHORT).show(); }
         });
+    }
+
+    private void considerTip() {
+        if(PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(Util.Preferences.KLAUSUR_TIP, true)) {
+            Toast t = Toast.makeText(getContext(), "Klicke auf den Button um zwischen 11. und 12. Klasse zu wechseln \uD83D\uDC49", Toast.LENGTH_SHORT);
+            t.setGravity(Gravity.BOTTOM|Gravity.LEFT, 0, 0);
+            t.show();
+            SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
+            edit.putBoolean(Util.Preferences.KLAUSUR_TIP, false);
+            edit.apply();
+        }
+
     }
 
     /*
@@ -438,7 +494,6 @@ public class KlausurenFragment extends Fragment {
     Die Pläne müssen zuvor in kP (klausurPlans) geladen worden sein
      */
     private void showKlasse(int klasse) {
-        Toast.makeText(getContext(), String.format("Showing %d", klasse),Toast.LENGTH_SHORT).show();
         List<Klausur> al = (klasse == 0 ? kP.getKl11() : kP.getKl12());
         this.klausurs.clear();
         for(int i = 0; i < al.size(); i++) {
@@ -454,6 +509,9 @@ public class KlausurenFragment extends Fragment {
         }
 
         shownPage = klasse;
+        SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
+        edit.putInt(Util.Preferences.KLAUSUR_PLAN, klasse);
+        edit.apply();
 
         Collections.sort(klausurs, (k1, k2) -> k1.getDate().compareTo(k2.getDate()));
         mAdapter.notifyDataSetChanged();
@@ -505,8 +563,9 @@ public class KlausurenFragment extends Fragment {
         int numFirstDateRow = doc.select("td[class=kopf]").first().parent().children().size() - 1;
         Element kartoffel = doc.select("td[class=kopf] ~ td").first().parent().nextElementSibling();
         int day = 0;
-        while(kartoffel != kartoffel.lastElementSibling()) {
-            Timber.d(kartoffel.html());
+        //while(kartoffel != kartoffel.lastElementSibling()) {
+        while(day < 20) {
+            //Timber.d(kartoffel.html());
             Elements klausuren = kartoffel.select("td:not(.tag,.kopf)");
             Iterator klausurenIt = klausuren.iterator();
             while (klausurenIt.hasNext()) {
@@ -531,13 +590,16 @@ public class KlausurenFragment extends Fragment {
                         o.add(new Klausur("Abgabe SF", c.getTime()));
                     } else {
                         for(String singleKlausur : klausur.text().split(" ")) {
-                            o.add(new Klausur(singleKlausur, c.getTime()));
+                            if(singleKlausur.length() < 6) o.add(new Klausur(singleKlausur, c.getTime()));
                         }
                     }
                 }
             }
             day++;
-            kartoffel = kartoffel.nextElementSibling();
+            if(kartoffel != kartoffel.lastElementSibling())
+                kartoffel = kartoffel.nextElementSibling();
+            else
+                break;
         }
 
         if(o.size() < 1) {
@@ -546,88 +608,6 @@ public class KlausurenFragment extends Fragment {
 
         Collections.sort(o, (k1, k2) -> k1.getDate().compareTo(k2.getDate()));
         return o;
-    }
-
-    /*
-    Deprecated: Wird entfernt
-    Verarbeitet den Quellcode in die aktuelle Anzeige (kein Caching)
-     */
-    private void parseResponse(String result) throws ArrayIndexOutOfBoundsException, ParseException {
-        Document doc = Jsoup.parse(result);
-        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
-        List<Date> daten = new ArrayList<>(); //Enthält die jeweils ersten Tage der Wochen
-
-        Element ksHeader = doc.select("td[class*=ueberschr]").first(); //Überschrift-Element finden
-        String[] jahre;
-        Matcher jahreMatcher = Pattern.compile("[0-9]{4}\\/[0-9]{4}").matcher(ksHeader.html()); //Regex-Suche nach Jahreszahlen (XXXX/XXXX)
-        if(jahreMatcher.matches())
-            jahre = jahreMatcher.group(0).split("/");
-        else
-            jahre = ksHeader.html().split("<br>")[1].replaceAll("[^\\d/]", "" ).split("/"); //Fallback-Methode: Überschrift bei Linebreak teilen, dann Jahre trennen
-
-        Elements vpEnts = doc.select("td[class=kopf] ~ td");
-        Iterator it = vpEnts.iterator();
-        while (it.hasNext()) {
-            //Matcher datums = Pattern.compile("[0-9]{2}\\.[0-9]{2}\\.").matcher(((Element) it.next()).html());
-            String weekStart = ((Element) it.next()).html().split("<br>")[0]; //TODO: Doof.
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(format.parse(weekStart + "2000"));
-            //int month = Integer.parseInt(Pattern.compile("([0-9]+)(?!.*[0-9])").matcher(weekStart).group(0));
-            if(8 <= cal.get(Calendar.MONTH) && cal.get(Calendar.MONTH) <= 12) //Wenn Monat zwischen 8 und 12 -> erstes Jahr, sonst 2. Jahr
-                cal.set(Calendar.YEAR, Integer.parseInt(jahre[0])); //1. Jahr setzen
-            else
-                cal.set(Calendar.YEAR, Integer.parseInt(jahre[1])); //2. Jahr setzen
-
-            daten.add(cal.getTime()); //Wochenstart-Datum hinzufügen
-        }
-
-        int numFirstDateRow = doc.select("td[class=kopf]").first().parent().children().size() - 1;
-
-        Element kartoffel = doc.select("td[class=kopf] ~ td").first().parent().nextElementSibling();
-        int day = 0;
-        klausurs.clear();
-        while(kartoffel != kartoffel.lastElementSibling()) {
-            Elements klausuren = kartoffel.select("td:not(.tag,.kopf)");
-            Iterator klausurenIt = klausuren.iterator();
-            while (klausurenIt.hasNext()) {
-                Element klausur = ((Element) klausurenIt.next());
-                if(!klausur.html().equals("&nbsp;")) {
-                    Calendar c = Calendar.getInstance();
-                    int thisDay = day;
-                    int datePos = klausur.elementSiblingIndex();
-                    if(thisDay > 5) {
-                        datePos += numFirstDateRow;
-                        thisDay -= 6;
-                    }
-
-                    c.setTime(daten.get(datePos - 1));
-                    c.add(Calendar.DATE, thisDay);
-
-
-                    if (Util.isBeforeDay(c, Calendar.getInstance()))
-                    //if(c.before(new Date()))
-                        continue;
-                    else if (Pattern.compile("[^a-zA-Z0-9\\s]").matcher(klausur.text()).find() || klausur.text().equals("Ferien"))
-                        continue;
-                    else if (klausur.text().equals("Abgabe SF")) {
-                        klausurs.add(new Klausur("Abgabe SF", c.getTime()));
-                    } else {
-                        for(String singleKlausur : klausur.text().split(" ")) {
-                            klausurs.add(new Klausur(singleKlausur, c.getTime()));
-                        }
-                    }
-                }
-            }
-            day++;
-            kartoffel = kartoffel.nextElementSibling();
-        }
-
-        if(klausurs.size() < 1) {
-            klausurs.add(new Klausur("Keine Klausuren mehr!", new Date()));
-        }
-
-        Collections.sort(klausurs, (k1, k2) -> k1.getDate().compareTo(k2.getDate()));
-        mAdapter.notifyDataSetChanged();
     }
 
     @Override

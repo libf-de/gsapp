@@ -1,12 +1,17 @@
 package de.xorg.gsapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.text.Html;
 import android.transition.Fade;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,6 +30,7 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
@@ -73,6 +79,39 @@ public class MainActivity2 extends AppCompatActivity {
 
     }
 
+    private void showChangelog(int newVer) {
+        LayoutInflater inflater= LayoutInflater.from(this);
+        View view=inflater.inflate(R.layout.changelog_dialog, null);
+
+        TextView cl = view.findViewById(R.id.changelog);
+        StringBuilder htmlstr = new StringBuilder();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            for(String s : Util.CHANGELOG.split("\n")) {
+                htmlstr.append("<li>&nbsp;" + s + "</li>");
+            }
+            cl.setText(Html.fromHtml("<pre>Version " + getString(R.string.version) + "</pre><ul>" + htmlstr.toString() + "</ul>", Html.FROM_HTML_MODE_COMPACT));
+        } else {
+            for(String s : Util.CHANGELOG.split("\n")) {
+                htmlstr.append("*&nbsp;" + s + "<br/>");
+            }
+            cl.setText(Html.fromHtml("<pre>Version " + getString(R.string.version) + "</pre><br/>" + htmlstr.toString() + ""));
+        }
+
+        AlertDialog ad = new AlertDialog.Builder(this)
+                .setTitle("Neuigkeiten")
+                .setMessage("GSApp wurde aktualisiert!\nHier sind die Neuerungen:")
+                .setView(view)
+                .setNeutralButton("Okay", (dialog, which) -> {
+                    SharedPreferences.Editor edit = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).edit();
+                    edit.putInt(Util.Preferences.LAST_VERSION, newVer);
+                    edit.apply();
+                    dialog.dismiss();
+                })
+                .create();
+
+        ad.show();
+    }
+
 
     public String applyTheme() {
         String appTheme = PreferenceManager.getDefaultSharedPreferences(this).getString("pref_theme", Util.AppTheme.AUTO); //TODO: not gud"!
@@ -96,12 +135,42 @@ public class MainActivity2 extends AppCompatActivity {
         return appTheme;
     }
 
+    private int getNavHeight() {
+        Resources resources = getResources();
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return resources.getDimensionPixelSize(resourceId);
+        }
+        return 0;
+    }
+
+    private int getStatusHeight() {
+        Resources resources = getResources();
+        int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return resources.getDimensionPixelSize(resourceId);
+        }
+        return 0;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         first = System.currentTimeMillis();
-        super.onCreate(savedInstanceState);
         applicationTheme = applyTheme();
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
+
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window w = getWindow(); // in Activity's onCreate() for instance
+            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            w.setNavigationBarColor(Color.TRANSPARENT);
+            RelativeLayout rl = findViewById(R.id.rootLayout2);
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) rl.getLayoutParams();
+            lp.setMargins(0, getStatusHeight(), 0, 0);
+            rl.setLayoutParams(lp);
+
+        }*/
+
 
         tkFont = Util.getTKFont(this);
 
@@ -195,6 +264,17 @@ public class MainActivity2 extends AppCompatActivity {
         setupDrawer(shownFragment);
         showFragment(shownFragment, true);
 
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            int verCode = pInfo.versionCode;
+            if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getInt(Util.Preferences.LAST_VERSION, verCode - 1) < verCode) {
+                showChangelog(verCode);
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
         Timber.d("onCreate finished after " + (System.currentTimeMillis() - first) + "ms");
     }
 
@@ -216,6 +296,7 @@ public class MainActivity2 extends AppCompatActivity {
 
     public void setupDrawer(long selectedItem) {
         ViewGroup fot = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.ferien_footer, null);
+        fot.setPadding(50, 50, 50, 50);
 
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
@@ -223,8 +304,10 @@ public class MainActivity2 extends AppCompatActivity {
                 .withSelectionListEnabled(false)
                 .withProfileImagesClickable(false)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("GSApp").withEmail("»Melady« RC2")
+                        new ProfileDrawerItem().withName("GSApp").withEmail("»Melady« RC3").withIcon(R.mipmap.ic_launcher_round)
                 )
+                .withProfileImagesVisible(true)
+                .withCompactStyle(true)
                 .withOnAccountHeaderListener((view, profile, currentProfile) -> false)
                 .build();
 
@@ -253,12 +336,16 @@ public class MainActivity2 extends AppCompatActivity {
                 )
                 .withStickyFooter(fot)
                 .withStickyFooterShadow(false)
+
                 .withOnDrawerItemClickListener((view, position, drawerItem) -> {
                     showFragment(Integer.parseInt(String.valueOf(drawerItem.getIdentifier())), false);
                     return true;
                             })
                 .withAccountHeader(headerResult)
                 .withSelectedItem(selectedItem)
+                .withTranslucentNavigationBar(true)
+                .withTranslucentNavigationBarProgrammatically(true)
+                .withTranslucentStatusBar(true)
                 .build();
 
         new Feriencounter(this, new Feriencounter.FeriencounterCallback() {
@@ -375,7 +462,7 @@ public class MainActivity2 extends AppCompatActivity {
             ft.setCustomAnimations(R.anim.fadein, R.anim.fadeout);
             ft.replace(R.id.content_frame, fragm);
 
-            /*if(this.popBs) {
+            if(this.popBs) {
                 if (getSupportFragmentManager().popBackStackImmediate(fragm.getClass().getName(), 0)) {
                     shownFragment = fragId;
 
@@ -399,10 +486,10 @@ public class MainActivity2 extends AppCompatActivity {
                 ise.printStackTrace();
                 Toast.makeText(this, "BackStack caught IllegalStateException, gib mir bitte Bescheid wenn und wann dies auftritt :-)", Toast.LENGTH_LONG).show();
                 ft.commitAllowingStateLoss();
-            }*/
+            }
             //ft.addToBackStack(null);
             //try { ft.commit(); } catch(IllegalStateException e) { ft.commitAllowingStateLoss(); e.printStackTrace(); return; }
-            ft.commit();
+            //ft.commit();
             //ft.commitAllowingStateLoss();
         }
 
