@@ -83,6 +83,11 @@
         <activity
             android:name=".WebViewActivity"
             android:theme="@style/WebViewTheme" />
+
+        <activity android:name=".WelcomeActivity"
+            android:noHistory="true"
+            android:theme="@style/AppMainTheme">
+        </activity>
     </application>
 
 </manifest>

@@ -85,6 +85,14 @@
             android:title="Enable popping existing fragments"
             android:summary="in backstack"
             android:icon="@drawable/arrow_back" />
+
+        <SeekBarPreference
+            android:key="debugSrc"
+            android:title="Vertretungsplan-Quelle"
+            android:summary="0 is default"
+            android:max="3"
+            android:min="0"
+            android:defaultValue="0"/>
     </de.xorg.gsapp.SettingsHeader>
 
     <!--<PreferenceCategory

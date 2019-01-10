@@ -501,6 +501,11 @@ public class VPlanFragment extends Fragment {
                 else
                     displayAll();
             });
+        else
+            if (VPlanFragment.this.isFiltered && Util.isLehrerModus(getContext()))
+                displayAllTeacher();
+            else
+                displayAll();
     }
 
     private void fallbackLoad(String result) {

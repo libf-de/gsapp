@@ -23,11 +23,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginStart="2dp"
-        android:layout_marginLeft="2dp"
-        android:layout_marginEnd="2dp"
-        android:layout_marginRight="2dp"
-        android:layout_marginBottom="2dp"
         ads:adSize="SMART_BANNER"
         ads:adUnitId="ca-app-pub-6538125936915221/3766170296" />
 

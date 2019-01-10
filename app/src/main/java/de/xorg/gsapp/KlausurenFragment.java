@@ -506,6 +506,7 @@ public class KlausurenFragment extends Fragment {
         Element kartoffel = doc.select("td[class=kopf] ~ td").first().parent().nextElementSibling();
         int day = 0;
         while(kartoffel != kartoffel.lastElementSibling()) {
+            Timber.d(kartoffel.html());
             Elements klausuren = kartoffel.select("td:not(.tag,.kopf)");
             Iterator klausurenIt = klausuren.iterator();
             while (klausurenIt.hasNext()) {

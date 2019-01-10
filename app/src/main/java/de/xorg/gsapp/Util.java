@@ -223,7 +223,7 @@ public class Util {
         String DEVICE_ID = "device-id";
         String HAS_REGISTERED = "fcm-has-registered";
         String PUSH_MODE = "pref_push";
-        String FIRST_RUN2 = "first-run-v2";
+        String FIRST_RUN3 = "first-run-v3";
         String KLASSE = "pref_klasse";
         String THEME = "pref_theme";
         String FERIEN_FETCHED = "ferien_fetched";

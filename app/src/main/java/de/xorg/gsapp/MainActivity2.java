@@ -63,6 +63,17 @@ public class MainActivity2 extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onResume(){
+        super.onResume();
+        boolean previouslyStarted = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getBoolean(Util.Preferences.FIRST_RUN3, false);
+        if(!previouslyStarted) {
+            startActivity(new Intent(MainActivity2.this, WelcomeActivity.class));
+        }
+
+    }
+
+
     public String applyTheme() {
         String appTheme = PreferenceManager.getDefaultSharedPreferences(this).getString("pref_theme", Util.AppTheme.AUTO); //TODO: not gud"!
         if (appTheme.equals(Util.AppTheme.AUTO))
@@ -125,12 +136,7 @@ public class MainActivity2 extends AppCompatActivity {
 
 
         //TODO: First-Run-Zeug
-        /*if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Util.Preferences.FIRST_RUN2, true)) {
-            Intent intent = new Intent(this, FirstRunActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivityForResult(intent, Util.FIRSTRUN_ACTIVITY);
-        }
+        /*
 
         if (!PreferenceManager.getDefaultSharedPreferences(this).contains("isSamsung")) {
             boolean isSamsung = Build.MANUFACTURER.equals("samsung");
@@ -217,7 +223,7 @@ public class MainActivity2 extends AppCompatActivity {
                 .withSelectionListEnabled(false)
                 .withProfileImagesClickable(false)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("GSApp").withEmail("Finn Beta 4").withIcon(getResources().getDrawable(R.drawable.icon_tree))
+                        new ProfileDrawerItem().withName("GSApp").withEmail("»Melady« RC2")
                 )
                 .withOnAccountHeaderListener((view, profile, currentProfile) -> false)
                 .build();
@@ -367,8 +373,9 @@ public class MainActivity2 extends AppCompatActivity {
             fragm.setArguments(bundle);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.setCustomAnimations(R.anim.fadein, R.anim.fadeout);
+            ft.replace(R.id.content_frame, fragm);
 
-            if(this.popBs) {
+            /*if(this.popBs) {
                 if (getSupportFragmentManager().popBackStackImmediate(fragm.getClass().getName(), 0)) {
                     shownFragment = fragId;
 
@@ -392,9 +399,10 @@ public class MainActivity2 extends AppCompatActivity {
                 ise.printStackTrace();
                 Toast.makeText(this, "BackStack caught IllegalStateException, gib mir bitte Bescheid wenn und wann dies auftritt :-)", Toast.LENGTH_LONG).show();
                 ft.commitAllowingStateLoss();
-            }
+            }*/
             //ft.addToBackStack(null);
-            //&try { ft.commit(); } catch(IllegalStateException e) { ft.commitAllowingStateLoss(); e.printStackTrace(); return; }
+            //try { ft.commit(); } catch(IllegalStateException e) { ft.commitAllowingStateLoss(); e.printStackTrace(); return; }
+            ft.commit();
             //ft.commitAllowingStateLoss();
         }
 

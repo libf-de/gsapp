@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/gsgelb"
+    android:paddingBottom="@dimen/appIntro2BottomBarHeight">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="56dp"
+        android:gravity="center_horizontal"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:text="Datenschutzerklärung"
+        android:textColor="@android:color/white"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView11"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/title"
+        android:layout_marginBottom="56dp"
+        android:gravity="center_horizontal"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:text="Bitte lies dir die Datenschutzerklärung durch und akzeptiere sie, um die App zu verwenden."
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:id="@+id/showBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/acceptBox"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="70dp"
+        android:layout_marginBottom="32dp"
+        android:text="Datenschutzerklärung anzeigen" />
+
+    <CheckBox
+        android:id="@+id/acceptBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="64dp"
+        android:text="Ich akzeptiere die Datenschutzerklärung"
+        android:textColor="@android:color/white" />
+</RelativeLayout>
