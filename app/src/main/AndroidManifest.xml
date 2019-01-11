@@ -48,6 +48,7 @@
             android:name=".MainActivity2"
             android:configChanges="orientation"
             android:label="GSApp"
+            android:windowSoftInputMode="adjustResize"
             android:launchMode="singleInstance"
             android:theme="@style/AppMainTheme">
             <intent-filter>

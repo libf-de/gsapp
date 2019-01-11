@@ -15,6 +15,7 @@ import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.TypefaceSpan;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
@@ -23,6 +24,7 @@ import android.widget.Toast;
 import java.util.Calendar;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -61,6 +63,36 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
         });
 
     }
+
+    private static final String DIALOG_FRAGMENT_TAG =
+            "android.support.v7.preference.PreferenceFragment.DIALOG";
+
+    @Override
+    public void onDisplayPreferenceDialog(Preference preference) {
+        // check if dialog is already showing
+        if (getFragmentManager().findFragmentByTag(DIALOG_FRAGMENT_TAG) != null) {
+            return;
+        }
+
+        DialogFragment f = null;
+        if (preference instanceof TeacherPreference) {
+            try {
+                f = new TeacherPreferenceDialogFragmentCompat().newInstance(preference.getKey());
+                this.getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+            } catch(Exception e) {
+                e.printStackTrace();
+                super.onDisplayPreferenceDialog(preference);
+            }
+        } else {
+            super.onDisplayPreferenceDialog(preference);
+        }
+        if (f != null) {
+            f.setTargetFragment(this, 0);
+            f.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
+        }
+    }
+
+
 
 
 

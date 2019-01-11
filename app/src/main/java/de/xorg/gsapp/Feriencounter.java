@@ -1,15 +1,10 @@
 package de.xorg.gsapp;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
-import android.widget.Toast;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import org.json.JSONArray;
@@ -22,12 +17,7 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -67,7 +57,7 @@ public class Feriencounter {
         Handler handler = new Handler();
 
         final Runnable r = () -> {
-            File ferien = new File(mActivity.getCacheDir(), "ferien.json");
+            File ferien = new File(mActivity.getCacheDir(), "gsferien.json");
             long age = new Date().getTime() - PreferenceManager.getDefaultSharedPreferences(mActivity).getLong(Util.Preferences.FERIEN_FETCHED, 0);
 
             if(!ferien.exists() || TimeUnit.MILLISECONDS.toDays(age) > 14) {
@@ -107,7 +97,7 @@ public class Feriencounter {
             Date end = df.parse(disFerien.getString("end"));
             if (!end.before(now)) { //Ferien enden in der Vergangenheit -> Ignorieren
                 if (now.after(begin) && now.before(end)) { //Heute ist nach Ferienbeginn und vor Ferienende -> In den Ferien
-                    long timeRem = TimeUnit.MILLISECONDS.toDays(end.getTime() - now.getTime());
+                    long timeRem = TimeUnit.MILLISECONDS.toDays(end.getTime() - now.getTime()) + 1;
                     String timeSuff;
                     if (timeRem > 7) {
                         timeSuff = String.format("noch %d %s, %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tage"));
@@ -131,7 +121,7 @@ public class Feriencounter {
             }
         }
 
-        long timeRem = TimeUnit.MILLISECONDS.toDays(nearestDate.getTime() - now.getTime());
+        long timeRem = TimeUnit.MILLISECONDS.toDays(nearestDate.getTime() - now.getTime()) + 1;
         String timeSuff;
         if (timeRem > 7) {
             timeSuff = String.format("in %d %s und %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tagen"));
@@ -154,7 +144,8 @@ public class Feriencounter {
         System.setProperty("http.keepAlive", "false");
 
         Request request = new Request.Builder()
-                .url("https://ferien-api.de/api/v1/holidays/TH/")
+                //.url("https://ferien-api.de/api/v1/holidays/TH/")
+                .url("https://www.gymnasium-sonneberg.de/Informationen/Kalender/ferien.json")
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -172,7 +163,7 @@ public class Feriencounter {
 
                 String result = response.body().string();
 
-                Files.write(result.getBytes(Charset.forName("UTF-8")), new File(mActivity.getCacheDir(), "ferien.json")); //Ferien-JSON zwischenspeichern
+                Files.write(result.getBytes(Charset.forName("UTF-8")), new File(mActivity.getCacheDir(), "gsferien.json")); //Ferien-JSON zwischenspeichern
 
                 SharedPreferences.Editor ed = PreferenceManager.getDefaultSharedPreferences(mActivity).edit(); //Zeitpunkt des Ferien-JSON-Downloads speichern
                 ed.putLong(Util.Preferences.FERIEN_FETCHED, new Date().getTime());

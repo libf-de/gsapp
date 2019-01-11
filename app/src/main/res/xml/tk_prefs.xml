@@ -16,10 +16,17 @@
     <de.xorg.gsapp.SettingsHeader
         android:title="@string/prefs_teacher_header"
         android:key="sec_lehrer">
-        <EditTextPreference
+        <!-- <EditTextPreference
             android:key="pref_teacher"
             android:title="@string/prefs_teacher"
+            android:icon="@drawable/class_icon" />-->
+
+        <de.xorg.gsapp.TeacherPreference
+            android:key="pref_teacher"
+            android:title="Lehrer 2.0"
             android:icon="@drawable/class_icon" />
+
+
     </de.xorg.gsapp.SettingsHeader>
 
     <de.xorg.gsapp.SettingsHeader
