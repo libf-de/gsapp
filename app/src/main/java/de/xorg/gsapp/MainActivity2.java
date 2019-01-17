@@ -69,6 +69,13 @@ public class MainActivity2 extends AppCompatActivity {
         }
     }
 
+    public boolean hasNavBar(Resources resources)
+    {
+        if(Build.MANUFACTURER.toLowerCase().equals("oneplus")) return false;
+        int id = resources.getIdentifier("config_showNavigationBar", "bool", "android");
+        return id > 0 && resources.getBoolean(id);
+    }
+
     @Override
     public void onResume(){
         super.onResume();
@@ -76,7 +83,6 @@ public class MainActivity2 extends AppCompatActivity {
         if(!previouslyStarted) {
             startActivity(new Intent(MainActivity2.this, WelcomeActivity.class));
         }
-
     }
 
     private void showChangelog(int newVer) {
@@ -171,6 +177,11 @@ public class MainActivity2 extends AppCompatActivity {
 
         }*/
 
+        if(Timber.treeCount() < 1) {
+            Timber.plant(new Timber.DebugTree());
+            Timber.plant(new FileLogTree(this));
+            Timber.tag("GSApp");
+        }
 
         tkFont = Util.getTKFont(this);
 
@@ -195,13 +206,6 @@ public class MainActivity2 extends AppCompatActivity {
             });
 
         popBs = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_popbs", false);
-
-
-        if(Timber.treeCount() < 1) {
-                Timber.plant(new Timber.DebugTree());
-                Timber.plant(new FileLogTree(this));
-                Timber.tag("GSApp");
-        }
 
 
         //TODO: First-Run-Zeug
@@ -298,6 +302,9 @@ public class MainActivity2 extends AppCompatActivity {
         ViewGroup fot = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.ferien_footer, null);
         fot.setPadding(50, 50, 50, 50);
 
+        boolean hasNav = hasNavBar(getResources());
+        //boolean hasNav = false;
+
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.drawable.header_background)
@@ -343,8 +350,8 @@ public class MainActivity2 extends AppCompatActivity {
                             })
                 .withAccountHeader(headerResult)
                 .withSelectedItem(selectedItem)
-                .withTranslucentNavigationBar(true)
-                .withTranslucentNavigationBarProgrammatically(true)
+                .withTranslucentNavigationBar(hasNav)
+                .withTranslucentNavigationBarProgrammatically(hasNav)
                 .withTranslucentStatusBar(true)
                 .build();
 

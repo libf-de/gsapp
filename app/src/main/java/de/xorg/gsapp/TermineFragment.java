@@ -44,7 +44,6 @@ public class TermineFragment extends Fragment {
         if (getArguments() != null && getArguments().containsKey("theme")) {
             isYellow = (getArguments().getString("theme").equals(Util.AppTheme.YELLOW));
         }
-        Util.setOrientation(this.getActivity());
 
         //Variablen
         WebView Termine = getView().findViewById(R.id.WebView);

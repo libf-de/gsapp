@@ -37,7 +37,7 @@ public class Feriencounter {
         String daysUntil;
         String nameFerien;
 
-        public void setDays(String _days) {
+        void setDays(String _days) {
             this.daysUntil = _days;
         }
         public void setName(String _name) { this.nameFerien = _name; }

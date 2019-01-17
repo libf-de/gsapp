@@ -232,7 +232,7 @@ public class KlausurenFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Klausurenplan");
+        if(getActivity() != null && getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Klausurenplan");
 
         shownPage = PreferenceManager.getDefaultSharedPreferences(getContext()).getInt(Util.Preferences.KLAUSUR_PLAN, getPageFromKlasse(PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "KEINE")));
 
@@ -344,7 +344,7 @@ public class KlausurenFragment extends Fragment {
         OkHttpClient client = b.build();
 
         System.setProperty("http.keepAlive", "false");
-        if (showDialog != null) {
+        if (showDialog != null && getActivity() != null) {
             getActivity().runOnUiThread(() -> {
                 showDialog.setProgressStyle(0);
                 showDialog.setTitle("GSApp");
@@ -370,10 +370,15 @@ public class KlausurenFragment extends Fragment {
                     return;
 
                 getActivity().runOnUiThread(() -> {
-                    if(e.getMessage().contains("timeout")) {
-                        Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
-                    } else {
-                        Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden!", Toast.LENGTH_SHORT).show();
+
+                    try {
+                        if(e.getMessage().contains("timeout")) {
+                            Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
+                        } else {
+                            Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden!", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch(NullPointerException npe) {
+                        npe.printStackTrace();
                     }
 
 
@@ -398,13 +403,13 @@ public class KlausurenFragment extends Fragment {
                     }
 
                     if(1 == page && passData != null) {
-                        getActivity().runOnUiThread(() -> {
-                            if (showDialog != null)
-                                showDialog.dismiss();
-                            if (swipeContainer != null && swipeContainer.isRefreshing())
-                                swipeContainer.setRefreshing(false);
-                        });
-
+                        if(getActivity() != null)
+                            getActivity().runOnUiThread(() -> {
+                                if (showDialog != null)
+                                    showDialog.dismiss();
+                                if (swipeContainer != null && swipeContainer.isRefreshing())
+                                    swipeContainer.setRefreshing(false);
+                            });
                         parseCache(passData, result, force);
                     }
 

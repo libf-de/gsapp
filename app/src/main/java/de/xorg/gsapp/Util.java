@@ -1,13 +1,13 @@
 package de.xorg.gsapp;
 
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.pm.ActivityInfo;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -27,30 +27,21 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewConfiguration;
-import android.view.Window;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -128,86 +119,17 @@ public class Util {
     }
 
     static String getTeacherName(String sht, boolean appendN) {
-        final String HR = appendN ? "Herrn " : "Herr ";
-        final String FR = "Frau ";
-        switch(sht.toUpperCase()) {
-            case "BÖA":
-                return FR + "Böhlein";
-            case "AMB":
-                return HR + "Amberg";
-            case "SRÖ":
-                return FR + "Schrön";
-            case "SEL":
-                return HR + "Seliger";
-            case "GRL":
-                return FR + "Grell";
-            case "SAT":
-                return FR + "Sauerteig";
-            case "BUF":
-                return FR + "Buff";
-            case "SEM":
-                return FR + "Sesselmann";
-            case "DIE":
-                return FR + "Dietrich";
-            case "END":
-                return HR + "End";
-            case "BAA":
-                return FR + "Bauer";
-            case "HAU":
-                return HR + "Hausdörfer";
-            case "JAA":
-                return FR + "Janusch";
-            case "KRO":
-                return FR + "Kropp";
-            case "LEI":
-                return FR + "Leipold";
-            case "MAG":
-                return HR + "Maier";
-            /*
-            case "GLÄ":
-                return "???GLÄ???";
-            case "BAR":
-                return "???BAR???";
-            case "LUT":
-                return "???LUT???";*/
-            case "RUS":
-                return FR + "Rust";
-            /*case "WAL":
-                return "???WAL???";*/
-            case "ZETC":
-                return FR + "Zettler";
-            case "ROß":
-                Timber.d("Java nimmt Roß mit ß");
-                return FR + "Roß";
-            case "ROẞ":
-                Timber.d("Java nimmt Roß mit großem ẞ");
-                return FR + "Roß";
-            case "HEß":
-                Timber.d("Java nimmt Roß mit ß");
-                return FR + "Heß";
-            case "HEẞ":
-                Timber.d("Java nimmt Roß mit großem ẞ");
-                return FR + "Heß";
-            case "GIE":
-                return FR + "Giernoth";
-            case "WEL":
-                return HR + "Welsch";
-            case "OBE":
-                return HR + "Oberender";
-            case "SCB":
-                return FR + "Schott";
-            case "SCG":
-                return HR + "Schott";
-            case "KEI":
-                return FR + "Keiderling";
-            case "SLI":
-                return HR + "Schliewe";
-            default:
-                return sht;
+        if(TEACHERS.containsKey(sht.toUpperCase())) {
+            if(appendN)
+                return TEACHERS.get(sht.toUpperCase()).replace("Hr.", "Herrn").replace("Fr.", "Frau");
+            else
+                return TEACHERS.get(sht.toUpperCase()).replace("Hr.", "Herr").replace("Fr.", "Frau");
+        } else {
+            return sht;
         }
     }
 
-    public static LinkedHashMap<String, String> TEACHERS = new LinkedHashMap<String, String>() {{
+    static LinkedHashMap<String, String> TEACHERS = new LinkedHashMap<String, String>() {{
         put("AMB", "Hr. Amberg");
         put("BAR", "Fr. Barnikol-Oettler");
         put("BAA", "Fr. Bauer");
@@ -305,7 +227,13 @@ public class Util {
         int YELLOW = R.style.AppThemeYellow;
     }
 
-
+    public interface PushTopics {
+        String VERTRETUNG = "vertretung";
+        String VERTRETUNG_DEBUG = "vertretung_debug";
+        static String get(boolean isDebug) {
+            return isDebug ? VERTRETUNG_DEBUG : VERTRETUNG;
+        }
+    }
 
     public interface NavFragments {
         int VERTRETUNGSPLAN = 1;
@@ -666,6 +594,26 @@ public class Util {
         }
     }
 
+    /** Open another app.
+     * @param context current Context, like Activity, App, or Service
+     * @param packageName the full package name of the app to open
+     * @return true if likely successful, false if unsuccessful
+     */
+    public static Intent openApp(Context context, String packageName) {
+        PackageManager manager = context.getPackageManager();
+        try {
+            Intent i = manager.getLaunchIntentForPackage(packageName);
+            i.addCategory(Intent.CATEGORY_LAUNCHER);
+            if (i != null) {
+                return i;
+            } else {
+                return null;
+            }
+        } catch (ActivityNotFoundException e) {
+            return null;
+        }
+    }
+
     public static boolean StrToBol(String value) {
         return value.toLowerCase().equals("true");
     }
@@ -705,7 +653,8 @@ public class Util {
         return "GSApp " + getVersion(c) + " on " + getDeviceName() + " (Android " + Build.VERSION.RELEASE + ") " + MORE;
     }
 
-    public static boolean hasInternet(Context _context){
+    static boolean hasInternet(Context _context){
+        if(_context == null) return false;
         ConnectivityManager connectivity = (ConnectivityManager) _context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivity != null)
         {
@@ -721,24 +670,17 @@ public class Util {
         return false;
     }
  
-    public static String getVersionID(Context context){
+    static String getVersionID(Context context){
         String ID = context.getString(R.string.version);
         String[] UID = ID.split(" ");
         return UID[0];
     }
 
-    public static String getVersion(Context context) {
-        String VER = context.getString(R.string.version);
-        return VER;
-        //String[] VRS = VER.split(" ");
-        //if(BuildConfig.DEBUG && !VER.startsWith("The")) {
-        //    return VRS[0] + "D " + VRS[1];
-        //} else {
-        //    return VER;
-        //}
+    static String getVersion(Context context) {
+        return context.getString(R.string.version);
     }
     
-    public static int getVersionCode(Context context) {
+    static int getVersionCode(Context context) {
     	PackageInfo pinfo;
 		try {
 			pinfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
@@ -748,74 +690,11 @@ public class Util {
 			return 0;
 		}
     }
-    
-    public static String getReleaseName(Context context) {
-    	String ID = context.getString(R.string.version);
-        String[] UID = ID.split(" ");
-        char gf = (char) 34;
-        String GFF = String.valueOf(gf);
-        
-        String CODENAME = ID.replace(UID[0], "").replace(GFF, "");
-        
-        return CODENAME;
-    }
 
-    public static void setThemeUI(Activity a) {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = a.getWindow();
-            //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            //window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            //window.setStatusBarColor(a.getResources().getColor(R.color.gsgelbdark));
-            //window.setNavigationBarColor(a.getResources().getColor(R.color.gsgelbdark));
-        }
-        switch (PreferenceManager.getDefaultSharedPreferences(a).getString("themeMode", "android")) {
-            case "android":
-                if(hasSoftNavigation(a)) {
-                    a.setTheme(R.style.AppTheme);
-                } else {
-                    //a.setTheme(R.style.PAppThemeLight); //TODO: In neues Themen-System einbauen?
-                }
-                break;
-            default:
-                Toast.makeText(a, "WARNUNG: UNGÜLTIGE ENTWICKEREINSTELLUNG UITHEMEMODE!", Toast.LENGTH_SHORT).show();
-                break;
-        }
-    }
-
-    @SuppressLint("NewApi")
-    public static boolean hasSoftNavigation(Context context)
-    {
-        try {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
-                return !ViewConfiguration.get(context).hasPermanentMenuKey();
-            }
-            return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-
-    }
-
-    public static String strArrayToString(String[] strings) {
-        StringBuilder sb = new StringBuilder();
-        Timber.d("len: " + strings.length);
-        for (int i = 0; i < strings.length; i++) {
-            sb.append(strings[i]).append(";");
-        }
-        return sb.toString();
-    }
-
-    public static String[] strToArrayString(String strings) {
-        return strings.split(";");
-    }
-
-    public static boolean applyFilter(Context c, String[] dataSet) {
-        Log.d("FILTER", "applyFilter start");
+    static boolean applyFilter(Context c, String[] dataSet) {
+        Timber.d("applyFilter start");
         if(isLehrerModus(c))
             return dataSet[3].toLowerCase().contains(PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "").toLowerCase());
-
-        Log.d("FILTER", "applyFilter continue");
 
         String Filter = PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.KLASSE, "");
 
@@ -851,89 +730,12 @@ public class Util {
                 return dataSet[0].startsWith(Filter.replaceAll("[^\\d.]", ""));
             }
         } else {
-            Log.d("VPL", "Komischer filter *" + Filter + "*");
+            Timber.d("Komischer filter * %s *", Filter);
         }
-
-
-
         return false;
     }
 
-    public static Elements getVertretungenElements(Document doc) {
-        Elements vpEnts = doc.select("tr[id=Svertretungen], tr[id=Svertretungen] ~ tr");
-        if(vpEnts.size() < 1) {
-            Timber.d( "Vertretungsplan: Keine Eintraege gefunden, versuche Behelfsmethode...");
-            Element par = doc.select("td[class*=vpTextZentriert]").first().parent();
-            vpEnts = doc.select(par.cssSelector() + ", " + par.cssSelector() + " ~ tr");
-        }
-        return vpEnts;
-    }
-
-    public static String DoubleToString(Double input) {
-        DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
-        df.setMaximumFractionDigits(12); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
-
-        return df.format(input);
-    }
-
-    public static void setOrientation(Activity a) {
-        switch (PreferenceManager.getDefaultSharedPreferences(a).getInt("rotateMode", 1)) {
-            case 3:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_BEHIND);
-                break;
-            case 10:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
-                break;
-            case 13:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
-                break;
-            case 0:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                break;
-            case 14:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
-                break;
-            case 5:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
-                break;
-            case 1:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                break;
-            case 8:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
-                break;
-            case 9:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
-                break;
-            case 4:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-                break;
-            case 6:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-                break;
-            case 7:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
-                break;
-            case -1:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-                break;
-            case 2:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
-                break;
-            case 11:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
-                break;
-            case 12:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
-                break;
-            default:
-                a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                Toast.makeText(a, "WARNUNG: UNGÜLTIGE ENTWICKEREINSTELLUNG UIROTATEMODEGLOBAL!", Toast.LENGTH_SHORT).show();
-                break;
-        }
-    }
-
-    public static void prepareMenu(Menu menu, int fragId) {
+    static void prepareMenu(Menu menu, int fragId) {
         switch (fragId) {
             case NavFragments.BESTELLUNG:
                 menu.findItem(R.id.eb_abmelden).setVisible(true);
@@ -1101,113 +903,31 @@ class TextDrawable extends Drawable {
 
 }
 
-/*class GetDate2 extends AsyncTask<String, Void, String> {
-    Context cont;
-    GetDate2(Context ct){
-        this.cont = ct;
-    }
-
-    protected String doInBackground(String... message) {
-        HttpClient httpclient;
-        HttpGet request;
-        HttpResponse response = null;
-        String result = "";
-
-        // Verbindung zum Server mit der "Apache HttpClient Library" aufbauen
-        try {
-            httpclient = new DefaultHttpClient();
-            //request = new HttpGet("http://www.gymnasium-sonneberg.de/Informationen/vp.html");
-            request = new HttpGet("https://xorg.ga/vpt.html");
-            response = httpclient.execute(request);
-        }
-
-        catch (Exception e) {
-            // Code um Fehler zu behandeln
-            result = "error";
-        }
-
-        // Serverantwort auswerten
-        try {
-            BufferedReader rd = new BufferedReader(new InputStreamReader(
-                    response.getEntity().getContent()));
-            String line = "";
-            while ((line = rd.readLine()) != null) {
-
-                // Serverantwort auslesen
-                result = result + line ;
-            }
-        } catch (Exception e) {
-            // Code um Fehler zu behandeln
-            result = "error";
-        }
-        return result;
-    }
-
-    protected void onPostExecute(String result) {
-        try {
-            //Serverantwort (Datum des verfügbarem Vertretungsplan)
-            char gf = (char) 34;
-            GALog loc = new GALog(cont);
-            Double revision = 0.0;
-            if(result != "E") {
-                String gPart = result.split("<td colspan=\"7\" class=\"vpUeberschr\">")[1].split("</td>")[0].replace("        ", "");
-                String gDate = gPart.replace("Montag, den ", "").replace("Dienstag, den ", "").replace("Mittwoch, den ", "").replace("Donnerstag, den ", "").replace("Freitag, den ", "")/*.split(".");
-                DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
-                DateFormat RC = new SimpleDateFormat("yyyyMMdd");
-                Date dt = df.parse(gDate.replaceAll("[^\\d.]", "").trim());
-                String GRC = RC.format(dt);
-
-                revision = Util.zähleVorkommen(gDate.toLowerCase(), "neu") * 0.1;
-
-                loc.debug("IntView/GetDate2: Datum von Server erhalten: +" + (Float.parseFloat(GRC)  + revision.floatValue()) + "+");
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(cont).edit();
-                editor.putFloat("lastDate", (Float.parseFloat(GRC)  + revision.floatValue()));
-                editor.putString("readDate", GRC);
-                editor.commit();
-            }
-        } catch(Exception ex) {
-            //Allgemeiner Fehler beim Auswerten
-            new GALog(cont).error("IntView/GetDate2: Fehler beim Auswerten: " + ex.getMessage());
-        }
-    }
-
-}*/
-
 class SpMenu {
     int id;
-    String Montag;
-    String Dienstag;
-    String Mittwoch;
-    String Donnerstag;
-    String Freitag;
-    String KW;
-    String Datum;
+    private String Montag;
+    private String Dienstag;
+    private String Mittwoch;
+    private String Donnerstag;
+    private String Freitag;
+    private String KW;
+    private String Datum;
     SpMenu(int idn) {
         id = idn;
     }
 
-    public int getID() {
-        return id;
-    }
-    public String getMontag() { return Montag; }
-    public String getDienstag() { return Dienstag; }
-    public String getMittwoch() { return Mittwoch; }
-    public String getDonnerstag() { return Donnerstag; }
-    public String getFreitag() { return Freitag; }
+    void setKW(String value) { KW = value; }
 
-    public String getKW() { return KW; }
-    public void setKW(String value) { KW = value; }
+    String getDatum() { return Datum; }
+    void setDatum(String Value) { Datum = Value; }
 
-    public String getDatum() { return Datum; }
-    public void setDatum(String Value) { Datum = Value; }
+    void setMontag(String value) { Montag = value; }
+    void setDienstag(String value) { Dienstag = value; }
+    void setMittwoch(String value) { Mittwoch = value; }
+    void setDonnerstag(String value) { Donnerstag = value; }
+    void setFreitag(String value) { Freitag = value; }
 
-    public void setMontag(String value) { Montag = value; }
-    public void setDienstag(String value) { Dienstag = value; }
-    public void setMittwoch(String value) { Mittwoch = value; }
-    public void setDonnerstag(String value) { Donnerstag = value; }
-    public void setFreitag(String value) { Freitag = value; }
-
-    public String getToday(int day) {
+    String getToday(int day) {
         String Meal;
         switch (day) {
             case Calendar.MONDAY:
@@ -1233,7 +953,7 @@ class SpMenu {
         return Meal;
     }
 
-    public JSONObject toSaveJSON() throws JSONException {
+    JSONObject toSaveJSON() throws JSONException {
         JSONObject jk = new JSONObject();
         jk.put("Montag", Montag);
         jk.put("Dienstag", Dienstag);
@@ -1246,7 +966,7 @@ class SpMenu {
         return jk;
     }
 
-    public void fromSaveJSON(JSONObject input, String KW) throws JSONException {
+    void fromSaveJSON(JSONObject input, String KW) throws JSONException {
         JSONObject jo = input;
         Montag = jo.getString("Montag");
         Dienstag = jo.getString("Dienstag");
@@ -1263,14 +983,14 @@ class SpMenu {
  * Datentyp für einen Eintrag im Vertretungsplan
  */
 class Eintrag implements Serializable  {
-    String Klasse;
-    String Stunde;
-    String Fachnormal;
-    String Vertretung;
-    String Raum;
-    String Fachvertret;
-    String Bemerkung;
-    boolean neu;
+    private String Klasse;
+    private String Stunde;
+    private String Fachnormal;
+    private String Vertretung;
+    private String Raum;
+    private String Fachvertret;
+    private String Bemerkung;
+    private boolean neu;
 
     /**
      * Ein Eintrag im Vertretungsplan (klassisch, ohne neue Vertretung)
@@ -1283,183 +1003,195 @@ class Eintrag implements Serializable  {
      * @param bemerkung Bemerkung
      */
     Eintrag(String klasse, String stunde, String fachnormal, String vertretung, String raum, String fachvertret, String bemerkung) {
-        Klasse = klasse;
-        Stunde = stunde;
-        Fachnormal = fachnormal;
-        Vertretung = vertretung;
-        Raum = raum;
-        Fachvertret = fachvertret;
-        Bemerkung = bemerkung;
-        neu = false;
+        this.Klasse = klasse;
+        this.Stunde = stunde;
+        this.Fachnormal = fachnormal;
+        this.Vertretung = vertretung;
+        this.Raum = raum;
+        this.Fachvertret = fachvertret;
+        this.Bemerkung = bemerkung;
+        this.neu = false;
     }
 
+    /**
+     * Ein Eintrag im Vertretungsplan
+     * @param klasse Klasse, die Vertretung hat
+     * @param stunde Stunde, die Vertreten wird
+     * @param fachnormal Fach, welches normalerweise stattfinden würde
+     * @param vertretung Lehrer, der vertritt
+     * @param raum Raum, in dem vertreten wird
+     * @param fachvertret Fach, das vertreten wird
+     * @param bemerkung Bemerkung
+     * @param isNeu Ist Vertretung neu
+     */
     Eintrag(String klasse, String stunde, String fachnormal, String vertretung, String raum, String fachvertret, String bemerkung, boolean isNeu) {
-        Klasse = klasse;
-        Stunde = stunde;
-        Fachnormal = fachnormal;
-        Vertretung = vertretung;
-        Raum = raum;
-        Fachvertret = fachvertret;
-        Bemerkung = bemerkung;
-        neu = isNeu;
+        this.Klasse = klasse;
+        this.Stunde = stunde;
+        this.Fachnormal = fachnormal;
+        this.Vertretung = vertretung;
+        this.Raum = raum;
+        this.Fachvertret = fachvertret;
+        this.Bemerkung = bemerkung;
+        this.neu = isNeu;
     }
 
+    /**
+     * Ein Eintrag im Vertretungsplan (Aus JSON-Cache)
+     * @param input JSON-Daten
+     */
     Eintrag(JSONObject input) throws Exception {
-        Klasse = input.getString("Klasse");
-        Stunde = input.getString("Stunde");
-        Fachnormal = input.getString("Fachnormal");
-        Vertretung = input.getString("Vertretung");
-        Raum = input.getString("Raum");
-        Fachvertret = input.getString("Fachvertret");
-        Bemerkung = input.getString("Bemerkung");
+        this.Klasse = input.getString("Klasse");
+        this.Stunde = input.getString("Stunde");
+        this.Fachnormal = input.getString("Fachnormal");
+        this.Vertretung = input.getString("Vertretung");
+        this.Raum = input.getString("Raum");
+        this.Fachvertret = input.getString("Fachvertret");
+        this.Bemerkung = input.getString("Bemerkung");
 
-        if (input.has("Neu")) {
-            neu = input.getBoolean("Neu");
-        } else {
-            neu = false;
-        }
+        if (input.has("Neu"))
+            this.neu = input.getBoolean("Neu");
+        else
+            this.neu = false;
     }
 
-    public String getKlasse() {
+    /**
+     * Gibt die Klasse einer Vertretung zurück
+     * @return Klasse einer Vertretung
+     */
+    String getKlasse() {
         try {
-            return Klasse.trim();
+            return this.Klasse.trim();
         } catch(Exception e) {
-            return Klasse;
+            return this.Klasse;
         }
 
     }
 
-    public void setKlasse(String value) {
-        Klasse = value;
-    }
-
-    public String getStunde() {
+    /**
+     * Gibt die Stunde einer Vertretung zurück
+     * @return Stunde einer Vertretung
+     */
+    String getStunde() {
         try {
-            return Stunde.trim();
+            return this.Stunde.trim();
         } catch(Exception e) {
-            return Stunde;
+            return this.Stunde;
         }
 
     }
 
-    public void setStunde(String value) {
-        Stunde = value;
-    }
-
-    public String getFachNormal() {
+    /**
+     * Gibt das eigentliche Fach zurück
+     * @return Eigentliches Fach
+     */
+    String getFachNormal() {
         try {
-            return Fachnormal.trim();
+            return this.Fachnormal.trim();
         } catch(Exception e) {
-            return Fachnormal;
+            return this.Fachnormal;
         }
-
     }
 
-    public void setFachNormal(String value) {
-        Fachnormal = value;
-    }
 
-    public String getVertretung() {
-        if (Vertretung.equals("##") || Vertretung.equals("&nbsp;")) {
+    /**
+     * Gibt den Vertretungslehrer zurück
+     * @return Vertretungslehrer oder "niemandem"
+     */
+    String getVertretung() {
+        if ((!this.Vertretung.matches(".*[a-zA-Z]+.*")) || this.Vertretung.equals("&nbsp;")) { //Enthält keine Buchstaben oder ist &nbsp;
             return "niemandem";
         } else {
             try {
-                return Vertretung.trim();
+                return this.Vertretung.trim();
             } catch(Exception e) {
-                return Vertretung;
+                return this.Vertretung;
             }
         }
     }
 
-    public void setVertretung(String value) {
-        Vertretung = value;
-    }
-
-    public String getRaum() {
-        if (Raum.equals("##")) {
+    /**
+     * Gibt den Raum einer Vertretung zurück
+     * @return Raum
+     */
+    String getRaum() {
+        if ((!this.Raum.matches(".*[a-zA-Z]+.*")) || this.Raum.equals("&nbsp;")) { //Keine Angabe
             return "k.A.";
         } else {
             try {
-                return Raum.trim();
+                return this.Raum.trim();
             } catch(Exception e) {
-                return Raum;
+                return this.Raum;
             }
         }
     }
 
-    public void setRaum(String value) {
-        Raum = value;
-    }
 
-    public String getFachVertretung() {
-        if (Fachvertret.equals("##") || Vertretung.equals("&nbsp;")) {
+    /**
+     * Gibt das Fach zurück, das vertreten wird
+     * @return Vertretenes Fach
+     */
+    String getFachVertretung() {
+        if (this.Fachvertret.matches(".*[a-zA-Z]+.*") || this.Vertretung.equals("&nbsp;")) {
             return "nichts";
         } else {
             try {
-                return Fachvertret.trim();
+                return this.Fachvertret.trim();
             } catch(Exception e) {
-                return Fachvertret;
+                return this.Fachvertret;
             }
         }
     }
 
-    public void setFachVertretung(String value) {
-        Fachvertret = value.trim();
-    }
 
-    public String getBemerkung() {
-        if (!Bemerkung.matches(".*[a-zA-Z]+.*")) {
+    /**
+     * Gibt die Bemerkung oder einen leeren String zurück
+     * @return Bemerkung
+     */
+    String getBemerkung() {
+        if (!this.Bemerkung.matches(".*[a-zA-Z]+.*")) {
             return "";
         } else {
-            return Bemerkung;
+            return this.Bemerkung;
         }
     }
 
-    public String getBemerkungForCard() {
-        if (!Bemerkung.matches(".*[a-zA-Z]+.*")) {
+    /**
+     * Gibt die Bemerkung für Vertretungsplan-Karten zurück (nichts oder 2 Leerzeilen + Bemerkung)
+     * @return Bemerkung
+     */
+    String getBemerkungForCard() {
+        if (!this.Bemerkung.matches(".*[a-zA-Z]+.*")) {
             return "";
         } else {
-            return "\n\n" + Bemerkung;
+            return "\n\n" + this.Bemerkung;
         }
     }
 
-    public void setBemerkung(String value) {
-        Bemerkung = value;
-    }
-
-    public boolean getNeu() {
+    /**
+     * Gibt zurück, ob die Vertretung neu ist
+     * @return Ist Vertretung neu
+     */
+    boolean getNeu() {
         return neu;
     }
-
-    public void setNeu(boolean value) {
-        neu = value;
-    }
-
-    public Boolean isKlasse(String input) {
-        return Klasse.equals(input);
-    }
-
-    public String[] toSaveString() {
-        String[] dieser = new String[8];
-        dieser[0] = Klasse;
-        dieser[1] = Stunde;
-        dieser[2] = Fachnormal;
-        dieser[3] = Vertretung;
-        dieser[4] = Raum;
-        dieser[5] = Fachvertret;
-        dieser[6] = Bemerkung;
-        dieser[7] = Util.bolToStr(neu);
-        //Set<String> dieserSet = new HashSet<String>(Arrays.asList(dieser));
-        return dieser;
-    }
-
 }
 
+/**
+ * Datentyp für mehrere Einträge im Vertretungsplan
+ * (ArrayList)
+ */
 class Eintrage extends ArrayList<Eintrag> {
-    public ArrayList<Eintrag> getKlasseGruppe(String klasse, Boolean reverse) throws KeineEintrageException {
+
+    /**
+     * Gibt die Vertretungen einer Klasse zurück
+     * @param klasse Klasse
+     * @param reverse Reihenfolge umkehren (für Einzelansicht im Vertretungsplan)
+     * @return Liste an Einträgen
+     * @throws KeineEintrageException Klasse hat keine Vertretungen
+     */
+    ArrayList<Eintrag> getKlasseGruppe(String klasse, Boolean reverse) throws KeineEintrageException {
         ArrayList<Eintrag> outp = new ArrayList<Eintrag>();
         for (Eintrag single : this) {
-            //Log.d("GSApp", "ET: " + single.getKlasse() + " vs SUCH: " + klasse);
             if (single.getKlasse().equals(klasse)) {
                 outp.add(single);
             }
@@ -1475,10 +1207,16 @@ class Eintrage extends ArrayList<Eintrag> {
         }
     }
 
-    public ArrayList<Eintrag> getStundeGruppe(String stunde, Boolean reverse) throws KeineEintrageException {
+    /**
+     * Gibt Vertretungen pro Stunde zurück
+     * @param stunde Stunde
+     * @param reverse Reihenfolge umkehren
+     * @return Liste an Vertretungen
+     * @throws KeineEintrageException Keine Vertretungen in dieser Stunde
+     */
+    ArrayList<Eintrag> getStundeGruppe(String stunde, Boolean reverse) throws KeineEintrageException {
         ArrayList<Eintrag> outp = new ArrayList<Eintrag>();
         for (Eintrag single : this) {
-            //Log.d("GSApp", "ET: " + single.getKlasse() + " vs SUCH: " + klasse);
             if (single.getStunde().equals(stunde)) {
                 outp.add(single);
             }
@@ -1494,23 +1232,12 @@ class Eintrage extends ArrayList<Eintrag> {
         }
     }
 
-    public ArrayList<Eintrag> getKlasseGruppeS(String klasse) throws KeineEintrageException {
-        ArrayList<Eintrag> outp = new ArrayList<Eintrag>();
-        for (Eintrag single : this) {
-            //Log.d("GSApp", "ET: " + single.getKlasse() + " vs SUCH: " + klasse);
-            if (single.getKlasse().equals(klasse)) {
-                outp.add(single);
-            }
-        }
-
-        if (outp.size() < 1) {
-            throw new KeineEintrageException();
-        } else {
-            return outp;
-        }
-    }
-
-    public ArrayList<String> getKlassen() throws KeineKlassenException {
+    /**
+     * Gibt alle Klassen im Vertretungsplan zurück
+     * @return Klassen im Plan
+     * @throws KeineKlassenException Plan enthält keine Klassen
+     */
+    ArrayList<String> getKlassen() throws KeineKlassenException {
         ArrayList<String> outp = new ArrayList<String>();
         for (Eintrag single : this) {
             if (!outp.contains(single.getKlasse()))
@@ -1523,25 +1250,13 @@ class Eintrage extends ArrayList<Eintrag> {
         return outp;
     }
 
-    public ArrayList<String> getKlassenLegacy() throws KeineKlassenException {
-        String liste = "";
-        for (Eintrag single : this) {
-            if (!liste.contains(single.getKlasse())) {
-                liste = liste + single.getKlasse() + ",";
-            }
-        }
 
-        if (liste.equals("")) {
-            throw new KeineKlassenException();
-        } else {
-            liste = method(liste);
-            ArrayList<String> outp = new ArrayList<String>();
-            Collections.addAll(outp, liste.split(","));
-            return outp;
-        }
-    }
-
-    public ArrayList<String> getStunden() throws KeineKlassenException { //TODO: Neu schreiben mit weniger sinnlosen Zählschleifen
+    /**
+     * Gibt Stunden zurück in denen vertreten wird
+     * @return Stunden
+     * @throws KeineKlassenException
+     */
+    ArrayList<String> getStunden() throws KeineKlassenException { //TODO: Neu schreiben mit weniger sinnlosen Zählschleifen
         ArrayList<String> outp = new ArrayList<String>();
         for (Eintrag single : this) {
             if (!outp.contains(single.getStunde()))
@@ -1551,31 +1266,26 @@ class Eintrage extends ArrayList<Eintrag> {
         if (outp.isEmpty())
             throw new KeineKlassenException();
 
-        Collections.sort(outp, (s1, s2) -> s1.compareToIgnoreCase(s2));
+        Collections.sort(outp, String::compareToIgnoreCase);
 
         return outp;
     }
-
-    public String method(String str) {
-        if (str.length() > 0 && str.charAt(str.length() - 1) == 'x') {
-            str = str.substring(0, str.length() - 1);
-        }
-        return str;
-    }
 }
 
-class KeineEintrageException extends Exception {
+/**
+ * Eigene Exception wenn keine Vertretungen existieren
+ */
+class KeineEintrageException extends Exception { }
 
-}
-
-class KeineKlassenException extends Exception {
-
-}
+/**
+ * Eigene Exception wenn keine Klassen existieren
+ */
+class KeineKlassenException extends Exception { }
 
 class FileLogTree extends Timber.DebugTree {
     File log;
 
-    public FileLogTree(Context context) {
+    FileLogTree(Context context) {
         log = new File(context.getFilesDir(), "/timber.log");
     }
 
@@ -1637,36 +1347,3 @@ class FileLogTree extends Timber.DebugTree {
         }
     }
 }
-
-
-/*
-public void appendLog(String text)
-{
-   File logFile = new File("sdcard/log.file");
-   if (!logFile.exists())
-   {
-      try
-      {
-         logFile.createNewFile();
-      }
-      catch (IOException e)
-      {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
-   try
-   {
-      //BufferedWriter for performance, true to set append to file flag
-      BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true));
-      buf.append(text);
-      buf.newLine();
-      buf.close();
-   }
-   catch (IOException e)
-   {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-   }
-}
- */

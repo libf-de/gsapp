@@ -6,6 +6,11 @@
     </style>
 
     <style name="AppTheme" parent="MaterialDrawerTheme.Light">
+        <item name="dialogTheme">@style/TeacherDialog</item>
+        <item name="alertDialogTheme">@style/TeacherDialog</item>
+        <item name="android:dialogTheme">@style/TeacherDialog</item>
+        <item name="android:alertDialogTheme">@style/TeacherDialog</item>
+
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="pageMargin">80dp</item>

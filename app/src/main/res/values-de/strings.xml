@@ -27,5 +27,6 @@
     <string name="prefs_teacher_header">Ich</string>
     <string name="ntf_channel">GSApp Vertretungsplan-Benachrichtigung</string>
     <string name="ntf_channel_desc">Zeigt Benachrichtigungen über neue Vertretungspläne an</string>
+    <string name="prefs_teacher_desc">Bitte geben Sie ihr Namenskürzel ein. Während der Eingabe werden Vorschläge angezeigt.</string>
 
 </resources>

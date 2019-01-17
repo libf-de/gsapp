@@ -69,13 +69,16 @@ public class SpeiseplanFragment extends Fragment {
         OkHttpClient client = b.build();
 
         System.setProperty("http.keepAlive", "false");
-        SpeiseplanFragment.this.progressDialog = new ProgressDialog(SpeiseplanFragment.this.getContext());
-        SpeiseplanFragment.this.progressDialog.setProgressStyle(0);
-        SpeiseplanFragment.this.progressDialog.setTitle("GSApp");
-        SpeiseplanFragment.this.progressDialog.setMessage("Lade Daten...");
-        SpeiseplanFragment.this.progressDialog.setCancelable(false);
-        SpeiseplanFragment.this.progressDialog.setIndeterminate(true);
-        SpeiseplanFragment.this.progressDialog.show();
+
+        if(SpeiseplanFragment.this.getContext() != null) {
+            SpeiseplanFragment.this.progressDialog = new ProgressDialog(SpeiseplanFragment.this.getContext());
+            SpeiseplanFragment.this.progressDialog.setProgressStyle(0);
+            SpeiseplanFragment.this.progressDialog.setTitle("GSApp");
+            SpeiseplanFragment.this.progressDialog.setMessage("Lade Daten...");
+            SpeiseplanFragment.this.progressDialog.setCancelable(false);
+            SpeiseplanFragment.this.progressDialog.setIndeterminate(true);
+            SpeiseplanFragment.this.progressDialog.show();
+        }
 
         Request request = new Request.Builder()
                 .url("https://www.schulkueche-bestellung.de/index.php?m=2;1")
@@ -88,20 +91,15 @@ public class SpeiseplanFragment extends Fragment {
                 if(SpeiseplanFragment.this.getActivity() == null)
                     return;
 
-                SpeiseplanFragment.this.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(e.getMessage().contains("timeout")) {
-                            Toast.makeText(SpeiseplanFragment.this.getContext(), "Der Speiseplan konnte nicht neu geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
-                        } else {
-                            Toast.makeText(SpeiseplanFragment.this.getContext(), "Der Speiseplan konnte nicht neu geladen werden!", Toast.LENGTH_SHORT).show();
-                        }
+                SpeiseplanFragment.this.getActivity().runOnUiThread(() -> {
+                    if(e.getMessage().contains("timeout")) {
+                        Toast.makeText(SpeiseplanFragment.this.getContext(), "Der Speiseplan konnte nicht neu geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
+                    } else {
+                        Toast.makeText(SpeiseplanFragment.this.getContext(), "Der Speiseplan konnte nicht neu geladen werden!", Toast.LENGTH_SHORT).show();
+                    }
 
-                        //TODO: Besser catchen
-
-                        if (SpeiseplanFragment.this.progressDialog != null) {
-                            SpeiseplanFragment.this.progressDialog.dismiss();
-                        }
+                    if (SpeiseplanFragment.this.progressDialog != null) {
+                        SpeiseplanFragment.this.progressDialog.dismiss();
                     }
                 });
             }
@@ -115,15 +113,12 @@ public class SpeiseplanFragment extends Fragment {
                 if(SpeiseplanFragment.this.getActivity() == null)
                     return;
 
-                SpeiseplanFragment.this.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        parseTable(result);
-                        loadCallback();
+                SpeiseplanFragment.this.getActivity().runOnUiThread(() -> {
+                    parseTable(result);
+                    loadCallback();
 
-                        if (SpeiseplanFragment.this.progressDialog != null) {
-                            SpeiseplanFragment.this.progressDialog.dismiss();
-                        }
+                    if (SpeiseplanFragment.this.progressDialog != null) {
+                        SpeiseplanFragment.this.progressDialog.dismiss();
                     }
                 });
             }
@@ -204,7 +199,7 @@ public class SpeiseplanFragment extends Fragment {
 
                 }
             } catch (Exception e) {
-                Timber.e("Konnte nicht aus dem Cache laden: " + e.getMessage());
+                Timber.e("Konnte nicht aus dem Cache laden: %s", e.getMessage());
                 e.printStackTrace();
                 fetchSpeiseplan();
             }
@@ -255,7 +250,7 @@ public class SpeiseplanFragment extends Fragment {
                         didLoad = true;
                     }
                 } catch (Exception e) {
-                    Timber.e("Konnte nicht aus dem Cache laden: " + e.getMessage());
+                    Timber.e("Konnte nicht aus dem Cache laden: %s", e.getMessage());
                     e.printStackTrace();
                     fetchSpeiseplan();
                 }
@@ -264,33 +259,30 @@ public class SpeiseplanFragment extends Fragment {
             fetchSpeiseplan();
         }
 
-        prevDay = (Button) getView().findViewById(R.id.prevDay);
-        nextDay = (Button) getView().findViewById(R.id.nextDay);
+        prevDay = getView().findViewById(R.id.prevDay);
+        nextDay = getView().findViewById(R.id.nextDay);
         loadCallback();
     }
 
-    public void loadCallback() {
-        if (didLoad) {
-            if (today == Calendar.SATURDAY || today == Calendar.SUNDAY) {
-                displayed = Calendar.MONDAY;
-                istWeekend = true;
-                drawCardsForDay(Calendar.MONDAY, istWeekend);
+    private void loadCallback() {
+        if (this.didLoad) {
+            if ((this.today == Calendar.SATURDAY) || (this.today == Calendar.SUNDAY)) {
+                this.displayed = Calendar.MONDAY;
+                this.istWeekend = true;
+                drawCardsForDay(Calendar.MONDAY, true);
             } else {
-                displayed = today;
-                istWeekend = false;
-                drawCardsForDay(today, istWeekend);
+                this.displayed = this.today;
+                this.istWeekend = false;
+                drawCardsForDay(this.today, false);
             }
         } else {
-            mCardView.clearCards();
-            MyPlayCard cardW = new MyPlayCard(istDark,"Fehler", "Es besteht keine Internetverbindung und der Zwischenspeicher existiert nicht! Stellen sie eine Internetverbindung her und tippen sie hier!", "#FFFFFF", "#FF0000", true, false, false);
-            cardW.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (Util.hasInternet(SpeiseplanFragment.this.getContext())) {
-                        fetchSpeiseplan();
-                    } else {
-                        Toast.makeText(SpeiseplanFragment.this.getContext(), "Es besteht keine Internetverbindung!", Toast.LENGTH_SHORT).show();
-                    }
+            this.mCardView.clearCards();
+            MyPlayCard cardW = new MyPlayCard(this.istDark,"Fehler", "Es besteht keine Internetverbindung und der Zwischenspeicher existiert nicht! Stellen sie eine Internetverbindung her und tippen sie hier!", "#FFFFFF", "#FF0000", true, false, false);
+            cardW.setOnClickListener(view -> {
+                if (Util.hasInternet(SpeiseplanFragment.this.getContext())) {
+                    fetchSpeiseplan();
+                } else {
+                    Toast.makeText(SpeiseplanFragment.this.getContext(), "Es besteht keine Internetverbindung!", Toast.LENGTH_SHORT).show();
                 }
             });
             mCardView.addCard(cardW);

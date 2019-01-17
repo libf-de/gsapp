@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Looper;
 import android.preference.PreferenceManager;
@@ -170,7 +169,7 @@ public class VPlanFragment extends Fragment {
         Thread mythread = new Thread(runnable);
         mythread.start();*/
         new Thread(() -> loadData(false)).start();
-        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Vertretungsplan");
+        if(getActivity() != null && getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Vertretungsplan");
     }
 
     /**
@@ -178,6 +177,8 @@ public class VPlanFragment extends Fragment {
      */
     //(Looper.getMainLooper().getThread() == Thread.currentThread())
     private void showLdDialog() {
+        if(VPlanFragment.this.getContext() == null)
+            return;
         VPlanFragment.this.progressDialog = new ProgressDialog(VPlanFragment.this.getContext());
         VPlanFragment.this.progressDialog.setProgressStyle(0);
         VPlanFragment.this.progressDialog.setTitle("GSApp");
@@ -190,7 +191,10 @@ public class VPlanFragment extends Fragment {
     private void loadOk(boolean showDialog, boolean checkCache) {
         if(showDialog)
             if(Looper.getMainLooper().getThread() != Thread.currentThread()) {
-                VPlanFragment.this.getActivity().runOnUiThread(this::showLdDialog);
+                if(VPlanFragment.this.getActivity() != null)
+                    VPlanFragment.this.getActivity().runOnUiThread(this::showLdDialog);
+                else
+                    Timber.d("Vertretungsplan getActivity is null");
             } else {
                 Timber.w("loadOk sollte nicht im Hauptthread ausgeführt werden!");
                 showLdDialog();
@@ -304,9 +308,10 @@ public class VPlanFragment extends Fragment {
 
     void loadData(boolean isRefresh) {
         if (Thread.currentThread() != Looper.getMainLooper().getThread())
-            VPlanFragment.this.getActivity().runOnUiThread(() -> {
-                if (swipeContainer != null) swipeContainer.setRefreshing(true);
-            });
+            if(VPlanFragment.this.getActivity() != null)
+                VPlanFragment.this.getActivity().runOnUiThread(() -> {
+                    if (swipeContainer != null) swipeContainer.setRefreshing(true);
+                });
 
         if(Util.hasInternet(getContext())) {
             if (!isRefresh) {
@@ -319,41 +324,15 @@ public class VPlanFragment extends Fragment {
         } else {
             boolean cs = loadFromHtmlCache();
             if (Thread.currentThread() != Looper.getMainLooper().getThread())
-                VPlanFragment.this.getActivity().runOnUiThread(() -> {
-                    if(!cs) {
-                        this.mCardView.clearCards();
-                        this.mCardView.addCard(new MyPlayCard(istDunkel, "Fehler", "Es besteht keine Internetverbindung und es wurde noch kein Vertretungsplan zwischengespeichert!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
-                        this.mCardView.refresh();
-                    } else Toast.makeText(getContext(), "Vertretungsplan aus dem Zwischenspeicher geladen!", Toast.LENGTH_SHORT).show();
+                if(getActivity() != null)
+                    VPlanFragment.this.getActivity().runOnUiThread(() -> {
+                        if(!cs) {
+                            this.mCardView.clearCards();
+                            this.mCardView.addCard(new MyPlayCard(istDunkel, "Fehler", "Es besteht keine Internetverbindung und es wurde noch kein Vertretungsplan zwischengespeichert!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
+                            this.mCardView.refresh();
+                        } else Toast.makeText(getContext(), "Vertretungsplan aus dem Zwischenspeicher geladen!", Toast.LENGTH_SHORT).show();
 
-                });
-        }
-    }
-
-    public void magic(boolean isRefresh) {
-        Timber.d("Loading start after " + (System.currentTimeMillis() - appStart) + "ms");
-        if (Util.hasInternet(getContext())) {
-            //this.mCardView.clearCards();
-            ///Filter = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "");
-            //if (PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("loadAsync", false)) {
-                if (!isRefresh) {
-                    boolean cacheState = loadFromHtmlCache();
-                    Timber.d("Cache loaded after " + (System.currentTimeMillis() - appStart) + "ms");
-                    loadOk(!cacheState, cacheState);
-                } else {
-                    loadOk(false, false);
-                }
-            //} else {
-            //    loadSynced(false);
-            //}
-        } else {
-            if(!loadFromHtmlCache()) {
-                this.mCardView.clearCards();
-                this.mCardView.addCard(new MyPlayCard(istDunkel, "Fehler", "Es besteht keine Internetverbindung und es wurde noch kein Vertretungsplan zwischengespeichert!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
-                this.mCardView.refresh();
-            } else {
-                Toast.makeText(getContext(), "Vertretungsplan aus dem Zwischenspeicher geladen!", Toast.LENGTH_SHORT).show();
-            }
+                    });
         }
     }
 
@@ -496,14 +475,17 @@ public class VPlanFragment extends Fragment {
                 this.vplane.add(new Eintrag(data[0], data[1], data[2], data[3], data[4], data[5], data[6], isNew));
             }
         }
-        if (Thread.currentThread() != Looper.getMainLooper().getThread())
-            VPlanFragment.this.getActivity().runOnUiThread(() -> {
-                if (VPlanFragment.this.isFiltered && Util.isLehrerModus(getContext()))
-                    displayAllTeacher();
-                else
-                    displayAll();
-            });
-        else
+        if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
+            if (getActivity() != null)
+                VPlanFragment.this.getActivity().runOnUiThread(() -> {
+                    if (VPlanFragment.this.isFiltered && Util.isLehrerModus(getContext()))
+                        displayAllTeacher();
+                    else
+                        displayAll();
+                });
+            else
+                Timber.d("Vertretungsplan Activity is null parseResponse");
+        } else
             if (VPlanFragment.this.isFiltered && Util.isLehrerModus(getContext()))
                 displayAllTeacher();
             else
@@ -637,26 +619,6 @@ mythread.start();
     private void displayAll() {
         Timber.d("Display start after " + (System.currentTimeMillis() - appStart) + "ms");
         mCardView.clearCards();
-
-        //Temporär - Umfrage
-        if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("hasUmfrage", true)) {
-            MyPlayCard card = new MyPlayCard(istDunkel,"Umfrage", "Solltest du einen kurzen Moment Zeit haben, sag mir doch bitte deine Meinung zur App. (Klicken zum Öffnen)", "#00EEEE", "#00EEEE", true, true, true, cardMarquee);
-            card.setOnClickListener(v -> {
-                SharedPreferences.Editor edit = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
-                edit.putBoolean("hasUmfrage", false);
-                edit.apply();
-                Toast.makeText(getContext(), "Die Anmerkung verschwindet sobald der Vertretungsplan neu geladen wird :-)", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getContext(), WebViewActivity.class);
-                intent.putExtra(EXTRA_URL, "https://goo.gl/forms/31qUU2YhucKpE9hp1");
-                intent.putExtra(Util.EXTRA_NAME, "Umfrage");
-                getContext().startActivity(intent);
-            });
-            mCardView.addCard(card);
-        }
-
-
-
-
         CardStack dateHead = new CardStack(istDunkel);
         dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
         dateHead.setTitle("Für " + dateD);
@@ -776,23 +738,6 @@ mythread.start();
 
     private void displayAllTeacher() {
         mCardView.clearCards();
-
-        //Temporär - Umfrage
-        if(androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("hasUmfrage", true)) {
-            MyPlayCard card = new MyPlayCard(istDunkel,"Umfrage", "Sollten Sie einen kurzen Moment Zeit haben, sagen Sie mir doch bitte Ihre Meinung zur App. (Klicken zum Öffnen)", "#00EEEE", "#00EEEE", true, true, true, cardMarquee);
-            card.setOnClickListener(v -> {
-                SharedPreferences.Editor edit = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
-                edit.putBoolean("hasUmfrage", false);
-                edit.apply();
-                Toast.makeText(getContext(), "Die Anmerkung verschwindet sobald der Vertretungsplan neu geladen wird :-)", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getContext(), WebViewActivity.class);
-                intent.putExtra(EXTRA_URL, "https://goo.gl/forms/31qUU2YhucKpE9hp1");
-                intent.putExtra(Util.EXTRA_NAME, "Umfrage");
-                getContext().startActivity(intent);
-            });
-            mCardView.addCard(card);
-        }
-
         CardStack dateHead = new CardStack(istDunkel);
         dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
         dateHead.setTitle("Für " + dateD);
@@ -909,7 +854,7 @@ mythread.start();
         VPDetailSheet vds = new VPDetailSheet();
         ArrayList<Eintrag> inp = null;
         try {
-            inp = vplane.getKlasseGruppeS(klasse);
+            inp = vplane.getKlasseGruppe(klasse, false);
         } catch (KeineEintrageException e) {
             e.printStackTrace();
             return;
@@ -1287,8 +1232,12 @@ mythread.start();
             } catch (ArrayIndexOutOfBoundsException e) {
                 try {
                     Timber.d("Loading from cache (M2)");
-                    if(Looper.getMainLooper().getThread() != Thread.currentThread())
-                        VPlanFragment.this.getActivity().runOnUiThread(() -> VPlanFragment.this.fallbackLoad(html));
+                    if(Looper.getMainLooper().getThread() != Thread.currentThread()) {
+                        if (VPlanFragment.this.getActivity() != null)
+                            VPlanFragment.this.getActivity().runOnUiThread(() -> VPlanFragment.this.fallbackLoad(html));
+                        else
+                            Timber.d("Vertretungsplan htmlCache activityIsNull");
+                    }
                     return true;
                 } catch(Exception exo) {
                     Timber.d( "Failed on fallbackLoad: " + exo.getMessage());

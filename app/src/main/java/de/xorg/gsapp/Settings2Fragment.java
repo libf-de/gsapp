@@ -93,9 +93,6 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
     }
 
 
-
-
-
     @Override
     public void onResume() {
         super.onResume();
@@ -160,10 +157,11 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
                 break;
             case Util.Preferences.LEHRER: {
                 String val = sharedPreferences.getString(key, "");
-                findPreference(key).setSummary(Util.getTeacherName(val, false));
-                if (val.length() < 3) {
-                    Toast.makeText(getContext(), "Lehrerkürzel ungültig, da kürzer als 3 Zeichen! Filter deaktiviert!", Toast.LENGTH_SHORT).show();
+                if (val.length() < 3 || val.length() > 4) {
+                    sharedPreferences.edit().putString(key, "").apply();
+                    val = "";
                 }
+                findPreference(key).setSummary(Util.getTeacherName(val, false));
                 break;
             }
         }

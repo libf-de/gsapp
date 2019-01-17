@@ -4,8 +4,8 @@
     <string name="app_name">GSApp</string>
     <string name="VPlan">Vertretungsplan</string>
     <string name="aktualisiere">Aktualisieren</string>
-    <string name="version">6.0 RC3 »Melady«</string>
-    <string name="build">MELADY6RC3</string>
+    <string name="version">6.0 RC4 »Melady«</string>
+    <string name="build">MELADY6RC4</string>
     <string name="klasse_desc">Wenn du nur deine Klasse im Vertretungsplan sehen möchtest, wähle sie hier aus:</string>
     <string name="ConfigVer">2</string>
 
@@ -37,5 +37,6 @@
     <string name="prefs_teacher_header">Me</string>
     <string name="ntf_channel">GSApp Notifications</string>
     <string name="ntf_channel_desc">Displays teacher substition schedules</string>
+    <string name="prefs_teacher_desc">Please enter your shorthand name. You can search by typing your full name and selecting it from the suggestions.</string>
 
 </resources>

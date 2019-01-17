@@ -59,11 +59,11 @@ public class AktuellesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Aktuelles");
+        if(getActivity() != null && getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Aktuelles");
 
         if (getArguments() != null && getArguments().containsKey("theme")) {
-            themeId = getArguments().getString("theme");
-            isDark = (themeId.equals(Util.AppTheme.DARK));
+            this.themeId = getArguments().getString("theme");
+            this.isDark = (this.themeId.equals(Util.AppTheme.DARK));
         }
 
         //Variablen
@@ -90,14 +90,17 @@ public class AktuellesFragment extends Fragment {
         Termine.getSettings().setJavaScriptEnabled(false);
         Termine.getSettings().setBuiltInZoomControls(false);
 
-        isConnected = Util.hasInternet(this.getContext());
+        this.isConnected = Util.hasInternet(this.getContext());
 
-        if(isConnected)
+        if(this.isConnected)
             fetchLastPost();
 
         Termine.loadUrl("https://www.gymnasium-sonneberg.de/Informationen/Term/ausgebenK.php5");
     }
 
+    /**
+     * Sucht die Nummer des letzten Posts und öffnet ihn
+     */
     private void fetchLastPost() {
         OkHttpClient.Builder b = new OkHttpClient.Builder();
         b.readTimeout(20, TimeUnit.SECONDS);
@@ -107,13 +110,17 @@ public class AktuellesFragment extends Fragment {
         OkHttpClient client = b.build();
 
         System.setProperty("http.keepAlive", "false");
-        progressDialog = new ProgressDialog(AktuellesFragment.this.getContext());
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.setTitle("GSApp");
-        progressDialog.setMessage("Lade Daten...");
-        progressDialog.setCancelable(false);
-        progressDialog.setIndeterminate(true);
-        progressDialog.show();
+        try {
+            this.progressDialog = new ProgressDialog(AktuellesFragment.this.getContext());
+            this.progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            this.progressDialog.setTitle("GSApp");
+            this.progressDialog.setMessage("Lade Daten...");
+            this.progressDialog.setCancelable(false);
+            this.progressDialog.setIndeterminate(true);
+            this.progressDialog.show();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
 
         Request request = new Request.Builder()
                 .url("https://www.gymnasium-sonneberg.de/Informationen/aktuelles.php5")
@@ -126,19 +133,16 @@ public class AktuellesFragment extends Fragment {
                 if(AktuellesFragment.this.getActivity() == null)
                     return;
 
-                AktuellesFragment.this.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(e.getMessage().contains("timeout")) {
-                            Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen (Timeout) - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
-                        }
+                AktuellesFragment.this.getActivity().runOnUiThread(() -> {
+                    if(e.getMessage().contains("timeout")) {
+                        Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen (Timeout) - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
+                    }
 
 
-                        if (AktuellesFragment.this.progressDialog != null) {
-                            AktuellesFragment.this.progressDialog.dismiss();
-                        }
+                    if (AktuellesFragment.this.progressDialog != null) {
+                        AktuellesFragment.this.progressDialog.dismiss();
                     }
                 });
             }
@@ -147,7 +151,10 @@ public class AktuellesFragment extends Fragment {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if(!response.isSuccessful()) {
                     Timber.e("onResponse FAILED (" + response.code() + ")");
-                    Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
+                    if(AktuellesFragment.this.getActivity() != null)
+                        AktuellesFragment.this.getActivity().runOnUiThread(() -> {
+                            Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
+                        });
                     return;
                 }
                 final String result = response.body().string();
@@ -155,20 +162,17 @@ public class AktuellesFragment extends Fragment {
                 if(AktuellesFragment.this.getActivity() == null)
                     return;
 
-                AktuellesFragment.this.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressDialog.dismiss();
-                        try {
-                            Document d = Jsoup.parse(result);
-                            Element ifr = d.select("iframe[id=inhframeAkt]").first();
-                            String ID = ifr.attr("src").split("id=")[1];
-                            lastID = Integer.parseInt(ID);
-                            PostID = Integer.parseInt(ID);
-                            openUrl("https://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + ID);
-                        } catch(Exception e) { //TODO: Besseres Fehler-Catchen
-                            Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen (JAVAEXC) - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
-                        }
+                AktuellesFragment.this.getActivity().runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    try {
+                        Document d = Jsoup.parse(result);
+                        Element ifr = d.select("iframe[id=inhframeAkt]").first();
+                        String ID = ifr.attr("src").split("id=")[1];
+                        lastID = Integer.parseInt(ID);
+                        PostID = Integer.parseInt(ID);
+                        openUrl("https://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + ID);
+                    } catch(Exception e) { //TODO: Besseres Fehler-Catchen
+                        Toast.makeText(AktuellesFragment.this.getContext(), "Warnung: Datenabruf fehlgeschlagen (JAVAEXC) - Applet funktioniert nicht korrekt!", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -179,17 +183,17 @@ public class AktuellesFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.br_back:
-                if(PostID == 2) {
+                if(PostID == 2)
                     Toast.makeText(AktuellesFragment.this.getContext(), "Fehler: Dies ist der erste Post!", Toast.LENGTH_SHORT).show();
-                } else {
+                else {
                     PostID = PostID - 1;
                     openUrl("https://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + PostID);
                 }
                 return true;
             case R.id.br_fwd:
-                if(PostID == lastID) {
+                if(PostID == lastID)
                     Toast.makeText(AktuellesFragment.this.getContext(), "Fehler: Dies ist der letzte Post!", Toast.LENGTH_SHORT).show();
-                } else {
+                else {
                     PostID = PostID + 1;
                     openUrl("https://www.gymnasium-sonneberg.de/Informationen/Aktuell/ausgeben.php5?id=" + PostID);
                 }
@@ -208,8 +212,7 @@ public class AktuellesFragment extends Fragment {
     }
 
     private void openUrl(String url) {
-        WebView Speisen = getView().findViewById(R.id.WebView);
-        Speisen.loadUrl(url);
+        ((WebView) getView().findViewById(R.id.WebView)).loadUrl(url);
     }
 
     private class MyWebViewClient extends WebViewClient {

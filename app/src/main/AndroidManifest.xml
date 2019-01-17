@@ -37,12 +37,6 @@
                 android:resource="@xml/filepaths" />
         </provider>
 
-        <activity
-            android:name=".DeveloperSettings"
-            android:label="GDevSetting"
-            android:noHistory="true"
-            android:screenOrientation="portrait" />
-
         <activity android:name=".PermissionManager" />
         <activity
             android:name=".MainActivity2"

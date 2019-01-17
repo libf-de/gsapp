@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatAutoCompleteTextView;
 import androidx.preference.PreferenceDialogFragmentCompat;
 
@@ -104,6 +106,56 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
             super.onSaveInstanceState(outState);
             outState.putCharSequence(SAVE_STATE_TEXT, mText);
         }
+
+        /*@Override
+        public @NonNull
+        Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Context context = getActivity();
+            mWhichButtonClicked = DialogInterface.BUTTON_NEGATIVE;
+            final AlertDialog.Builder builder = new AlertDialog.Builder(context)
+                    .setTitle(mDialogTitle)
+                    .setIcon(mDialogIcon)
+                    .setPositiveButton(mPositiveButtonText, this)
+                    .setNegativeButton(mNegativeButtonText, this);
+            View contentView = onCreateDialogView(context);
+            if (contentView != null) {
+                onBindDialogView(contentView);
+                builder.setView(contentView);
+            } else {
+                builder.setMessage(mDialogMessage);
+            }
+            onPrepareDialogBuilder(builder);
+            // Create the dialog
+            final Dialog dialog = builder.create();
+            if (needInputMethod()) {
+                requestInputMethod(dialog);
+            }
+            return dialog;
+        }*/
+
+        /*@Override
+        public @NonNull
+        Dialog onCreateDialog(Bundle savedInstanceState) {
+            //Dialog d = super.onCreateDialog(savedInstanceState);
+            final Context context = getActivity();
+
+            //final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getContext(), R.style.TeacherAlertDialog))
+            final AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+                    .setTitle("YALA");
+            View contentView = onCreateDialogView(context);
+            if (contentView != null) {
+                onBindDialogView(contentView);
+                builder.setView(contentView);
+            } else {
+                builder.setMessage("blah");
+            }
+            onPrepareDialogBuilder(builder);
+            // Create the dialog
+            final Dialog dialog = builder.create();
+            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+            return dialog;
+        }*/
+
         @Override
         protected void onBindDialogView(View view) {
             super.onBindDialogView(view);
@@ -111,8 +163,11 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
             //mEditText = view.findViewById(android.R.id.edit);
 
             AppCompatAutoCompleteTextView acv = new AppCompatAutoCompleteTextView(getContext());
-            acv.setPadding(0, 0, 0, 200);
             acv.setThreshold(0);
+            int marg = Util.convertToPixels(getContext(), -4);
+            LinearLayout.LayoutParams acvp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            acvp.setMargins(marg, 0, marg, 0);
+            acv.setLayoutParams(acvp);
 
             new ViewGroupUtils().replaceView(view.findViewById(android.R.id.edit), acv);
 
@@ -130,6 +185,9 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
             mEditText.setAdapter(new TeacherAdapter(getContext()));
             // Place cursor at the end
             mEditText.setSelection(mEditText.getText().length());
+
+
+
             if (getTeacherPreference().getOnBindTeacherListener() != null) {
                 getTeacherPreference().getOnBindTeacherListener().onBindEditText(mEditText);
             }
@@ -137,12 +195,27 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
         private TeacherPreference getTeacherPreference() {
             return (TeacherPreference) getPreference();
         }
+
+        @Override
+        protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
+            builder.setPositiveButton("Okk", (dialog, which) -> {
+                if(mEditText != null)
+                    if(mEditText.getText().length() > 4 || mEditText.getText().length() < 3)
+                        new AlertDialog.Builder(getContext())
+                                .setTitle("Falsche Eingabe!")
+                                .setMessage("Für diese Funktion müssen Sie ihr Namenskürzel (3 oder 4 Buchstaben) eingeben. Das Textfeld zeigt während des Tippens Vorschläge an, die durch Tippen auf den jeweiligen Vorschlag übernommen werden können.\n\nDer Lehrerfilter wurde aufgrund der falschen Eingabe deaktiviert. Geben Sie ihr Kürzel erneut im richtigen Format ein, um den Filter zu aktivieren.")
+                                .setNeutralButton("OK", (dialog1, which1) -> dialog1.dismiss()).create().show();
+            });
+        }
+
+
+
         /** @hide */
         @RestrictTo(LIBRARY_GROUP)
         @Override
         protected boolean needInputMethod() {
             // We want the input method to show, if possible, when dialog is displayed
-            return true;
+            return false;
         }
         @Override
         public void onDialogClosed(boolean positiveResult) {
@@ -213,6 +286,11 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
                             filterResults.count = suggestions.size();
                         }
                         return filterResults;
+                    }
+
+                    @Override
+                    public String convertResultToString(Object resultValue) {
+                        return ((Map.Entry<String,String>)(resultValue)).getKey();
                     }
 
                     @Override

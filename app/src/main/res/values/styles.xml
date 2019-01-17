@@ -57,6 +57,10 @@
 
     <!-- Application theme. -->
     <style name="AppTheme" parent="MaterialDrawerTheme.Light"> <!-- Theme.MaterialComponents.Light.NoActionBar -->
+        <!--<item name="dialogTheme">@style/TeacherDialog</item>-->
+        <item name="alertDialogTheme">@style/TeacherAlertDialog</item>
+        <!--<item name="android:dialogTheme">@style/TeacherDialog</item>-->
+        <item name="android:alertDialogTheme">@style/TeacherAlertDialog</item>
         <item name="pageMargin">0dp</item>
         <item name="pageMarginBottom">0dp</item>
         <item name="colorPrimary">@color/gsgelb</item>
@@ -121,6 +125,23 @@
         <item name="android:textColor">#ff8d8d8d</item>
         <item name="android:ellipsize">end</item>
         <item name="android:maxLines">2</item>
+    </style>
+
+    <!-- Green Dialog Theme -->
+    <style name="TeacherDialog" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowSoftInputMode">adjustResize|stateHidden</item>
+        <item name="colorPrimary">@color/accent_yellow</item>
+        <item name="colorPrimaryDark">@color/accent_yellow</item>
+        <item name="colorAccent">@color/accent_yellow</item>
+    </style>
+
+    <!-- Green Alert Dialog Theme -->
+    <!--<style name="TeacherAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">-->
+    <style name="TeacherAlertDialog" parent="AlertDialog.AppCompat.Light">
+        <item name="android:windowSoftInputMode">adjustResize|stateHidden</item>
+        <item name="colorPrimary">@color/accent_yellow</item>
+        <item name="colorPrimaryDark">@color/accent_yellow</item>
+        <item name="colorAccent">@color/accent_yellow</item>
     </style>
 
 </resources>
