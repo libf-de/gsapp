@@ -442,18 +442,20 @@ public class SpeiseplanFragment extends Fragment {
 
         if (isWeekend && showWeekend) {
             final MyPlayCard cardW = new MyPlayCard(istDark,"Wochenende!", "Heute gibt es keine Schulspeisung!", "#FFFFFF", "#FF0000", true, false, false);
-            cardW.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    showWeekend = false;
-                    drawCardsForDay(day, isWeekend);
-                }
+            cardW.setOnClickListener(view -> {
+                showWeekend = false;
+                drawCardsForDay(day, isWeekend);
             });
             mCardView.addCard(cardW);
         }
 
-        TextView dispDay = (TextView) getView().findViewById(R.id.curDay);
-        dispDay.setText(getDayName(day));
+        TextView dispDay;
+        try {
+            dispDay = getView().findViewById(R.id.curDay);
+            dispDay.setText(getDayName(day));
+        } catch(NullPointerException e) {
+            e.printStackTrace();
+        }
 
         if (day == Calendar.MONDAY) {
             prevDay.setEnabled(false);
@@ -472,84 +474,61 @@ public class SpeiseplanFragment extends Fragment {
         }
 
         MyPlayCard card1 = new MyPlayCard(istDark,"Menü 1", m1.getToday(day), "#f44336", "#f44336", true, true, false);
-        card1.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
-                ad.setCancelable(true);
-                ad.setTitle("Menü 1 am " + getDayName(day));
-                ad.setMessage(m1.getToday(day));
-                ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                ad.show();
-            }
-
+        card1.setOnClickListener(v -> {
+            AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
+            ad.setCancelable(true);
+            ad.setTitle("Menü 1 am " + getDayName(day));
+            ad.setMessage(m1.getToday(day));
+            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", (dialog, which) -> dialog.dismiss());
+            ad.show();
         });
         mCardView.addCard(card1);
 
         MyPlayCard card2 = new MyPlayCard(istDark,"Menü 2", m2.getToday(day), "#ff9800", "#ff9800", true, true, false);
-        card2.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
-                ad.setCancelable(true);
-                ad.setTitle("Menü 2 am " + getDayName(day));
-                ad.setMessage(m2.getToday(day));
-                ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                ad.show();
-            }
-
+        card2.setOnClickListener(v -> {
+            AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
+            ad.setCancelable(true);
+            ad.setTitle("Menü 2 am " + getDayName(day));
+            ad.setMessage(m2.getToday(day));
+            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            ad.show();
         });
         mCardView.addCard(card2);
 
         MyPlayCard card3 = new MyPlayCard(istDark,"Menü 3", m3.getToday(day), "#4caf50", "#4caf50", true, true, false);
-        card3.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
-                ad.setCancelable(true);
-                ad.setTitle("Menü 3 am " + getDayName(day));
-                ad.setMessage(m3.getToday(day));
-                ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                ad.show();
-            }
-
+        card3.setOnClickListener(v -> {
+            AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
+            ad.setCancelable(true);
+            ad.setTitle("Menü 3 am " + getDayName(day));
+            ad.setMessage(m3.getToday(day));
+            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            ad.show();
         });
         mCardView.addCard(card3);
 
         MyPlayCard salad = new MyPlayCard(istDark,"Salat", getSalatForDay(day), "#2196F3", "#2196F3", true, true, false);
-        salad.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
-                ad.setCancelable(true);
-                ad.setTitle("Salat am " + getDayName(day));
-                ad.setMessage(getSalatForDay(day) + "\n\nSalat nur für Schüler auf Bestellung während der Schulzeit!");
-                ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                ad.show();
-            }
+        salad.setOnClickListener(view -> {
+            AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
+            ad.setCancelable(true);
+            ad.setTitle("Salat am " + getDayName(day));
+            ad.setMessage(getSalatForDay(day) + "\n\nSalat nur für Schüler auf Bestellung während der Schulzeit!");
+            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            ad.show();
         });
         mCardView.addCard(salad);
 

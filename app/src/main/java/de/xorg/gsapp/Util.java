@@ -1131,7 +1131,7 @@ class Eintrag implements Serializable  {
      * @return Vertretenes Fach
      */
     String getFachVertretung() {
-        if (this.Fachvertret.matches(".*[a-zA-Z]+.*") || this.Vertretung.equals("&nbsp;")) {
+        if (!(this.Fachvertret.matches(".*[a-zA-Z]+.*") || this.Vertretung.equals("&nbsp;"))) {
             return "nichts";
         } else {
             try {
