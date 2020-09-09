@@ -44,10 +44,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
@@ -79,9 +82,9 @@ public class KlausurenFragment extends Fragment {
     public KlausurenFragment() { }
 
     private class KlasseState {
-        public static final int UNCHANGED = 0;
-        public static final int CHANGED = 1;
-        public static final int ERROR = 2;
+        static final int UNCHANGED = 0;
+        static final int CHANGED = 1;
+        static final int ERROR = 2;
     }
 
     /*
@@ -94,10 +97,10 @@ public class KlausurenFragment extends Fragment {
         String headr12;
 
         class JSONKeys { //JSON-Schlüssel-Namen
-            public static final String KLAUSUR_11 = "klausuren-11";
-            public static final String KLAUSUR_12 = "klausuren-12";
-            public static final String HEADER_11 = "header-11";
-            public static final String HEADER_12 = "header-12";
+            static final String KLAUSUR_11 = "klausuren-11";
+            static final String KLAUSUR_12 = "klausuren-12";
+            static final String HEADER_11 = "header-11";
+            static final String HEADER_12 = "header-12";
         }
 
         KlausurPlans() { //Leer initialisieren
@@ -105,13 +108,6 @@ public class KlausurenFragment extends Fragment {
             this.kl12 = new ArrayList<>();
             this.headr11 = "";
             this.headr12 = "";
-        }
-
-        KlausurPlans(List<Klausur> k11, List<Klausur> k12, String h11, String h12) { //Eigentlich normaler Konstruktor, wird aber nicht verwendet
-            this.kl11 = k11;
-            this.kl12 = k12;
-            this.headr11 = h11;
-            this.headr12 = h12;
         }
 
         KlausurPlans(String error_message) { //Fügt nur eine Fehlermeldung ein
@@ -135,21 +131,16 @@ public class KlausurenFragment extends Fragment {
         }
 
         //Gibt Klausurplan bzw Header für entspr. Klasse zurück
-        public List<Klausur> getKl11() { if(this.kl11.size() > 0 ) return this.kl11; else return new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Keine Daten!", new Date()))); }
-        public List<Klausur> getKl12() { if(this.kl12.size() > 0 ) return this.kl12; else return new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Keine Daten!", new Date()))); }
-        public String getHeader11() { return this.headr11; }
-        public String getHeader12() { return this.headr12; }
+        List<Klausur> getKl11() { if(this.kl11.size() > 0 ) return this.kl11; else return new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Keine Daten!", new Date()))); }
+        List<Klausur> getKl12() { if(this.kl12.size() > 0 ) return this.kl12; else return new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Keine Daten!", new Date()))); }
+        String getHeader11() { return this.headr11; }
+        String getHeader12() { return this.headr12; }
 
-        //Setzt Klausurplan und/oder Header für entspr. Klasse
-        public void setKl11(List<Klausur> i) { this.kl11 = i; }
-        public void setKl11(List<Klausur> i, String h) { this.kl11 = i; this.headr11 = h; }
-        public void setHeadr11(String h) { this.headr11 = h; }
-        public void setHeadr12(String h) { this.headr12 = h; }
-        public void setKl12(List<Klausur> i) { this.kl12 = i; }
-        public void setKl12(List<Klausur> i, String h) { this.kl12 = i; this.headr12 = h; }
+        void setKl11(List<Klausur> i, String h) { this.kl11 = i; this.headr11 = h; }
+        void setKl12(List<Klausur> i, String h) { this.kl12 = i; this.headr12 = h; }
 
         //Wandelt die Daten in JSON um (Für Cache)
-        public JSONObject toJSON() throws JSONException {
+        JSONObject toJSON() throws JSONException {
             JSONObject root = new JSONObject();
             JSONArray k11 = new JSONArray();
             for (int i = 0; i < this.kl11.size(); i++) {  k11.put(this.kl11.get(i).toJSON()); }
@@ -165,7 +156,7 @@ public class KlausurenFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_klausuren, container, false);
@@ -182,7 +173,7 @@ public class KlausurenFragment extends Fragment {
     Wenn also 2018 August bis Dezember oder 2019 Januar bis Juli ist, dann sind die in der 11.
     Rest ist klar.
      */
-    public int getPageFromKlasse(String inp) {
+    private int getPageFromKlasse(String inp) {
         try {
             if(!inp.toUpperCase().startsWith("A")) //Keine Abiturklasse / Nicht 11./12. Klasse
                 return 0;
@@ -207,15 +198,15 @@ public class KlausurenFragment extends Fragment {
 
     //Erstellt eine Grafik mit Text (durchsichtiger Text auf Weiß)
     //Für Klassen-Umschalter
-    public static Bitmap textIconic(Context c, String text, float textSize, boolean darkBg) {
+    private static Bitmap textIconic(Context c, String text) {
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setTextSize(textSize);
+        paint.setTextSize((float) 120);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT));
         paint.setTextAlign(Paint.Align.LEFT);
         paint.setTypeface(Util.getTKFont(c, true));
         Paint bg = new Paint(Paint.ANTI_ALIAS_FLAG);
         bg.setStyle(Paint.Style.FILL);
-        bg.setColor(darkBg ? c.getResources().getColor(R.color.text_light) : c.getResources().getColor(R.color.text_dark));
+        bg.setColor(c.getResources().getColor(R.color.text_dark));
 
         float baseline = -paint.ascent(); // ascent() is negative
         int width = (int) (paint.measureText(text) + 0.0f); // round
@@ -230,19 +221,22 @@ public class KlausurenFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if(getActivity() != null && getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Klausurenplan");
 
-        shownPage = PreferenceManager.getDefaultSharedPreferences(getContext()).getInt(Util.Preferences.KLAUSUR_PLAN, getPageFromKlasse(PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "KEINE")));
+        shownPage = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).getInt(Util.Preferences.KLAUSUR_PLAN, getPageFromKlasse(PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).getString(Util.Preferences.KLASSE, "KEINE")));
 
-        MobileAds.initialize(getContext(), "ca-app-pub-6538125936915221~2281967739");
+        if(getContext() != null) MobileAds.initialize(getContext(), "ca-app-pub-6538125936915221~2281967739");
         AdView mAdView = getView().findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice("F42D4035C5B8ABF685658DE77BCB840A")
-                .addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")
-                .addTestDevice("ED9E21C114D9DE1A8C0695C4607CD141")
-                .build();
-        mAdView.loadAd(adRequest);
+        if(mAdView != null) {
+            AdRequest adRequest = new AdRequest.Builder().addTestDevice("F42D4035C5B8ABF685658DE77BCB840A")
+                    .addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")
+                    .addTestDevice("ED9E21C114D9DE1A8C0695C4607CD141")
+                    .build();
+            mAdView.loadAd(adRequest);
+        }
+
 
 
         RecyclerView recyclerView = getView().findViewById(R.id.rv);
@@ -255,7 +249,7 @@ public class KlausurenFragment extends Fragment {
         //Klassen-Umschalter
         //TODO: Mit in den Einstellungen gewählter Klasse starten
         fab = getView().findViewById(R.id.fab_class);
-        fab.setImageBitmap(textIconic(getContext(),"11", 120, false)); //Icon setzen
+        fab.setImageBitmap(textIconic(getContext(),"11")); //Icon setzen
         RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) fab.getLayoutParams();
         lp.setMargins(lp.leftMargin, lp.topMargin, lp.rightMargin, AdSize.SMART_BANNER.getHeightInPixels(getContext()) + lp.bottomMargin);
         fab.setLayoutParams(lp);
@@ -263,17 +257,17 @@ public class KlausurenFragment extends Fragment {
             if(shownPage == 0) {
                 //shownPage = 1;
                 showKlasse(1);
-                fab.setImageBitmap(textIconic(getContext(),"12", 120, false));
+                fab.setImageBitmap(textIconic(getContext(),"12"));
             } else {
                 //shownPage = 0;
                 showKlasse(0);
-                fab.setImageBitmap(textIconic(getContext(),"11", 120, false));
+                fab.setImageBitmap(textIconic(getContext(),"11"));
             }
         });
 
         klausurs.add(new Klausur("Fehler: (Noch) keine Daten..", new Date()));
 
-        mAdapter = new KlausurenAdapter(this.getContext(), klausurs);
+        mAdapter = new KlausurenAdapter(Objects.requireNonNull(getContext()), klausurs);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this.getContext());
 
         recyclerView.setLayoutManager(mLayoutManager);
@@ -310,7 +304,7 @@ public class KlausurenFragment extends Fragment {
                      -(nein)-> Zeige Ladebildschirm -> Lade Plan aus Internet -> schreibe Cache -> Ladeb. schließen -> neuen Anzeigen
      */
     private void load() {
-        File klausurCache = new File(getContext().getCacheDir(), "klausur.json");
+        File klausurCache = new File(GSApp.getContext().getCacheDir(), "klausur.json");
         if(klausurCache.exists()) {
             try {
                 kP = new KlausurPlans(new JSONObject(new String(Files.toByteArray(klausurCache), Charset.forName("UTF-8"))));
@@ -441,7 +435,7 @@ public class KlausurenFragment extends Fragment {
 
         if(!header11.equals(kP.getHeader11()) || force) {
             try {
-                kP.setKl11(parse(d11, header11, false), header11);
+                kP.setKl11(parse(d11, header11), header11);
                 state11 = KlasseState.CHANGED;
             } catch (ParseException e) {
                 kP.setKl11(new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Verarbeitungsfehler 11", new Date()))), "");
@@ -451,7 +445,7 @@ public class KlausurenFragment extends Fragment {
 
         if(!header12.equals(kP.getHeader12()) || force) {
             try {
-                kP.setKl12(parse(d12, header12, false), header12);
+                kP.setKl12(parse(d12, header12), header12);
                 state12 = KlasseState.CHANGED;
             } catch (ParseException e) {
                 kP.setKl12(new ArrayList<>(Collections.singletonList(new Klausur("Fehler: Verarbeitungsfehler 12", new Date()))), "");
@@ -461,8 +455,11 @@ public class KlausurenFragment extends Fragment {
 
         //try { Log.d("GSApp", kP.toJSON().toString()); } catch(Exception e) { Log.d("GSApp", "ich bin dumm"); }
 
+        if(getContext() == null)
+            Timber.d("*** CONTEXT WOULD BE NULL!");
+
         try {
-            Files.write(kP.toJSON().toString().getBytes(Charset.forName("UTF-8")), new File(getContext().getCacheDir(), "klausur.json"));
+            Files.write(kP.toJSON().toString().getBytes(Charset.forName("UTF-8")), new File(GSApp.getContext().getCacheDir(), "klausur.json"));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (JSONException e) {
@@ -483,11 +480,11 @@ public class KlausurenFragment extends Fragment {
     }
 
     private void considerTip() {
-        if(PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(Util.Preferences.KLAUSUR_TIP, true)) {
+        if(PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).getBoolean(Util.Preferences.KLAUSUR_TIP, true)) {
             Toast t = Toast.makeText(getContext(), "Klicke auf den Button um zwischen 11. und 12. Klasse zu wechseln \uD83D\uDC49", Toast.LENGTH_SHORT);
-            t.setGravity(Gravity.BOTTOM|Gravity.LEFT, 0, 0);
+            t.setGravity(Gravity.BOTTOM|Gravity.START, 0, 0);
             t.show();
-            SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
+            SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).edit();
             edit.putBoolean(Util.Preferences.KLAUSUR_TIP, false);
             edit.apply();
         }
@@ -514,7 +511,7 @@ public class KlausurenFragment extends Fragment {
         }
 
         shownPage = klasse;
-        SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(getContext()).edit();
+        SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).edit();
         edit.putInt(Util.Preferences.KLAUSUR_PLAN, klasse);
         edit.apply();
 
@@ -536,14 +533,14 @@ public class KlausurenFragment extends Fragment {
     ksHeader ist die Kopfzeile aus parseHeader
     excludeOld schließt vergangene Klausuren aus (eigentlich nicht benutzt wegen Cache - könnte aber eigentlich gemacht werden?)
      */
-    private List<Klausur> parse(Document doc, String ksHeader, boolean excludeOld) throws ArrayIndexOutOfBoundsException, ParseException {
+    private List<Klausur> parse(Document doc, String ksHeader) throws ArrayIndexOutOfBoundsException, ParseException {
         List<Klausur> o = new ArrayList<>();
         //Document doc = Jsoup.parse(result);
-        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
         List<Date> daten = new ArrayList<>(); //Enthält die jeweils ersten Tage der Wochen
 
         String[] jahre;
-        Matcher jahreMatcher = Pattern.compile("[0-9]{4}\\/[0-9]{4}").matcher(ksHeader); //Regex-Suche nach Jahreszahlen (XXXX/XXXX)
+        Matcher jahreMatcher = Pattern.compile("[0-9]{4}/[0-9]{4}").matcher(ksHeader); //Regex-Suche nach Jahreszahlen (XXXX/XXXX)
         if(jahreMatcher.matches())
             jahre = jahreMatcher.group(0).split("/");
         else
@@ -587,9 +584,7 @@ public class KlausurenFragment extends Fragment {
                     c.setTime(daten.get(datePos - 1));
                     c.add(Calendar.DATE, thisDay);
 
-                    if (excludeOld && Util.isBeforeDay(c, Calendar.getInstance()))
-                        continue;
-                    else if (Pattern.compile("[^a-zA-Z0-9\\s]").matcher(klausur.text()).find() || klausur.text().equals("Ferien"))
+                    if (Pattern.compile("[^a-zA-Z0-9\\s]").matcher(klausur.text()).find() || klausur.text().equals("Ferien"))
                         continue;
                     else if (klausur.text().equals("Abgabe SF")) {
                         o.add(new Klausur("Abgabe SF", c.getTime()));

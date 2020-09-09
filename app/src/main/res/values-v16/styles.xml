@@ -57,6 +57,8 @@
     <item name="material_drawer_selected">@color/md_selected</item>
     <item name="material_drawer_selected_text">@color/md_selected_text</item>
     <item name="android:fontFamily">@font/google_sans</item>
+    <item name="alertDialogTheme">@style/TeacherAlertDialog</item>
+    <item name="android:alertDialogTheme">@style/TeacherAlertDialog</item>
 </style>
 
 <style name="AppThemeLight" parent="AppTheme">
@@ -80,6 +82,8 @@
     <item name="material_drawer_selected">@color/md_selected</item>
     <item name="material_drawer_selected_text">@color/md_selected_text</item>
     <item name="android:fontFamily">@font/google_sans</item>
+    <item name="alertDialogTheme">@style/TeacherAlertDialogDark</item>
+    <item name="android:alertDialogTheme">@style/TeacherAlertDialogDark</item>
 </style>
 
 <style name="ActionBarDark" parent="Base.Widget.AppCompat.ActionBar">

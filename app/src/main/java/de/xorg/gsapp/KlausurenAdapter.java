@@ -51,7 +51,7 @@ public class KlausurenAdapter extends RecyclerView.Adapter<KlausurenAdapter.View
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.iconView.setText(klausurs.get(position).getIconText());
         holder.iconView.setTypeface(Util.getTKFont(mContext, true));
-        holder.iconView.setSolidColor(Color.parseColor(Util.getFachColor(klausurs.get(position).getFachShort())));
+        holder.iconView.setSolidColor(Util.getFachColor(klausurs.get(position).getFachShort()));
         holder.titleView.setText(klausurs.get(position).getLongName());
         holder.titleView.setTypeface(Util.getTKFont(mContext, false));
         holder.titleView.setSingleLine(true);

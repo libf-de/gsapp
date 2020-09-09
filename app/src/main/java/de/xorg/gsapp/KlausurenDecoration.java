@@ -3,7 +3,6 @@ package de.xorg.gsapp;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -23,7 +22,7 @@ public class KlausurenDecoration extends RecyclerView.ItemDecoration {
     private View     headerView;
     private TextView header;
 
-    public KlausurenDecoration(int headerHeight, boolean sticky, @NonNull SectionCallback sectionCallback) {
+    KlausurenDecoration(int headerHeight, boolean sticky, @NonNull SectionCallback sectionCallback) {
         headerOffset = headerHeight;
         this.sticky = sticky;
         this.sectionCallback = sectionCallback;
@@ -50,7 +49,7 @@ public class KlausurenDecoration extends RecyclerView.ItemDecoration {
 
         if (headerView == null) {
             headerView = inflateHeaderView(parent);
-            header = (TextView) headerView.findViewById(R.id.klausuren_header_text);
+            header = headerView.findViewById(R.id.klausuren_header_text);
             fixLayoutSize(headerView,
                     parent);
         }

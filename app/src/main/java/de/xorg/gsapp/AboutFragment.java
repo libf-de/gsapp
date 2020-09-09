@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.Objects;
+
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
@@ -35,7 +37,7 @@ public class AboutFragment extends Fragment {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://xorg.ga/")));
         });
 
-        ((TextView) getView().findViewById(R.id.versionText)).setText(Util.getVersion(this.getContext()));
+        ((TextView) getView().findViewById(R.id.versionText)).setText(Util.getVersion(Objects.requireNonNull(getContext())));
     }
 
     @Override

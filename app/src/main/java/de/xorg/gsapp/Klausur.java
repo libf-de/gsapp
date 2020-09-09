@@ -16,23 +16,20 @@ public class Klausur {
     private String title;
     private Date datum;
 
-    public Klausur() {
-    }
-
-    public Klausur(String title, Date datum) {
+    Klausur(String title, Date datum) {
         this.title = title;
         this.datum = datum;
     }
 
-    public Klausur(JSONObject inp) throws JSONException, ParseException {
+    Klausur(JSONObject inp) throws JSONException, ParseException {
         this.title = inp.getString("title");
-        this.datum = new SimpleDateFormat("dd/MM/yyyy").parse(inp.getString("date"));
+        this.datum = new SimpleDateFormat("dd/MM/yyyy", Locale.GERMANY).parse(inp.getString("date"));
     }
 
-    public JSONObject toJSON() throws JSONException {
+    JSONObject toJSON() throws JSONException {
         JSONObject outp = new JSONObject();
         outp.put("title", title);
-        outp.put("date", new SimpleDateFormat("dd/MM/yyyy").format(datum));
+        outp.put("date", new SimpleDateFormat("dd/MM/yyyy", Locale.GERMANY).format(datum));
         return outp;
     }
 
@@ -52,12 +49,12 @@ public class Klausur {
         this.datum = datum;
     }
 
-    public String getDateString() { return new SimpleDateFormat("E, dd.MM.yyyy", Locale.GERMAN).format(this.datum); }
+    String getDateString() { return new SimpleDateFormat("E, dd.MM.yyyy", Locale.GERMAN).format(this.datum); }
 
-    public String getDateStringLong() { return new SimpleDateFormat("EEEE, 'den' dd.MM.yyyy", Locale.GERMAN).format(this.datum); }
+    private String getDateStringLong() { return new SimpleDateFormat("EEEE, 'den' dd.MM.yyyy", Locale.GERMAN).format(this.datum); }
 
     //https://stackoverflow.com/questions/23323792/android-days-between-two-dates
-    public String getRemainingTime() {
+    String getRemainingTime() {
         Calendar klausurTag = Calendar.getInstance();
         klausurTag.setTime(this.datum);
         long msDiff = klausurTag.getTimeInMillis() - Calendar.getInstance().getTimeInMillis();
@@ -79,7 +76,7 @@ public class Klausur {
             }
     }
 
-    public String getKursNummer() {
+    private String getKursNummer() {
         if(Pattern.matches("^.+?[0-9]$", this.title)) {
             Matcher kursNr = Pattern.compile("[0-9]").matcher(this.title);
             return kursNr.find() ? kursNr.group() : "";
@@ -87,15 +84,15 @@ public class Klausur {
     }
 
     //Kursarbeit = eA = GROSSGESCHRIEBEN
-    public boolean isKursarbeit() {
+    private boolean isKursarbeit() {
         return Pattern.matches("([A-Z]+(?!.*[0-9]))", this.title);
     }
 
-    public String getDesc() {
+    String getDesc() {
         return getLongName() + " am " + getDateStringLong();
     }
 
-    public String getLongName() {
+    String getLongName() {
         if(this.title.equals("Keine Klausuren mehr!"))  return "Keine Klausuren mehr!";
         if(this.title.startsWith("Fehler:")) return this.title;
         String fachName = Util.LongName(getFachShort());
@@ -103,11 +100,11 @@ public class Klausur {
         return isKursarbeit() ? String.format("%s Kursarbeit", fachName) : String.format("%s %s Klausur", fachName, getKursNummer());
     }
 
-    public String getIconText() {
+    String getIconText() {
         if(this.title.equals("Keine Klausuren mehr!"))  return "\uD83D\uDE0A"; else if (this.title.startsWith("Fehler:")) return "\uD83D\uDE1E"; else return this.title; //😊/😞/Titel
     }
 
-    public String getFachShort() { //TODO: Crash-Safe?
+    String getFachShort() { //TODO: Crash-Safe?
         if(this.title.equals("Keine Klausuren mehr!"))  return "et"; //gelb
         if(this.title.startsWith("Fehler:"))  return "ma"; //rot
         if(Pattern.matches("[a-z].+N[0-9]", this.title)) { //frN1

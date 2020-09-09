@@ -18,6 +18,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -29,9 +30,8 @@ import timber.log.Timber;
 
 public class Feriencounter {
 
-    Activity mActivity;
-    Handler handler;
-    FeriencounterCallback fc;
+    private Activity mActivity;
+    private FeriencounterCallback fc;
 
     static class FeriencounterCallback implements Runnable {
         String daysUntil;
@@ -86,7 +86,7 @@ public class Feriencounter {
 
     private void parseFerien(String jsonInp) throws JSONException, ParseException {
         JSONArray root = new JSONArray(jsonInp);
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.GERMANY);
         JSONObject nearest = null;
         Date now = new Date();
         Date nearestDate = null;
@@ -100,9 +100,9 @@ public class Feriencounter {
                     long timeRem = TimeUnit.MILLISECONDS.toDays(end.getTime() - now.getTime()) + 1;
                     String timeSuff;
                     if (timeRem > 7) {
-                        timeSuff = String.format("noch %d %s, %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tage"));
+                        timeSuff = String.format(Locale.GERMANY, "noch %d %s, %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tage"));
                     } else {
-                        timeSuff = String.format("noch %d %s", timeRem, (timeRem == 1 ? "Tag" : "Tage"));
+                        timeSuff = String.format(Locale.GERMANY, "noch %d %s", timeRem, (timeRem == 1 ? "Tag" : "Tage"));
                     }
                     announceDays(timeSuff, capitalize(disFerien.getString("name")));
                     return; //Funktion fertig, da "passende" Ferien definitiv gefunden
@@ -121,15 +121,18 @@ public class Feriencounter {
             }
         }
 
+        if(nearestDate == null)
+            return;
+
         long timeRem = TimeUnit.MILLISECONDS.toDays(nearestDate.getTime() - now.getTime()) + 1;
         String timeSuff;
         if (timeRem > 7) {
-            timeSuff = String.format("in %d %s und %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tagen"));
+            timeSuff = String.format(Locale.GERMANY, "in %d %s und %d %s", (timeRem / 7), ((timeRem / 7) == 1 ? "Woche" : "Wochen"), (timeRem % 7), ((timeRem % 7) == 1 ? "Tag" : "Tagen"));
         } else if(timeRem < 0) {
             Timber.w("Not displaying next holidays as remaining days is less than 0!");
             timeSuff = "ab heute";
         } else {
-            timeSuff = String.format("in %d %s", timeRem, (timeRem == 1 ? "Tag" : "Tagen"));
+            timeSuff = String.format(Locale.GERMANY, "in %d %s", timeRem, (timeRem == 1 ? "Tag" : "Tagen"));
         }
         announceDays(timeSuff, capitalize(nearest.getString("name")));
     }
@@ -181,7 +184,7 @@ public class Feriencounter {
         });
     }
 
-    public void announceDays(String days, String name) {
+    private void announceDays(String days, String name) {
         fc.setDays(days);
         fc.setName(name);
         mActivity.runOnUiThread(fc);

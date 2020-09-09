@@ -65,16 +65,6 @@ public class CircularTextView extends AppCompatTextView
         strokeColor = Color.parseColor(color);
     }
 
-    public void setSolidColorStr(String color)
-    {
-        solidColor = Color.parseColor(color);
-        if(Color.red(solidColor) + Color.green(solidColor)+ Color.blue(solidColor) < 300) {
-            setTextColor(Color.WHITE);
-        } else {
-            setTextColor(Color.BLACK);
-        }
-    }
-
     public void setSolidColor(int color)
     {
         solidColor = color;

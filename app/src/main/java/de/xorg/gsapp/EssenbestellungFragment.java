@@ -1,10 +1,6 @@
 package de.xorg.gsapp;
 
-import android.graphics.Color;
 import android.os.Bundle;
-
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,11 +14,13 @@ import android.widget.Toast;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 public class EssenbestellungFragment extends Fragment {
 
     private String URI;
     private boolean isConnected = true;
-    private boolean isDark = false;
     private String themeId;
 
 
@@ -47,7 +45,6 @@ public class EssenbestellungFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         if (getArguments() != null && getArguments().containsKey("theme")) {
             themeId = getArguments().getString("theme");
-            isDark = (themeId.equals(Util.AppTheme.DARK));
         }
 
 

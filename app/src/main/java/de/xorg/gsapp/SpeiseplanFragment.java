@@ -2,7 +2,6 @@ package de.xorg.gsapp;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -29,6 +28,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import de.xorg.cardsuilib.objects.CardStack;
@@ -46,10 +46,10 @@ public class SpeiseplanFragment extends Fragment {
 
 
     int displayed = 0;
-    int today = 1;
-    boolean istWeekend = false;
-    boolean showWeekend = true;
-    boolean didLoad = false;
+    private int today = 1;
+    private boolean istWeekend = false;
+    private boolean showWeekend = true;
+    private boolean didLoad = false;
     Button prevDay;
     Button nextDay;
     private CardUI mCardView;
@@ -57,11 +57,11 @@ public class SpeiseplanFragment extends Fragment {
     private SpMenu m2;
     private SpMenu m3;
     private ProgressDialog progressDialog;
-    boolean istDark = false;
+    private boolean istDark = false;
 
     public SpeiseplanFragment() { }
 
-    public void fetchSpeiseplan() {
+    private void fetchSpeiseplan() {
         OkHttpClient.Builder b = new OkHttpClient.Builder();
         b.readTimeout(20, TimeUnit.SECONDS);
         b.connectTimeout(20, TimeUnit.SECONDS);
@@ -127,13 +127,13 @@ public class SpeiseplanFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_speiseplan, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Speiseplan");
@@ -157,22 +157,16 @@ public class SpeiseplanFragment extends Fragment {
         int cKW = calendar.get(Calendar.WEEK_OF_YEAR);
         String currentKW = String.valueOf(cKW);
         today = calendar.get(Calendar.DAY_OF_WEEK);
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this.getContext());
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext());
         String savedKW = sp.getString("cacheKW", "0");
 
-        getView().findViewById(R.id.prevDay).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                displayed = displayed - 1;
-                drawCardsForDay(displayed, istWeekend);
-            }
+        getView().findViewById(R.id.prevDay).setOnClickListener(view1 -> {
+            displayed = displayed - 1;
+            drawCardsForDay(displayed, istWeekend);
         });
-        getView().findViewById(R.id.nextDay).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                displayed = displayed + 1;
-                drawCardsForDay(displayed, istWeekend);
-            }
+        getView().findViewById(R.id.nextDay).setOnClickListener(view12 -> {
+            displayed = displayed + 1;
+            drawCardsForDay(displayed, istWeekend);
         });
 
         Timber.d("cur: *" + currentKW + "*, sav: *" + savedKW + "*");
@@ -180,11 +174,11 @@ public class SpeiseplanFragment extends Fragment {
         if (currentKW.equals(savedKW)) {
             Toast.makeText(this.getContext(), "Cache load! (KW Match)", Toast.LENGTH_SHORT).show();
             try {
-                File cacheDir = this.getContext().getCacheDir(); // context being the Activity pointer
-                File cacheFile = new File(cacheDir, "speiseplan.gxcache");
+                File cacheFile = new File(GSApp.getContext().getCacheDir(), "speiseplan.gxcache");
 
                 if (cacheFile.exists() && cacheFile.canRead()) {
-                    JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
+                    //JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
+                    JSONObject jo = new JSONObject(Files.asCharSource(cacheFile, Charsets.UTF_8).read());
 
                     JSONObject M1 = jo.getJSONObject("Meal1");
                     JSONObject M2 = jo.getJSONObject("Meal2");
@@ -206,11 +200,11 @@ public class SpeiseplanFragment extends Fragment {
         } else if (Util.isNumeric(savedKW) && cKW < Integer.parseInt(savedKW)) {
             Toast.makeText(this.getContext(), "Cache load! (KW New)", Toast.LENGTH_SHORT).show();
             try {
-                File cacheDir = this.getContext().getCacheDir(); // context being the Activity pointer
-                File cacheFile = new File(cacheDir, "speiseplan.gxcache");
+                File cacheFile = new File(GSApp.getContext().getCacheDir(), "speiseplan.gxcache");
 
                 if (cacheFile.exists() && cacheFile.canRead()) {
-                    JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
+                    //JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
+                    JSONObject jo = new JSONObject(Files.asCharSource(cacheFile, Charsets.UTF_8).read());
 
                     JSONObject M1 = jo.getJSONObject("Meal1");
                     JSONObject M2 = jo.getJSONObject("Meal2");
@@ -223,18 +217,18 @@ public class SpeiseplanFragment extends Fragment {
                     didLoad = true;
                 }
             } catch (Exception e) {
-                Timber.e("Konnte nicht aus dem Cache laden: " + e.getMessage());
+                Timber.e("Konnte nicht aus dem Cache laden: %s", e.getMessage());
                 e.printStackTrace();
                 fetchSpeiseplan();
             }
         } else {
-            if (!Util.hasInternet(this.getContext())) {
+            if (!Util.hasInternet(getContext())) {
                 try {
-                    File cacheDir = this.getContext().getCacheDir(); // context being the Activity pointer
-                    File cacheFile = new File(cacheDir, "speiseplan.gxcache");
+                    File cacheFile = new File(GSApp.getContext().getCacheDir(), "speiseplan.gxcache");
 
                     if (cacheFile.exists() && cacheFile.canRead()) {
-                        JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
+                        //JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
+                        JSONObject jo = new JSONObject(Files.asCharSource(cacheFile, Charsets.UTF_8).read());
 
                         JSONObject M1 = jo.getJSONObject("Meal1");
                         JSONObject M2 = jo.getJSONObject("Meal2");
@@ -289,22 +283,13 @@ public class SpeiseplanFragment extends Fragment {
         }
     }
 
-    public void nextDay(View v) {
-
-    }
-
-    public void prevDay(View v) {
-
-    }
-
-    public void parseTable(String data) {
-        String output = "";
+    private void parseTable(String data) {
         try {
             Document doc = Jsoup.parse(data);
 
             Elements date = doc.select("select option[selected]");
             String KW = date.text().split(" ")[1];
-            Timber.d( "Got KW " + KW);
+            Timber.d( "Got KW %s", KW);
             String Datum = date.text().split("\\|\\|")[1];
             Timber.d("Datum is +" + Datum + "+");
 
@@ -318,18 +303,10 @@ public class SpeiseplanFragment extends Fragment {
 
             Elements tableElements = doc.select("table[class=splanauflistung]");
 
-            Elements tableHeaderEles = tableElements.select("thead tr th");
-            output += "headers\n";
-            for (int i = 0; i < tableHeaderEles.size(); i++) {
-                output += tableHeaderEles.get(i).text() + "\n";
-            }
-            output += "\n";
-
             Elements tableRowElements = tableElements.select(":not(thead) tr");
 
             for (int i = 0; i < tableRowElements.size(); i++) {
                 Element row = tableRowElements.get(i);
-                output += "row" + i + "\n";
                 Elements rowItems = row.select("td");
                 if (rowItems.size() == 6) {
                     for (int j = 0; j < rowItems.size(); j++) {
@@ -389,19 +366,17 @@ public class SpeiseplanFragment extends Fragment {
                         }
                     }
                 }
-                output += "\n";
             }
 
-            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this.getContext()).edit();
+            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).edit();
             editor.putString("cacheKW", KW);
-            editor.commit();
+            editor.apply();
 
             SpeiseplanFragment.this.didLoad = true;
 
-            File outputDir = this.getContext().getCacheDir(); // context being the Activity pointer
-            File outputFile = new File(outputDir, "speiseplan.gxcache");
+            File outputFile = new File(GSApp.getContext().getCacheDir(), "speiseplan.gxcache");
 
-            //if (outputFile.canWrite()) {
+            if (outputFile.canWrite()) {
                 JSONObject root = new JSONObject();
 
                 JSONObject Meal1 = m1.toSaveJSON();
@@ -414,22 +389,23 @@ public class SpeiseplanFragment extends Fragment {
                 root.put("Meal2", Meal2);
                 root.put("Meal3", Meal3);
 
-                Files.write(root.toString(), outputFile, Charsets.UTF_8);
+                //Files.write(root.toString(), outputFile, Charsets.UTF_8);
+                Files.asCharSink(outputFile, Charsets.UTF_8).write(root.toString());
                 Timber.d("Cache erstellt!");
-            //} else {
-            //    l.critical("Kann nicht in Cache schreiben!");
-            //}
+            } else {
+                if(getContext() != null) Toast.makeText(getContext(), "Speiseplan konnte nicht zwischengespeichert werden!", Toast.LENGTH_SHORT).show();
+                Timber.w("Could not create cache - file not writeable");
+            }
         } catch (Exception e) {
-            Timber.e("Konnte Serverantwort nicht verarbeiten: " + e.getMessage());
+            Timber.e("Konnte Serverantwort nicht verarbeiten: %s", e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public void drawCardsForDay(final int day, final boolean isWeekend) {
+    private void drawCardsForDay(final int day, final boolean isWeekend) {
         mCardView.clearCards();
         CardStack dateHead = new CardStack(istDark);
         dateHead.setTypeface(Util.getTKFont(getContext(), false));
-        //dateHead.setTitle("Kalenderwoche " + m1.getKW());
         String Datem = m1.getDatum();
         String FromDate = "??";
         String TillDate = "??";
@@ -444,7 +420,7 @@ public class SpeiseplanFragment extends Fragment {
             final MyPlayCard cardW = new MyPlayCard(istDark,"Wochenende!", "Heute gibt es keine Schulspeisung!", "#FFFFFF", "#FF0000", true, false, false);
             cardW.setOnClickListener(view -> {
                 showWeekend = false;
-                drawCardsForDay(day, isWeekend);
+                drawCardsForDay(day, true);
             });
             mCardView.addCard(cardW);
         }
@@ -452,32 +428,32 @@ public class SpeiseplanFragment extends Fragment {
         TextView dispDay;
         try {
             dispDay = getView().findViewById(R.id.curDay);
-            dispDay.setText(getDayName(day));
+            dispDay.setText(getResources().getString(getDayRes(day)));
         } catch(NullPointerException e) {
             e.printStackTrace();
         }
 
         if (day == Calendar.MONDAY) {
             prevDay.setEnabled(false);
-            prevDay.setText("← Mo");
+            prevDay.setText(String.format("← %s", getResources().getString(R.string.day_mo)));
         } else {
             prevDay.setEnabled(true);
-            prevDay.setText("← " + getDayNameShort(day - 1));
+            prevDay.setText(String.format("← %s", getResources().getString(getDayResShort(day - 1))));
         }
 
         if (day == Calendar.FRIDAY) {
             nextDay.setEnabled(false);
-            nextDay.setText("Fr →");
+            nextDay.setText(String.format("%s →", getResources().getString(R.string.day_fr)));
         } else {
             nextDay.setEnabled(true);
-            nextDay.setText(getDayNameShort(day + 1) + " →");
+            nextDay.setText(String.format("%s →", getResources().getString(getDayResShort(day + 1))));
         }
 
         MyPlayCard card1 = new MyPlayCard(istDark,"Menü 1", m1.getToday(day), "#f44336", "#f44336", true, true, false);
         card1.setOnClickListener(v -> {
             AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
             ad.setCancelable(true);
-            ad.setTitle("Menü 1 am " + getDayName(day));
+            ad.setTitle(String.format(getResources().getString(R.string.menu_on), 1, getResources().getString(getDayRes(day))));
             ad.setMessage(m1.getToday(day));
             ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", (dialog, which) -> dialog.dismiss());
             ad.show();
@@ -488,14 +464,9 @@ public class SpeiseplanFragment extends Fragment {
         card2.setOnClickListener(v -> {
             AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
             ad.setCancelable(true);
-            ad.setTitle("Menü 2 am " + getDayName(day));
+            ad.setTitle(String.format(getResources().getString(R.string.menu_on), 2, getResources().getString(getDayRes(day))));
             ad.setMessage(m2.getToday(day));
-            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", (dialog, which) -> dialog.dismiss());
             ad.show();
         });
         mCardView.addCard(card2);
@@ -504,14 +475,9 @@ public class SpeiseplanFragment extends Fragment {
         card3.setOnClickListener(v -> {
             AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
             ad.setCancelable(true);
-            ad.setTitle("Menü 3 am " + getDayName(day));
+            ad.setTitle(String.format(getResources().getString(R.string.menu_on), 3, getResources().getString(getDayRes(day))));
             ad.setMessage(m3.getToday(day));
-            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", (dialog, which) -> dialog.dismiss());
             ad.show();
         });
         mCardView.addCard(card3);
@@ -520,14 +486,9 @@ public class SpeiseplanFragment extends Fragment {
         salad.setOnClickListener(view -> {
             AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
             ad.setCancelable(true);
-            ad.setTitle("Salat am " + getDayName(day));
+            ad.setTitle(String.format(getResources().getString(R.string.salad_on), getResources().getString(getDayRes(day))));
             ad.setMessage(getSalatForDay(day) + "\n\nSalat nur für Schüler auf Bestellung während der Schulzeit!");
-            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", (dialog, which) -> dialog.dismiss());
             ad.show();
         });
         mCardView.addCard(salad);
@@ -535,7 +496,29 @@ public class SpeiseplanFragment extends Fragment {
         mCardView.refresh();
     }
 
-    public String getSalatForDay(int day) {
+    private int getDayResShort(int day) {
+        switch(day) {
+            case Calendar.MONDAY: return R.string.day_mo;
+            case Calendar.TUESDAY: return R.string.day_tu;
+            case Calendar.WEDNESDAY: return R.string.day_we;
+            case Calendar.THURSDAY: return R.string.day_th;
+            case Calendar.FRIDAY: return R.string.day_fr;
+            default: return R.string.day_fr;
+        }
+    }
+
+    private int getDayRes(int day) {
+        switch(day) {
+            case Calendar.MONDAY: return R.string.day_monday;
+            case Calendar.TUESDAY: return R.string.day_tuesday;
+            case Calendar.WEDNESDAY: return R.string.day_wednesday;
+            case Calendar.THURSDAY: return R.string.day_thursday;
+            case Calendar.FRIDAY: return R.string.day_friday;
+            default: return R.string.day_friday;
+        }
+    }
+
+    private String getSalatForDay(int day) {
         String Salat;
         switch (day) {
             case Calendar.MONDAY:
@@ -560,7 +543,7 @@ public class SpeiseplanFragment extends Fragment {
         return Salat;
     }
 
-    public String getDayName(int day) {
+    /*public String getDayName(int day) {
         String name;
         switch (day) {
             case Calendar.MONDAY:
@@ -620,5 +603,5 @@ public class SpeiseplanFragment extends Fragment {
                 break;
         }
         return name;
-    }
+    }*/
 }

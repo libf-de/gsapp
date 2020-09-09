@@ -78,7 +78,6 @@
         android:id="@+id/show_src"
         app:showAsAction="always"
         android:title="Quellcode"
-        android:icon="@drawable/home"
         android:visible="false"></item>
 
     <item android:id="@+id/action_klausur_toggle" app:showAsAction="always" android:title="Kl.12" android:visible="false" />

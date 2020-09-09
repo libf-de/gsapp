@@ -34,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -80,7 +81,7 @@ public class FirebaseService extends FirebaseMessagingService {
         }
 
         Date forDate = new Date();
-        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
         try {
             forDate = format.parse(data.get("forDate"));
         } catch (ParseException e) {

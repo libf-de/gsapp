@@ -6,10 +6,10 @@
     </style>
 
     <style name="AppTheme" parent="MaterialDrawerTheme.Light">
-        <item name="dialogTheme">@style/TeacherDialog</item>
-        <item name="alertDialogTheme">@style/TeacherDialog</item>
-        <item name="android:dialogTheme">@style/TeacherDialog</item>
-        <item name="android:alertDialogTheme">@style/TeacherDialog</item>
+        <!--<item name="dialogTheme">@style/TeacherDialog</item>-->
+        <item name="alertDialogTheme">@style/TeacherAlertDialog</item>
+        <!-- <item name="android:dialogTheme">@style/TeacherDialog</item> -->
+        <item name="android:alertDialogTheme">@style/TeacherAlertDialog</item>
 
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowTranslucentStatus">true</item>
@@ -55,6 +55,8 @@
         <item name="material_drawer_selected_text">@color/md_selected_text</item>
         <item name="android:fontFamily">@font/google_sans</item>
         <item name="colorAccent">@color/accent_dark</item>
+        <item name="alertDialogTheme">@style/TeacherAlertDialogDark</item>
+        <item name="android:alertDialogTheme">@style/TeacherAlertDialogDark</item>
     </style>
 
     <style name="ActionBarDark" parent="Base.Widget.AppCompat.ActionBar">
@@ -78,33 +80,7 @@
         <item name="android:navigationBarColor">@color/gsgelb</item>
         <item name="android:statusBarColor">@color/gsgelb</item>
         <item name="android:windowBackground">@color/background_yellow</item>
+        <item name="android:buttonTint">@color/accent_yellow</item>
     </style>
-
-    <!--<style name="AppTheme" parent="AppBaseTheme">
-        -<item name="android:windowTranslucentNavigation">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:actionBarStyle">@style/MyActionBar</item>
-        <item name="pageMargin">80dp</item>
-        <item name="pageMarginBottom">48dp</item>
-        <item name="pageMarginBottomSV">56dp</item>
-        <item name="colorPrimary">@color/gsgelb</item>
-        <item name="colorPrimaryDark">@color/gsgelbdark</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
-        <item name="android:navigationBarColor">@color/gsgelbdark</item>
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="MyActionBar" parent="ThemeOverlay.AppCompat.ActionBar">
-        <item name="android:background">#fed21b</item>
-    </style>
-
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">@color/gsgelbdark</item>
-    </style>-->
 
 </resources>

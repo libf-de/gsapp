@@ -7,4 +7,11 @@
       </declare-styleable>
 
       <attr name="sheet_background" format="color"/>
+
+      <declare-styleable name="PrefImageView">
+            <attr name="maxWidth" format="dimension" />
+            <attr name="android:maxWidth" />
+            <attr name="maxHeight" format="dimension" />
+            <attr name="android:maxHeight" />
+      </declare-styleable>
 </resources>

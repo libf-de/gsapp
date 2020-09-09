@@ -62,10 +62,10 @@ public class MainActivity2 extends AppCompatActivity {
                     new Thread(() -> vpf.loadData(true)).start();
                 } else {
                     Timber.d("Opening VPlan...");
-                    showFragment(Util.NavFragments.VERTRETUNGSPLAN, false);
+                    showFragment(Util.NavFragments.VERTRETUNGSPLAN);
                 }
         } else if(i.hasExtra("FRAG_SHOW")) {
-            showFragment(i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN), false);
+            showFragment(i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN));
         }
     }
 
@@ -93,14 +93,14 @@ public class MainActivity2 extends AppCompatActivity {
         StringBuilder htmlstr = new StringBuilder();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             for(String s : Util.CHANGELOG.split("\n")) {
-                htmlstr.append("<li>&nbsp;" + s + "</li>");
+                htmlstr.append("<li>&nbsp;").append(s).append("</li>");
             }
-            cl.setText(Html.fromHtml("<pre>Version " + getString(R.string.version) + "</pre><ul>" + htmlstr.toString() + "</ul>", Html.FROM_HTML_MODE_COMPACT));
+            cl.setText(Html.fromHtml("<pre>Version " + getResources().getString(R.string.version) + "</pre><ul>" + htmlstr.toString() + "</ul>", Html.FROM_HTML_MODE_COMPACT));
         } else {
             for(String s : Util.CHANGELOG.split("\n")) {
-                htmlstr.append("*&nbsp;" + s + "<br/>");
+                htmlstr.append("*&nbsp;").append(s).append("<br/>");
             }
-            cl.setText(Html.fromHtml("<pre>Version " + getString(R.string.version) + "</pre><br/>" + htmlstr.toString() + ""));
+            cl.setText(Html.fromHtml("<pre>Version " + getResources().getString(R.string.version) + "</pre><br/>" + htmlstr.toString() + ""));
         }
 
         AlertDialog ad = new AlertDialog.Builder(this)
@@ -120,7 +120,7 @@ public class MainActivity2 extends AppCompatActivity {
 
 
     public String applyTheme() {
-        String appTheme = PreferenceManager.getDefaultSharedPreferences(this).getString("pref_theme", Util.AppTheme.AUTO); //TODO: not gud"!
+        String appTheme = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("pref_theme", Util.AppTheme.AUTO); //TODO: not gud"!
         if (appTheme.equals(Util.AppTheme.AUTO))
             appTheme = Util.AppTheme.getAutoTheme();
         switch (appTheme) {
@@ -139,24 +139,6 @@ public class MainActivity2 extends AppCompatActivity {
                 break;
         }
         return appTheme;
-    }
-
-    private int getNavHeight() {
-        Resources resources = getResources();
-        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            return resources.getDimensionPixelSize(resourceId);
-        }
-        return 0;
-    }
-
-    private int getStatusHeight() {
-        Resources resources = getResources();
-        int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            return resources.getDimensionPixelSize(resourceId);
-        }
-        return 0;
     }
 
     @Override
@@ -266,7 +248,7 @@ public class MainActivity2 extends AppCompatActivity {
                 shownFragment = Util.NavFragments.VERTRETUNGSPLAN;
 
         setupDrawer(shownFragment);
-        showFragment(shownFragment, true);
+        showFragment(shownFragment);
 
         try {
             PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -311,7 +293,7 @@ public class MainActivity2 extends AppCompatActivity {
                 .withSelectionListEnabled(false)
                 .withProfileImagesClickable(false)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("GSApp").withEmail("»Melady« RC3").withIcon(R.mipmap.ic_launcher_round)
+                        new ProfileDrawerItem().withName("GSApp").withEmail(Util.getVersion(this)).withIcon(R.mipmap.ic_launcher_round)
                 )
                 .withProfileImagesVisible(true)
                 .withCompactStyle(true)
@@ -324,6 +306,7 @@ public class MainActivity2 extends AppCompatActivity {
         PrimaryDrawerItem ak = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.AKTUELLES).withName("Aktuelles").withIcon(Util.getThemedDrawable(this,R.drawable.newspaper, applicationTheme)).withTypeface(tkFont);
         PrimaryDrawerItem tm = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.TERMINE).withName("Termine").withIcon(Util.getThemedDrawable(this,R.drawable.calendar_clock, applicationTheme)).withTypeface(tkFont);
         PrimaryDrawerItem ks = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.KLAUSUREN).withName("Klausuren").withIcon(Util.getThemedDrawable(this, R.drawable.ic_klausur, applicationTheme)).withTypeface(tkFont);
+        PrimaryDrawerItem kt = new PrimaryDrawerItem().withIdentifier(Util.NavFragments.KONTAKT).withName("Kontakt").withIcon(Util.getThemedDrawable(this, R.drawable.phone_in_talk, applicationTheme)).withTypeface(tkFont);
         SecondaryDrawerItem st = new SecondaryDrawerItem().withIdentifier(Util.NavFragments.SETTINGS).withName("Einstellungen").withIcon(Util.getThemedDrawable(this,R.drawable.settings, applicationTheme)).withTypeface(tkFont);
         SecondaryDrawerItem ab = new SecondaryDrawerItem().withIdentifier(Util.NavFragments.ABOUT).withName("Über...").withIcon(Util.getThemedDrawable(this,R.drawable.information, applicationTheme)).withTypeface(tkFont);
 
@@ -337,6 +320,7 @@ public class MainActivity2 extends AppCompatActivity {
                         ak,
                         tm,
                         ks,
+                        kt,
                         new DividerDrawerItem(),
                         st,
                         ab
@@ -345,7 +329,7 @@ public class MainActivity2 extends AppCompatActivity {
                 .withStickyFooterShadow(false)
 
                 .withOnDrawerItemClickListener((view, position, drawerItem) -> {
-                    showFragment(Integer.parseInt(String.valueOf(drawerItem.getIdentifier())), false);
+                    showFragment(Integer.parseInt(String.valueOf(drawerItem.getIdentifier())));
                     return true;
                             })
                 .withAccountHeader(headerResult)
@@ -417,7 +401,7 @@ public class MainActivity2 extends AppCompatActivity {
         }
     }
 
-    private void showFragment(int fragId, boolean first) {
+    private void showFragment(int fragId) {
         Bundle bundle = new Bundle();
         bundle.putString("theme", applicationTheme);
 
@@ -457,11 +441,18 @@ public class MainActivity2 extends AppCompatActivity {
                 fragm = new KlausurenFragment();
                 //setBarTitle("Klausurenplan");
                 break;
+            case Util.NavFragments.KONTAKT:
+                fragm = new KontaktFragment();
+                //setBarTitle("Klausurenplan");
+                break;
             case Util.NavFragments.ABOUT:
                 fragm = new AboutFragment();
                 //setBarTitle("Über GSApp...");
                 break;
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            toolbar.setElevation(fragId == Util.NavFragments.KONTAKT ? 0.0f : Util.convertToPixels(this, 4));
 
         if (fragm != null) {
             fragm.setArguments(bundle);

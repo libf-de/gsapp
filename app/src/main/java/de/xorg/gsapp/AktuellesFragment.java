@@ -31,7 +31,6 @@ import timber.log.Timber;
 
 public class AktuellesFragment extends Fragment {
 
-    String URI;
     private boolean isConnected = true;
     private int lastID = 260;
     private int PostID = 260;

@@ -14,6 +14,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -107,62 +108,13 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
             outState.putCharSequence(SAVE_STATE_TEXT, mText);
         }
 
-        /*@Override
-        public @NonNull
-        Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Context context = getActivity();
-            mWhichButtonClicked = DialogInterface.BUTTON_NEGATIVE;
-            final AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                    .setTitle(mDialogTitle)
-                    .setIcon(mDialogIcon)
-                    .setPositiveButton(mPositiveButtonText, this)
-                    .setNegativeButton(mNegativeButtonText, this);
-            View contentView = onCreateDialogView(context);
-            if (contentView != null) {
-                onBindDialogView(contentView);
-                builder.setView(contentView);
-            } else {
-                builder.setMessage(mDialogMessage);
-            }
-            onPrepareDialogBuilder(builder);
-            // Create the dialog
-            final Dialog dialog = builder.create();
-            if (needInputMethod()) {
-                requestInputMethod(dialog);
-            }
-            return dialog;
-        }*/
-
-        /*@Override
-        public @NonNull
-        Dialog onCreateDialog(Bundle savedInstanceState) {
-            //Dialog d = super.onCreateDialog(savedInstanceState);
-            final Context context = getActivity();
-
-            //final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getContext(), R.style.TeacherAlertDialog))
-            final AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
-                    .setTitle("YALA");
-            View contentView = onCreateDialogView(context);
-            if (contentView != null) {
-                onBindDialogView(contentView);
-                builder.setView(contentView);
-            } else {
-                builder.setMessage("blah");
-            }
-            onPrepareDialogBuilder(builder);
-            // Create the dialog
-            final Dialog dialog = builder.create();
-            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-            return dialog;
-        }*/
-
         @Override
         protected void onBindDialogView(View view) {
             super.onBindDialogView(view);
 
             //mEditText = view.findViewById(android.R.id.edit);
 
-            AppCompatAutoCompleteTextView acv = new AppCompatAutoCompleteTextView(getContext());
+            AppCompatAutoCompleteTextView acv = new AppCompatAutoCompleteTextView(Objects.requireNonNull(getContext()));
             acv.setThreshold(0);
             int marg = Util.convertToPixels(getContext(), -4);
             LinearLayout.LayoutParams acvp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -173,12 +125,6 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
 
             mEditText = acv;
 
-            //mEditText = view.findViewById(android.R.id.edit);
-
-            if (mEditText == null) {
-                throw new IllegalStateException("Dialog view must contain an EditText with id" +
-                        " @android:id/edit");
-            }
             mEditText.requestFocus();
             mEditText.setText(mText);
             mEditText.setThreshold(0);
@@ -201,7 +147,7 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
             builder.setPositiveButton("Okk", (dialog, which) -> {
                 if(mEditText != null)
                     if(mEditText.getText().length() > 4 || mEditText.getText().length() < 3)
-                        new AlertDialog.Builder(getContext())
+                        new AlertDialog.Builder(Objects.requireNonNull(getContext()))
                                 .setTitle("Falsche Eingabe!")
                                 .setMessage("Für diese Funktion müssen Sie ihr Namenskürzel (3 oder 4 Buchstaben) eingeben. Das Textfeld zeigt während des Tippens Vorschläge an, die durch Tippen auf den jeweiligen Vorschlag übernommen werden können.\n\nDer Lehrerfilter wurde aufgrund der falschen Eingabe deaktiviert. Geben Sie ihr Kürzel erneut im richtigen Format ein, um den Filter zu aktivieren.")
                                 .setNeutralButton("OK", (dialog1, which1) -> dialog1.dismiss()).create().show();
@@ -228,11 +174,10 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
         }
         private class TeacherAdapter extends BaseAdapter implements Filterable {
 
-            private static final int MAX_RESULTS = 10;
             private Context mContext;
             private List<Map.Entry<String, String>> resultList = new ArrayList<>();
 
-            public TeacherAdapter(Context context) {
+            TeacherAdapter(Context context) {
                 mContext = context;
             }
 
@@ -270,7 +215,7 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
 
             @Override
             public Filter getFilter() {
-                Filter filter = new Filter() {
+                return new Filter() {
                     @Override
                     protected FilterResults performFiltering(CharSequence constraint) {
                         FilterResults filterResults = new FilterResults();
@@ -302,25 +247,24 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
                             notifyDataSetInvalidated();
                         }
                     }};
-                return filter;
             }
         }
 
 
         private class ViewGroupUtils {
 
-            public ViewGroup getParent(View view) {
+            ViewGroup getParent(View view) {
                 return (ViewGroup)view.getParent();
             }
 
-            public void removeView(View view) {
+            void removeView(View view) {
                 ViewGroup parent = getParent(view);
                 if(parent != null) {
                     parent.removeView(view);
                 }
             }
 
-            public void replaceView(View currentView, View newView) {
+            void replaceView(View currentView, View newView) {
                 ViewGroup parent = getParent(currentView);
                 if(parent == null) {
                     return;

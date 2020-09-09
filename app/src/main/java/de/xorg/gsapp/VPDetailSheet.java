@@ -1,7 +1,6 @@
 package de.xorg.gsapp;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
@@ -12,7 +11,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.ArrayList;
 
-import de.xorg.cardsuilib.objects.Card;
 import de.xorg.cardsuilib.objects.CardStack;
 import de.xorg.cardsuilib.views.CardUI;
 
@@ -60,24 +58,14 @@ public class VPDetailSheet extends BottomSheetDialogFragment {
 
         if(hinweisD.length() > 6) {
             MyPlayCard card = new MyPlayCard(istDark,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\\\r\\\n]+","").trim(), "#00FF00", "#00FF00", true, false, false, cardMarquee);
-            card.setOnClickListener(new View.OnClickListener() {
+            card.setOnClickListener(v -> {
+                AlertDialog ad = new AlertDialog.Builder(getContext()).create();
+                ad.setCancelable(true);
+                ad.setTitle("Hinweis");
+                ad.setMessage(hinweisD);
 
-                @Override
-                public void onClick(View v) {
-                    AlertDialog ad = new AlertDialog.Builder(getContext()).create();
-                    ad.setCancelable(true);
-                    ad.setTitle("Hinweis");
-                    ad.setMessage(hinweisD);
-
-                    ad.setButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    ad.show();
-                }
-
+                ad.setButton("OK", (dialog, which) -> dialog.dismiss());
+                ad.show();
             });
             display.addCard(card);
         }
@@ -108,13 +96,8 @@ public class VPDetailSheet extends BottomSheetDialogFragment {
             } else {
                 card = new MyPlayCard(istDark,single.getStunde() + ". Stunde" + note, "Statt " + LongName(single.getFachNormal()) + " hast du " + LongName(single.getFachVertretung()) + " bei " + Util.getTeacherName(single.getVertretung(), true) + " in Raum " + single.getRaum() + ".\n\n" + single.getBemerkung(), getFachColor(single.getFachNormal()), getFachColor(single.getFachNormal()), true, false, single.getNeu(), cardMarquee);
             }
-            card.setOnClickListener(new View.OnClickListener() {
-
-                @Override
-                public void onClick(View arg0) {
-                    //displayMoreInformation(single);
-                }
-
+            card.setOnClickListener(arg0 -> {
+                //displayMoreInformation(single);
             });
             display.addCard(card);
         }
@@ -122,26 +105,6 @@ public class VPDetailSheet extends BottomSheetDialogFragment {
         display.refresh();
         display.getScrollView().computeScrollY();
         return rootView;
-    }
-
-    public void addStack(CardStack c) {
-        CardUI cu = rootView.findViewById(R.id.cv_dialog);
-        cu.addStack(c);
-    }
-
-    public void addCard(Card c) {
-        CardUI cu = rootView.findViewById(R.id.cv_dialog);
-        cu.addCard(c);
-    }
-
-    public void refreshUI() {
-        CardUI cu = rootView.findViewById(R.id.cv_dialog);
-        cu.refresh();
-    }
-
-    public void computeUI() {
-        CardUI cu = rootView.findViewById(R.id.cv_dialog);
-        cu.getScrollView().computeScrollY();
     }
 
     public CardUI getDisplay() {

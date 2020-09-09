@@ -1,12 +1,11 @@
 package de.xorg.gsapp;
 
 import android.content.Context;
-import androidx.core.view.ViewCompat;
-//import android.support.v4.widget.SwipeRefreshLayout;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.AbsListView;
+
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class FSwipeRefreshLayout extends SwipeRefreshLayout {
 
@@ -18,20 +17,6 @@ public class FSwipeRefreshLayout extends SwipeRefreshLayout {
 
     public FSwipeRefreshLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-    }
-
-    /**
-     * Set the children which can trigger a refresh by swiping down when they are visible. These
-     * views need to be a descendant of this view.
-     */
-    public void setSwipeableChildren(final int... ids) {
-        assert ids != null;
-
-        // Iterate through the ids and find the Views
-        mSwipeableChildren = new View[ids.length];
-        for (int i = 0; i < ids.length; i++) {
-            mSwipeableChildren[i] = findViewById(ids[i]);
-        }
     }
 
     // BEGIN_INCLUDE(can_child_scroll_up)
@@ -68,7 +53,8 @@ public class FSwipeRefreshLayout extends SwipeRefreshLayout {
     private static boolean canViewScrollUp(View view) {
         if (android.os.Build.VERSION.SDK_INT >= 14) {
             // For ICS and above we can call canScrollVertically() to determine this
-            return ViewCompat.canScrollVertically(view, -1);
+            return view.canScrollVertically(-1);
+            //return ViewCompat.canScrollVertically(view, -1);
         } else {
             if (view instanceof AbsListView) {
                 // Pre-ICS we need to manually check the first visible item and the child view's top

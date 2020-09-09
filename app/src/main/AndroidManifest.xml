@@ -16,7 +16,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
-        android:name="androidx.multidex.MultiDexApplication"
+        android:name="de.xorg.gsapp.GSApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -37,7 +37,6 @@
                 android:resource="@xml/filepaths" />
         </provider>
 
-        <activity android:name=".PermissionManager" />
         <activity
             android:name=".MainActivity2"
             android:configChanges="orientation"
@@ -62,14 +61,6 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
-        <receiver android:name=".CheckBroadcastReceiver">
-            <intent-filter>
-                <action android:name="de.xorg.gsapp.NEW_PLAN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </receiver>
 
         <activity
             android:name=".WebViewActivity"

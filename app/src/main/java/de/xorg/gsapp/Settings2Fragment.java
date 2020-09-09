@@ -22,7 +22,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Calendar;
+import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.preference.ListPreference;
@@ -40,7 +42,7 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
             tintIcons(getPreferenceScreen());
         }
 
-        if(!PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(Util.Preferences.IS_LEHRER, false)) {
+        if(!PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).getBoolean(Util.Preferences.IS_LEHRER, false)) {
             getPreferenceScreen().removePreference(findPreference("sec_lehrer"));
 
             final ListPreference listPreference = (ListPreference) findPreference("pref_klasse");
@@ -52,7 +54,7 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
                 return false;
             });
 
-        } else { getPreferenceScreen().removePreference(findPreference("sec_klasse")); findPreference(Util.Preferences.LEHRER).setSummary(Util.getTeacherName(getPreferenceManager().getSharedPreferences().getString(Util.Preferences.LEHRER, ""), false)); }
+        } else { getPreferenceScreen().removePreference(findPreference("sec_klasse")); findPreference(Util.Preferences.LEHRER).setSummary(Util.getTeacherName(Objects.requireNonNull(getPreferenceManager().getSharedPreferences().getString(Util.Preferences.LEHRER, "")), false)); }
 
 
 
@@ -135,7 +137,7 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Einstellungen");
@@ -149,11 +151,11 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
         switch (key) {
             case Util.Preferences.PUSH_MODE: {
                 String val = sharedPreferences.getString(key, Util.PushMode.DISABLED);
-                FirebaseService.changePush(this.getContext(), (val.equals(Util.PushMode.PRIVATE) || val.equals(Util.PushMode.PUBLIC)));
+                FirebaseService.changePush(Objects.requireNonNull(this.getContext()), (val.equals(Util.PushMode.PRIVATE) || val.equals(Util.PushMode.PUBLIC)));
                 break;
             }
             case Util.Preferences.THEME:
-                ((MainActivity2) getActivity()).changeTheme();
+                if(getActivity() != null && getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).changeTheme();
                 break;
             case Util.Preferences.LEHRER: {
                 String val = sharedPreferences.getString(key, "");
@@ -168,9 +170,9 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
     }
 
     void toggleLehrer() {
-        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
+        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext());
         boolean isEnabled = sp.getBoolean(Util.Preferences.IS_LEHRER, false);
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        AlertDialog.Builder builder = new AlertDialog.Builder(Objects.requireNonNull(getContext()));
         builder.setMessage(isEnabled ? R.string.teacher_disable_msg : R.string.teacher_enable_msg).setTitle(R.string.teacher_title)
                 .setPositiveButton(R.string.yes, (dialog, which) -> {
                     SharedPreferences.Editor editor = sp.edit();
@@ -179,7 +181,7 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
                     editor.apply();
                     Toast.makeText(getContext(), isEnabled ? "Lehrermodus deaktiviert" : "Lehrermodus aktiviert", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
-                    getActivity().recreate();
+                    if(getActivity() != null) getActivity().recreate();
                 }).setNegativeButton(R.string.no, (dialog, which) -> dialog.dismiss()).show();
     }
 
@@ -246,7 +248,7 @@ public class Settings2Fragment extends PreferenceFragmentCompat implements Share
 
 
     private void showEBLogin() {
-        final Dialog dialog = new Dialog(getContext());
+        final Dialog dialog = new Dialog(Objects.requireNonNull(getContext()));
         dialog.setContentView(R.layout.anmeldung);
         dialog.setTitle("Automatische Anmeldung");
 

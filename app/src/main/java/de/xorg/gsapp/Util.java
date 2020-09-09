@@ -1,16 +1,8 @@
 package de.xorg.gsapp;
 
 
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -23,7 +15,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -45,48 +36,23 @@ import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import timber.log.Timber;
 
 public class Util {
 
-    static final int PERMISSION_DEBUG = 2226;
-    static final int PERMISSION_CALL = 2202;
     static final int FIRSTRUN_ACTIVITY = 392;
 
     static final String CHANGELOG = ""
-            + "Fehlende Klausuren behoben\n"
-            + "Hinzufügen von Klausuren in Kalender\n"
-            + "Laden des Vertretungsplans behoben\n"
-            + "Layout der Einführung behoben\n"
-            + "Layout des Ferien-Countdowns behoben\n"
-            + "Wochentag im Klausurenplan hinzugefügt\n"
-            + "Anwenden des Designs behoben\n";
+            + "App für Android 10 angepasst\n";
 
     static final String NTF_CHANNEL_ID = "gsapp_notifications";
 
     final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
     final static String EXTRA_NAME = "de.xorg.gsapp.MESSAGENAME";
-
-    private static String cDeutsch = "#2196F3";
-    private static String cMathe = "#f44336";
-    private static String cMusik = "#9e9e9e";
-    private static String cKunst = "#673ab7";
-    private static String cGeografie = "#9e9d24";
-    private static String cReligion = "#ff8f00";
-    private static String cEthik = "#ff8f00";
-    private static String cMNT = "#4caf50";
-    private static String cEnglisch = "#ff9800";
-    private static String cSport = "#607d8b";
-    private static String cBiologie = "#4caf50";
-    private static String cChemie = "#e91e63";
-    private static String cPhysik = "#009688";
-    private static String cSozialkunde = "#795548";
-    private static String cInformatik = "#03a9f4";
-    private static String cWirtschaftRecht = "#ff5722";
-    private static String cGeschichte = "#9c27b0";
-    private static String cFRL = "#558b2f";
 
     static int convertToPixels(Context context, int nDP)
     {
@@ -98,9 +64,6 @@ public class Util {
 
     /**
      * Source: http://www.java2s.com/Code/Java/Data-Type/Checksifacalendardateisaftertodayandwithinanumberofdaysinthefuture.htm
-     */
-
-    /**
      * <p>Checks if the first calendar date is before the second calendar date ignoring time.</p>
      * @param cal1 the first calendar, not altered, not null.
      * @param cal2 the second calendar, not altered, not null.
@@ -256,6 +219,8 @@ public class Util {
                 return AKTUELLES;
             else if(f instanceof TermineFragment)
                 return TERMINE;
+            else if(f instanceof KontaktFragment)
+                return KONTAKT;
             else if(f instanceof Settings2Fragment)
                 return SETTINGS;
             else if(f instanceof AboutFragment)
@@ -291,241 +256,67 @@ public class Util {
         String PUBLIC = "PUBLIC";
     }
 
-    public static Typeface getTKFont(Context c) {
+    static Typeface getTKFont(Context c) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
             return ResourcesCompat.getFont(c, R.font.google_sans);
         else
             return Typeface.createFromAsset(c.getAssets(), "google_sans_regular.ttf");
     }
 
-    public static Typeface getTKFont(Context c, boolean bold) {
+    static Typeface getTKFont(Context c, boolean bold) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
             return (bold ? ResourcesCompat.getFont(c, R.font.google_sans_bold) : ResourcesCompat.getFont(c, R.font.google_sans_regular));
         else
             return (bold ? Typeface.createFromAsset(c.getAssets(), "google_sans_bold.ttf") : Typeface.createFromAsset(c.getAssets(), "google_sans_regular.ttf"));
     }
 
-    public static int getAppVersion(Context c) {
-        int vers = -1;
-        try {
-            PackageInfo pInfo = c.getPackageManager().getPackageInfo(c.getPackageName(), 0);
-            vers = pInfo.versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return vers;
-    }
-
-    public static Drawable getThemedDrawable(Context c, int resId, boolean isDark) {
+    static Drawable getThemedDrawable(Context c, int resId, boolean isDark) {
         Drawable ic = c.getResources().getDrawable(resId);
         if(isDark)
             ic.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
         return ic;
     }
 
-    public static Drawable getThemedDrawable(Context c, int resId, String applicationTheme) {
+    static Drawable getThemedDrawable(Context c, int resId, String applicationTheme) {
         Drawable ic = c.getResources().getDrawable(resId);
         if(applicationTheme.equals(Util.AppTheme.DARK))
             ic.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
         return ic;
     }
 
-    public static String dataLoader(Activity ct) {
-        final StringBuilder RITT = new StringBuilder();
-
-        RITT.append("--> DEBUG <--\n");
-        RITT.append("\n");
-        RITT.append("--> Build\n");
-        RITT.append("BUILD.DEBUG=" + String.valueOf(BuildConfig.DEBUG) + "\n");
-        RITT.append("BUILD.VERSIONCODE=" + Util.getVersionID(ct) + "\n");
-        RITT.append("BUILD.VERSIONNAME=" + Util.getVersionCode(ct) + "\n");
-        RITT.append("BUILD.VERSION=" + Util.getVersion(ct).replace(" ", "_") + "\n");
-        RITT.append("BUILD.BUILD=" + ct.getString(R.string.build) + "\n");
-        RITT.append("BUILD.DEBUG=" + String.valueOf(BuildConfig.DEBUG) + "\n");
-        RITT.append("\n");
-        RITT.append("--> Device\n");
-
-        // Bildschirmgroesse
-        DisplayMetrics dm = new DisplayMetrics();
-        ct.getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int width = dm.widthPixels;
-        int height = dm.heightPixels;
-        int dens = dm.densityDpi;
-        double wi = (double) width / (double) dens;
-        double hi = (double) height / (double) dens;
-        double x = Math.pow(wi, 2);
-        double y = Math.pow(hi, 2);
-        double si = Math.sqrt(x + y);
-        si = Math.round(si * 100);
-        si = si / 100;
-        String BILDSCHIRMGROESSE = String.valueOf(si);
-
-        // DPI
-        DisplayMetrics metrics = ct.getResources().getDisplayMetrics();
-        int densityDpi = (int) (metrics.density * 160f);
-        String DPI = String.valueOf(densityDpi);
-
-        // Bildschirmaufloesung
-        DisplayMetrics displaymetrics = new DisplayMetrics();
-        ct.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-        int heightA = displaymetrics.heightPixels;
-        int widthA = displaymetrics.widthPixels;
-        String BILDSCHIRMAUFLOESUNG = String.valueOf(widthA) + "x" + String.valueOf(heightA);
-
-        // Android-Version
-        String ANDROIDVERSION = Build.VERSION.RELEASE;
-        String ANDROIDSDK = String.valueOf(Build.VERSION.SDK_INT);
-
-        // Handydaten
-        String HERSTELLER = Build.MANUFACTURER;
-        String HANDYTYP = getDeviceName();
-
-        // Einmalige ID-Nummer
-        String PI = PreferenceManager.getDefaultSharedPreferences(ct).getString("id", "X0X0X0X0X");
-
-        Boolean asyncb = PreferenceManager.getDefaultSharedPreferences(ct).getBoolean("loadAsync", false);
-        String ASYNC = "";
-        if (asyncb) {
-            ASYNC = "TRUE";
-        } else {
-            ASYNC = "FALSE";
-        }
-
-        RITT.append("DEVICE.SCREEN.SIZE=" + BILDSCHIRMGROESSE + "\n");
-        RITT.append("DEVICE.SCREEN.DPI=" + DPI + "\n");
-        RITT.append("DEVICE.SCREEN.RESOLUTION=" + BILDSCHIRMAUFLOESUNG + "\n");
-        RITT.append("DEVICE.ANDROID.VERSION=" + ANDROIDVERSION + "\n");
-        RITT.append("DEVICE.ANDROID.SDK=" + ANDROIDSDK + "\n");
-        RITT.append("DEVICE.MANUFACTURER=" + HERSTELLER + "\n");
-        RITT.append("DEVICE.DESCRIPTOR=" + HANDYTYP + "\n");
-        RITT.append("DEVICE.IDENTIFIER=" + PI + "\n");
-        RITT.append("DEVICE.LOADSASYNC=" + ASYNC + "\n");
-
-        return RITT.toString();
-    }
-
-    public static String getDeviceName() {
-        String manufacturer = Build.MANUFACTURER;
-        String model = Build.MODEL;
-        if (model.startsWith(manufacturer)) {
-            return capitalize(model);
-        } else {
-            return capitalize(manufacturer) + " " + model;
-        }
-    }
-
-    private static String capitalize(String s) {
-        if (s == null || s.length() == 0) {
-            return "";
-        }
-        char first = s.charAt(0);
-        if (Character.isUpperCase(first)) {
-            return s;
-        } else {
-            return Character.toUpperCase(first) + s.substring(1);
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.O)
-    public static void initNotifications(Context c) { //TODO: Eigenes Schema
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return;
-        }
-        NotificationManager mNotificationManager =
-                (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
-        // The user-visible name of the channel.
-        CharSequence name = "GSApp Vertretungsplan";
-        // The user-visible description of the channel.
-        String description = "Benachrichtigungen bei neuem Vertretungsplan";
-        int importance = NotificationManager.IMPORTANCE_HIGH;
-        NotificationChannel mChannel = new NotificationChannel(NTF_CHANNEL_ID, name, importance);
-        // Configure the notification channel.
-        mChannel.setDescription(description);
-        mChannel.enableLights(true);
-        // Sets the notification light color for notifications posted to this
-        // channel, if the device supports this feature.
-        mChannel.setLightColor(Color.RED);
-        mChannel.enableVibration(true);
-        mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
-        mNotificationManager.createNotificationChannel(mChannel);
-    }
-
-    public static int zähleVorkommen(String strings, String suchwort) {
-        int lastIndex = 0;
-        int count = 0;
-
-        while (lastIndex != -1) {
-
-            lastIndex = strings.indexOf(suchwort, lastIndex);
-
-            if (lastIndex != -1) {
-                count++;
-                lastIndex += suchwort.length();
-            }
-        }
-
-        return count;
-    }
-
-    public static String getFachColor(String fach) {
+    static int getFachColor(String fach) {
+        Resources r = GSApp.getContext().getResources();
         switch (fach.toLowerCase()) {
-            case "de":
-                return cDeutsch;
-            case "ma":
-                return cMathe;
-            case "mu":
-                return cMusik;
-            case "ku":
-                return cKunst;
-            case "gg":
-                return cGeografie;
-            case "re":
-                return cReligion;
-            case "et":
-                return cEthik;
-            case "mnt":
-                return cMNT;
-            case "en":
-                return cEnglisch;
-            case "sp":
-                return cSport;
-            case "spj":
-                return cSport;
-            case "spm":
-                return cSport;
-            case "bi":
-                return cBiologie;
-            case "ch":
-                return cChemie;
-            case "ph":
-                return cPhysik;
-            case "sk":
-                return cSozialkunde;
-            case "if":
-                return cInformatik;
-            case "wr":
-                return cWirtschaftRecht;
-            case "ge":
-                return cGeschichte;
-            case "ru":
-                return cFRL;
-            case "la":
-                return cFRL;
-            case "fr":
-                return cFRL;
-            case "sn":
-                return cFRL;
-            case "gewi":
-                return cSozialkunde;
-            case "dg":
-                return cSozialkunde;
-            default:
-                return cSport;
+            case "de": return r.getColor(R.color.de);
+            case "ma": return r.getColor(R.color.ma);
+            case "mu": return r.getColor(R.color.mu);
+            case "ku": return r.getColor(R.color.ku);
+            case "gg": return r.getColor(R.color.gg);
+            case "re": return r.getColor(R.color.etre);
+            case "et": return r.getColor(R.color.etre);
+            case "mnt": return r.getColor(R.color.mnt);
+            case "en": return r.getColor(R.color.en);
+            case "sp": return r.getColor(R.color.sp);
+            case "spj": return r.getColor(R.color.sp);
+            case "spm": return r.getColor(R.color.sp);
+            case "bi": return r.getColor(R.color.mnt);
+            case "ch": return r.getColor(R.color.ch);
+            case "ph": return r.getColor(R.color.ph);
+            case "sk": return r.getColor(R.color.sk);
+            case "if": return r.getColor(R.color.inf);
+            case "wr": return r.getColor(R.color.wr);
+            case "ge": return r.getColor(R.color.ge);
+            case "ru": return r.getColor(R.color.frl);
+            case "la": return r.getColor(R.color.frl);
+            case "fr": return r.getColor(R.color.frl);
+            case "sn": return r.getColor(R.color.frl);
+            case "gewi": return r.getColor(R.color.sk);
+            case "dg": return r.getColor(R.color.sk);
+            default: return r.getColor(R.color.sp);
         }
     }
 
-    public static String LongName(String fach) {
+    static String LongName(String fach) {
         switch (fach.toLowerCase()) {
             case "de":
                 return "Deutsch";
@@ -586,71 +377,25 @@ public class Util {
     }
 
 
-    public static String bolToStr(boolean value) {
-        if(value) {
-            return "TRUE";
-        } else {
-            return "FALSE";
-        }
-    }
-
-    /** Open another app.
-     * @param context current Context, like Activity, App, or Service
-     * @param packageName the full package name of the app to open
-     * @return true if likely successful, false if unsuccessful
-     */
-    public static Intent openApp(Context context, String packageName) {
-        PackageManager manager = context.getPackageManager();
-        try {
-            Intent i = manager.getLaunchIntentForPackage(packageName);
-            i.addCategory(Intent.CATEGORY_LAUNCHER);
-            if (i != null) {
-                return i;
-            } else {
-                return null;
-            }
-        } catch (ActivityNotFoundException e) {
-            return null;
-        }
-    }
-
-    public static boolean StrToBol(String value) {
-        return value.toLowerCase().equals("true");
-    }
-
-    public static boolean isFiltered(Context c) {
+    static boolean isFiltered(Context c) {
         return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(Preferences.IS_LEHRER, false) ? PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "").length() > 2 : PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.KLASSE, "").length() > 2;
     }
 
-    public static boolean isLehrerModus(Context c) { //Wahr, wenn Lehrermodus aktiviert ist und eingegebener Lehrer mehr als 2 Zeichen enthält, sonst falsch
+    static boolean isLehrerModus(Context c) { //Wahr, wenn Lehrermodus aktiviert ist und eingegebener Lehrer mehr als 2 Zeichen enthält, sonst falsch
         return PreferenceManager.getDefaultSharedPreferences(c).getBoolean(Preferences.IS_LEHRER, false) && PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "").length() > 2;
     }
 
-    public static String getLehrer(Context c) {
+    static String getLehrer(Context c) {
         return PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.LEHRER, "");
     }
 
-    public static String getKlasse(Context c) {
+    static String getKlasse(Context c) {
         return PreferenceManager.getDefaultSharedPreferences(c).getString(Preferences.KLASSE, "");
     }
 
-    public static boolean isNumeric(String str)
+    static boolean isNumeric(@Nullable String str)
     {
-        return str.matches("-?\\d+(\\.\\d+)?");  //match a number with optional '-' and decimal.
-    }
-
-    public static int getConfigVersion(Context c) {
-        return Integer.parseInt(c.getString(R.string.ConfigVer));
-    }
-
-    public static String getUserAgentString(Context c, boolean isSync) {
-        String MORE;
-        if(isSync) {
-            MORE = "syncLoad";
-        } else {
-            MORE = "asyncLoad";
-        }
-        return "GSApp " + getVersion(c) + " on " + getDeviceName() + " (Android " + Build.VERSION.RELEASE + ") " + MORE;
+        return str != null && str.matches("-?\\d+(\\.\\d+)?");
     }
 
     static boolean hasInternet(Context _context){
@@ -660,35 +405,17 @@ public class Util {
         {
             NetworkInfo[] info = connectivity.getAllNetworkInfo();
             if (info != null)
-                for (int i = 0; i < info.length; i++)
-                    if (info[i].getState() == NetworkInfo.State.CONNECTED)
-                    {
+                for (NetworkInfo anInfo : info)
+                    if (anInfo.getState() == NetworkInfo.State.CONNECTED) {
                         return true;
                     }
 
         }
         return false;
     }
- 
-    static String getVersionID(Context context){
-        String ID = context.getString(R.string.version);
-        String[] UID = ID.split(" ");
-        return UID[0];
-    }
 
     static String getVersion(Context context) {
-        return context.getString(R.string.version);
-    }
-    
-    static int getVersionCode(Context context) {
-    	PackageInfo pinfo;
-		try {
-			pinfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-			return pinfo.versionCode;
-		} catch (NameNotFoundException e) {
-			e.printStackTrace();
-			return 0;
-		}
+        return context.getResources().getString(R.string.version);
     }
 
     static boolean applyFilter(Context c, String[] dataSet) {
@@ -881,7 +608,7 @@ class TextDrawable extends Drawable {
     }
 
     @Override
-    public void draw(Canvas canvas) {
+    public void draw(@NonNull Canvas canvas) {
         canvas.drawText(text, 0, 0, paint);
     }
 
