@@ -33,6 +33,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,12 +48,25 @@ public class Util {
     static final int FIRSTRUN_ACTIVITY = 392;
 
     static final String CHANGELOG = ""
-            + "App für Android 10 angepasst\n";
+            + "App für Android 10 angepasst\n"
+            + "Speiseplan behoben\n";
 
     static final String NTF_CHANNEL_ID = "gsapp_notifications";
 
     final static String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
     final static String EXTRA_NAME = "de.xorg.gsapp.MESSAGENAME";
+
+    /**
+     * Source: https://stackoverflow.com/questions/1181969/java-get-last-element-after-split
+     * <p>Gets the last element from array</p>
+     * @param array The array
+     * @return Last element
+     * @throws NullPointerException If array is empty
+     */
+    public static <T> T last(T[] array) {
+        if (array.length < 1) throw new NullPointerException("Array is empty");
+        return array[array.length - 1];
+    }
 
     static int convertToPixels(Context context, int nDP)
     {
@@ -638,15 +652,47 @@ class SpMenu {
     private String Donnerstag;
     private String Freitag;
     private String KW;
-    private String Datum;
     SpMenu(int idn) {
         id = idn;
     }
 
     void setKW(String value) { KW = value; }
 
-    String getDatum() { return Datum; }
-    void setDatum(String Value) { Datum = Value; }
+    void setMeals(String[] meals) {
+        Montag = meals[0];
+        Dienstag = meals[1];
+        Mittwoch = meals[2];
+        Donnerstag = meals[3];
+        Freitag = meals[4];
+    }
+
+    void setMeals(List<String> meals) {
+        Montag = meals.get(0);
+        Dienstag = meals.get(1);
+        Mittwoch = meals.get(2);
+        Donnerstag = meals.get(3);
+        Freitag = meals.get(4);
+    }
+
+    void setMeal(String meal, int day) {
+        switch (day) {
+            case 0:
+                Montag = meal;
+                break;
+            case 1:
+                Dienstag = meal;
+                break;
+            case 2:
+                Mittwoch = meal;
+                break;
+            case 3:
+                Donnerstag = meal;
+                break;
+            case 4:
+                Freitag = meal;
+                break;
+        }
+    }
 
     void setMontag(String value) { Montag = value; }
     void setDienstag(String value) { Dienstag = value; }
@@ -687,7 +733,6 @@ class SpMenu {
         jk.put("Mittwoch", Mittwoch);
         jk.put("Donnerstag", Donnerstag);
         jk.put("Freitag", Freitag);
-        jk.put("Datum", Datum);
         jk.put("KW", KW);
         jk.put("id", id);
         return jk;
@@ -700,7 +745,6 @@ class SpMenu {
         Mittwoch = jo.getString("Mittwoch");
         Donnerstag = jo.getString("Donnerstag");
         Freitag = jo.getString("Freitag");
-        Datum = jo.getString("Datum");
         KW = jo.getString("KW");
         id = jo.getInt("id");
     }

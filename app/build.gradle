@@ -5,10 +5,10 @@ android {
     compileSdkVersion 30
     defaultConfig {
         applicationId "de.xorg.gsapp"
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 30
-        versionCode 6011
-        versionName '6.1 RC1 »Linus«'
+        versionCode 6006
+        versionName '6.1 dev2 »Linus«'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         multiDexKeepFile file('multidex-config.txt')
@@ -19,7 +19,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    buildToolsVersion '28.0.3'
+    buildToolsVersion '30.0.2'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -30,9 +30,9 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation 'androidx.preference:preference:1.0.0'
-    implementation 'com.google.android.material:material:1.1.0-alpha02'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.preference:preference:1.1.1'
+    implementation 'com.google.android.material:material:1.3.0-alpha02'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.guava:guava:26.0-android'
     implementation 'com.jakewharton.timber:timber:4.7.1'
@@ -40,13 +40,13 @@ dependencies {
     implementation project(':cardsuilib')
     implementation project(':materialdrawer')
     implementation 'com.mikepenz:crossfader:1.6.0'
-    implementation 'com.google.firebase:firebase-core:16.0.6'
-    implementation 'com.google.firebase:firebase-ads:17.1.2'
-    implementation 'com.google.firebase:firebase-messaging:17.3.4'
+    implementation 'com.google.firebase:firebase-core:17.5.0'
+    implementation 'com.google.firebase:firebase-ads:19.3.0'
+    implementation 'com.google.firebase:firebase-messaging:20.2.4'
     implementation 'com.squareup.okhttp3:okhttp:3.12.0'
     //implementation 'com.squareup.okhttp:okhttp:2.7.5'
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.github.paolorotolo:appintro:v5.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'com.android.support.constraint:constraint-layout:2.0.1'
 }

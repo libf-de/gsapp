@@ -4,8 +4,8 @@
     <string name="app_name">GSApp</string>
     <string name="VPlan">Vertretungsplan</string>
     <string name="aktualisiere">Aktualisieren</string>
-    <string name="version">6.1 RC1 »Linus«</string>
-    <string name="build">LINUS61RC1</string>
+    <string name="version">6.1 dev2 »Linus«</string>
+    <string name="build">LINUS61dev2</string>
     <string name="klasse_desc">Wenn du nur deine Klasse im Vertretungsplan sehen möchtest, wähle sie hier aus:</string>
     <string name="ConfigVer">2</string>
 

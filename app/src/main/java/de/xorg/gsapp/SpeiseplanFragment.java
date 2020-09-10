@@ -20,7 +20,6 @@ import com.google.common.io.Files;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
@@ -56,6 +55,9 @@ public class SpeiseplanFragment extends Fragment {
     private SpMenu m1;
     private SpMenu m2;
     private SpMenu m3;
+    private SpMenu m4;
+    private String dateFrom;
+    private String dateTill;
     private ProgressDialog progressDialog;
     private boolean istDark = false;
 
@@ -81,7 +83,8 @@ public class SpeiseplanFragment extends Fragment {
         }
 
         Request request = new Request.Builder()
-                .url("https://www.schulkueche-bestellung.de/index.php?m=2;1")
+                //.url("https://www.schulkueche-bestellung.de/index.php?m=2;1")
+                .url("https://www.schulkueche-bestellung.de/de/menu/14/2020-09-07/2020-09-13/")
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -152,10 +155,12 @@ public class SpeiseplanFragment extends Fragment {
         m1 = new SpMenu(1);
         m2 = new SpMenu(2);
         m3 = new SpMenu(3);
+        m4 = new SpMenu(4);
 
         Calendar calendar = Calendar.getInstance();
         int cKW = calendar.get(Calendar.WEEK_OF_YEAR);
         String currentKW = String.valueOf(cKW);
+        //String currentKW = "0";
         today = calendar.get(Calendar.DAY_OF_WEEK);
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext());
         String savedKW = sp.getString("cacheKW", "0");
@@ -172,9 +177,8 @@ public class SpeiseplanFragment extends Fragment {
         Timber.d("cur: *" + currentKW + "*, sav: *" + savedKW + "*");
 
         if (currentKW.equals(savedKW)) {
-            Toast.makeText(this.getContext(), "Cache load! (KW Match)", Toast.LENGTH_SHORT).show();
             try {
-                File cacheFile = new File(GSApp.getContext().getCacheDir(), "speiseplan.gxcache");
+                File cacheFile = new File(GSApp.getContext().getCacheDir(), "sp2.gxcache");
 
                 if (cacheFile.exists() && cacheFile.canRead()) {
                     //JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
@@ -183,11 +187,24 @@ public class SpeiseplanFragment extends Fragment {
                     JSONObject M1 = jo.getJSONObject("Meal1");
                     JSONObject M2 = jo.getJSONObject("Meal2");
                     JSONObject M3 = jo.getJSONObject("Meal3");
+                    JSONObject M4 = jo.getJSONObject("Meal4");
                     String CKW = jo.getString("KW");
+
+                    if(!CKW.equals(savedKW)) {
+                        Timber.w("Stored KW is not equal to KW in cache - reloading..");
+                        cacheFile.delete();
+                        fetchSpeiseplan();
+                        return;
+                    }
+
+
+                    this.dateFrom = jo.getString("DateFrom");
+                    this.dateTill = jo.getString("DateTill");
 
                     m1.fromSaveJSON(M1, CKW);
                     m2.fromSaveJSON(M2, CKW);
                     m3.fromSaveJSON(M3, CKW);
+                    m4.fromSaveJSON(M4, CKW);
                     didLoad = true;
                     Timber.d("Cache loaded");
 
@@ -200,7 +217,7 @@ public class SpeiseplanFragment extends Fragment {
         } else if (Util.isNumeric(savedKW) && cKW < Integer.parseInt(savedKW)) {
             Toast.makeText(this.getContext(), "Cache load! (KW New)", Toast.LENGTH_SHORT).show();
             try {
-                File cacheFile = new File(GSApp.getContext().getCacheDir(), "speiseplan.gxcache");
+                File cacheFile = new File(GSApp.getContext().getCacheDir(), "sp2.gxcache");
 
                 if (cacheFile.exists() && cacheFile.canRead()) {
                     //JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
@@ -209,11 +226,15 @@ public class SpeiseplanFragment extends Fragment {
                     JSONObject M1 = jo.getJSONObject("Meal1");
                     JSONObject M2 = jo.getJSONObject("Meal2");
                     JSONObject M3 = jo.getJSONObject("Meal3");
+                    JSONObject M4 = jo.getJSONObject("Meal4");
                     String CKW = jo.getString("KW");
+                    this.dateFrom = jo.getString("DateFrom");
+                    this.dateTill = jo.getString("DateTill");
 
                     m1.fromSaveJSON(M1, CKW);
                     m2.fromSaveJSON(M2, CKW);
                     m3.fromSaveJSON(M3, CKW);
+                    m4.fromSaveJSON(M4, CKW);
                     didLoad = true;
                 }
             } catch (Exception e) {
@@ -224,7 +245,7 @@ public class SpeiseplanFragment extends Fragment {
         } else {
             if (!Util.hasInternet(getContext())) {
                 try {
-                    File cacheFile = new File(GSApp.getContext().getCacheDir(), "speiseplan.gxcache");
+                    File cacheFile = new File(GSApp.getContext().getCacheDir(), "sp2.gxcache");
 
                     if (cacheFile.exists() && cacheFile.canRead()) {
                         //JSONObject jo = new JSONObject(Files.toString(cacheFile, Charsets.UTF_8));
@@ -233,11 +254,15 @@ public class SpeiseplanFragment extends Fragment {
                         JSONObject M1 = jo.getJSONObject("Meal1");
                         JSONObject M2 = jo.getJSONObject("Meal2");
                         JSONObject M3 = jo.getJSONObject("Meal3");
+                        JSONObject M4 = jo.getJSONObject("Meal4");
                         String CKW = jo.getString("KW");
+                        this.dateFrom = jo.getString("DateFrom");
+                        this.dateTill = jo.getString("DateTill");
 
                         m1.fromSaveJSON(M1, CKW);
                         m2.fromSaveJSON(M2, CKW);
                         m3.fromSaveJSON(M3, CKW);
+                        m4.fromSaveJSON(M4, CKW);
 
                         Toast.makeText(this.getContext(), "Kein Internet - gespeicherter Plan ist veraltet!", Toast.LENGTH_SHORT).show();
 
@@ -287,115 +312,59 @@ public class SpeiseplanFragment extends Fragment {
         try {
             Document doc = Jsoup.parse(data);
 
-            Elements date = doc.select("select option[selected]");
-            String KW = date.text().split(" ")[1];
-            Timber.d( "Got KW %s", KW);
-            String Datum = date.text().split("\\|\\|")[1];
-            Timber.d("Datum is +" + Datum + "+");
+            doc.select("sup").remove();
 
-            m1.setKW(KW);
-            m2.setKW(KW);
-            m3.setKW(KW);
-
-            m1.setDatum(Datum);
-            m2.setDatum(Datum);
-            m3.setDatum(Datum);
-
-            Elements tableElements = doc.select("table[class=splanauflistung]");
-
-            Elements tableRowElements = tableElements.select(":not(thead) tr");
-
-            for (int i = 0; i < tableRowElements.size(); i++) {
-                Element row = tableRowElements.get(i);
-                Elements rowItems = row.select("td");
-                if (rowItems.size() == 6) {
-                    for (int j = 0; j < rowItems.size(); j++) {
-                        Element clear = rowItems.get(j);
-                        clear.getElementsByClass("zusatzstoff").remove();
-                        String meal = clear.text().replaceAll(" ,", ",");
-                        switch (j) {
-                            case 0:
-                                break;
-                            case 1:
-                                if (i == 1) {
-                                    m1.setMontag(meal);
-                                } else if (i == 2) {
-                                    m2.setMontag(meal);
-                                } else if (i == 3) {
-                                    m3.setMontag(meal);
-                                }
-                                break;
-                            case 2:
-                                if (i == 1) {
-                                    m1.setDienstag(meal);
-                                } else if (i == 2) {
-                                    m2.setDienstag(meal);
-                                } else if (i == 3) {
-                                    m3.setDienstag(meal);
-                                }
-                                break;
-                            case 3:
-                                if (i == 1) {
-                                    m1.setMittwoch(meal);
-                                } else if (i == 2) {
-                                    m2.setMittwoch(meal);
-                                } else if (i == 3) {
-                                    m3.setMittwoch(meal);
-                                }
-                                break;
-                            case 4:
-                                if (i == 1) {
-                                    m1.setDonnerstag(meal);
-                                } else if (i == 2) {
-                                    m2.setDonnerstag(meal);
-                                } else if (i == 3) {
-                                    m3.setDonnerstag(meal);
-                                }
-                                break;
-                            case 5:
-                                if (i == 1) {
-                                    m1.setFreitag(meal);
-                                } else if (i == 2) {
-                                    m2.setFreitag(meal);
-                                } else if (i == 3) {
-                                    m3.setFreitag(meal);
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
+            Elements currentDates = doc.select("button#time-selector-dropdown");
+            int kw = Integer.parseInt(currentDates.text().split("\\|\\|")[0].replaceAll("[\\D]", ""));
+            if ((kw < 0) || (kw > 53)) {
+                Timber.w("Parsed KW \""+ kw +"\" is probably invalid");
             }
+            Timber.d("NewEP::KW=%s", kw);
+            this.dateFrom = currentDates.text().split("\\|\\|")[1].split("-")[0].trim() + Util.last(currentDates.text().split("\\|\\|")[1].split("\\."));
+            this.dateTill = currentDates.text().split("\\|\\|")[1].split("-")[1].trim();
+
+            m1.setKW(String.valueOf(kw));
+            m2.setKW(String.valueOf(kw));
+            m3.setKW(String.valueOf(kw));
+            m4.setKW(String.valueOf(kw));
+
+            Elements tableElements = doc.select("table#menu-table_KW");
+            m1.setMeals(tableElements.select("td[mealId=01] mealtxt").eachText());
+            m2.setMeals(tableElements.select("td[mealId=02] mealtxt").eachText());
+            m3.setMeals(tableElements.select("td[mealId=03] mealtxt").eachText());
+            m4.setMeals(tableElements.select("td[mealId=07] mealtxt").eachText()); //TODO: Immer id=07?
 
             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).edit();
-            editor.putString("cacheKW", KW);
+            editor.putString("cacheKW", String.valueOf(kw));
             editor.apply();
 
             SpeiseplanFragment.this.didLoad = true;
 
-            File outputFile = new File(GSApp.getContext().getCacheDir(), "speiseplan.gxcache");
-
-            if (outputFile.canWrite()) {
+            File outputFile = new File(GSApp.getContext().getCacheDir(), "sp2.gxcache");
+            try {
                 JSONObject root = new JSONObject();
 
                 JSONObject Meal1 = m1.toSaveJSON();
                 JSONObject Meal2 = m2.toSaveJSON();
                 JSONObject Meal3 = m3.toSaveJSON();
+                JSONObject Meal4 = m4.toSaveJSON();
 
-                root.put("KW", KW);
-
+                root.put("KW", String.valueOf(kw));
+                root.put("DateFrom", this.dateFrom);
+                root.put("DateTill", this.dateTill);
                 root.put("Meal1", Meal1);
                 root.put("Meal2", Meal2);
                 root.put("Meal3", Meal3);
+                root.put("Meal4", Meal4);
 
                 //Files.write(root.toString(), outputFile, Charsets.UTF_8);
                 Files.asCharSink(outputFile, Charsets.UTF_8).write(root.toString());
                 Timber.d("Cache erstellt!");
-            } else {
+            } catch (Exception e) {
                 if(getContext() != null) Toast.makeText(getContext(), "Speiseplan konnte nicht zwischengespeichert werden!", Toast.LENGTH_SHORT).show();
                 Timber.w("Could not create cache - file not writeable");
             }
+
         } catch (Exception e) {
             Timber.e("Konnte Serverantwort nicht verarbeiten: %s", e.getMessage());
             e.printStackTrace();
@@ -406,14 +375,7 @@ public class SpeiseplanFragment extends Fragment {
         mCardView.clearCards();
         CardStack dateHead = new CardStack(istDark);
         dateHead.setTypeface(Util.getTKFont(getContext(), false));
-        String Datem = m1.getDatum();
-        String FromDate = "??";
-        String TillDate = "??";
-        try { FromDate = Datem.split("-")[0].trim(); //TODO: Fehler behandeln
-        TillDate = Datem.split("-")[1].trim(); } catch (Exception e) {
-            e.printStackTrace();
-        }
-        dateHead.setTitle("Gültig von " + FromDate + " bis " + TillDate);
+        dateHead.setTitle("Gültig von " + this.dateFrom + " bis " + this.dateTill);
         mCardView.addStack(dateHead);
 
         if (isWeekend && showWeekend) {
@@ -482,12 +444,12 @@ public class SpeiseplanFragment extends Fragment {
         });
         mCardView.addCard(card3);
 
-        MyPlayCard salad = new MyPlayCard(istDark,"Salat", getSalatForDay(day), "#2196F3", "#2196F3", true, true, false);
+        MyPlayCard salad = new MyPlayCard(istDark,"Salat", m4.getToday(day), "#2196F3", "#2196F3", true, true, false);
         salad.setOnClickListener(view -> {
             AlertDialog ad = new AlertDialog.Builder(SpeiseplanFragment.this.getContext()).create();
             ad.setCancelable(true);
             ad.setTitle(String.format(getResources().getString(R.string.salad_on), getResources().getString(getDayRes(day))));
-            ad.setMessage(getSalatForDay(day) + "\n\nSalat nur für Schüler auf Bestellung während der Schulzeit!");
+            ad.setMessage(m4.getToday(day));
             ad.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", (dialog, which) -> dialog.dismiss());
             ad.show();
         });
