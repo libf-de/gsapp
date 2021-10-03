@@ -17,9 +17,11 @@ import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.MobileAds;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -33,11 +35,9 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import de.xorg.cardsuilib.objects.CardStack;
 import de.xorg.cardsuilib.views.CardUI;
 import okhttp3.Call;
@@ -49,7 +49,6 @@ import timber.log.Timber;
 
 public class VPlanFragment extends Fragment {
     private static final String EXTRA_URL = "de.xorg.gsapp.MESSAGE";
-    private String cMNT = "#4caf50";
     private String dateD = "unbekannt";
     private long appStart;
     private String hinweisD = "kein Hinweis";
@@ -58,7 +57,7 @@ public class VPlanFragment extends Fragment {
     private ProgressDialog progressDialog;
     private SwipeRefreshLayout swipeContainer;
     private Eintrage vplane;
-    private boolean showingAll = false;
+    private final boolean showingAll = false;
     private boolean istDunkel = false;
     private String themeId = Util.AppTheme.LIGHT;
     private boolean cardMarquee;
@@ -77,7 +76,7 @@ public class VPlanFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_svplan, container, false);
     }
 
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         appStart = System.currentTimeMillis();
         if (getArguments() != null && getArguments().containsKey("theme")) {
@@ -85,27 +84,19 @@ public class VPlanFragment extends Fragment {
             istDunkel = (themeId.equals(Util.AppTheme.DARK));
         }
 
-        //MobileAds.initialize(getContext(), "ca-app-pub-3940256099942544/6300978111");
-        MobileAds.initialize(getContext(), "ca-app-pub-6538125936915221~2281967739");
-        AdView mAdView = getView().findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice("F42D4035C5B8ABF685658DE77BCB840A")
-                .addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")
-                .addTestDevice("ED9E21C114D9DE1A8C0695C4607CD141")
-                .build();
-        mAdView.loadAd(adRequest);
 
-        swipeContainer = getView().findViewById(R.id.swipeContainer);
+        swipeContainer = requireView().findViewById(R.id.swipeContainer);
         swipeContainer.setOnRefreshListener(() -> {
             VPlanFragment.this.vplane.clear();
             new Thread(() -> loadData(true)).start();
         });
         swipeContainer.setColorSchemeResources(R.color.md_cyan_A200, R.color.md_light_green_A400, R.color.md_amber_300, R.color.md_red_A400);
-        cardMarquee = PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(Util.Preferences.MARQUEE, false);
+        cardMarquee = PreferenceManager.getDefaultSharedPreferences(requireContext()).getBoolean(Util.Preferences.MARQUEE, false);
 
 
         //Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.slide);
-        Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.fadein);
-        mCardView = getView().findViewById(R.id.cardsview);
+        Animation anim = AnimationUtils.loadAnimation(requireContext(), R.anim.fadein);
+        mCardView = requireView().findViewById(R.id.cardsview);
         mCardView.setAnimation(anim);
         mCardView.setSwipeable(false);
         mCardView.getScrollView().setOnScrollListener(new OnScrollListener() {
@@ -141,7 +132,7 @@ public class VPlanFragment extends Fragment {
     private void showLdDialog() {
         if(VPlanFragment.this.getContext() == null)
             return;
-        VPlanFragment.this.progressDialog = new ProgressDialog(VPlanFragment.this.getContext());
+        VPlanFragment.this.progressDialog = new ProgressDialog(VPlanFragment.this.requireContext());
         VPlanFragment.this.progressDialog.setProgressStyle(0);
         VPlanFragment.this.progressDialog.setTitle("GSApp");
         VPlanFragment.this.progressDialog.setMessage("Lade Daten...");
@@ -175,16 +166,16 @@ public class VPlanFragment extends Fragment {
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Timber.e(e);
                 if(VPlanFragment.this.getActivity() == null)
                     return;
 
                 VPlanFragment.this.getActivity().runOnUiThread(() -> {
                     if(e instanceof SocketTimeoutException)
-                        Toast.makeText(VPlanFragment.this.getContext(), "Timeout exception", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(VPlanFragment.this.requireContext(), "Timeout exception", Toast.LENGTH_SHORT).show();
                     else
-                        Toast.makeText(VPlanFragment.this.getContext(), "Der Vertretungsplan konnte nicht neu geladen werden!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(VPlanFragment.this.requireContext(), "Der Vertretungsplan konnte nicht neu geladen werden!", Toast.LENGTH_SHORT).show();
 
 
                     if (showDialog && VPlanFragment.this.progressDialog != null) {
@@ -195,20 +186,20 @@ public class VPlanFragment extends Fragment {
                         if(VPlanFragment.this.swipeContainer != null && VPlanFragment.this.swipeContainer.isRefreshing()) VPlanFragment.this.swipeContainer.setRefreshing(false);
                         mCardView.clearCards();
                         mCardView.addCard(new MyPlayCard(istDunkel,"Interner Fehler", "Es ist ein Fehler beim Herunterladen des Vertretungsplans aufgetreten!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
-                        Toast.makeText(getContext(), "Vertretungsplan konnte nicht angezeigt werden, zeige im Browser..", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(getContext(), WebViewActivity.class);
+                        Toast.makeText(requireContext(), "Vertretungsplan konnte nicht angezeigt werden, zeige im Browser..", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(requireContext(), WebViewActivity.class);
                         intent.putExtra(EXTRA_URL, "https://www.gymnasium-sonneberg.de/Informationen/vp.php5");
                         intent.putExtra(Util.EXTRA_NAME, "[!] Vertretungsplan [!]");
-                        getContext().startActivity(intent);
+                        requireContext().startActivity(intent);
                     }
                 });
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if(!response.isSuccessful())
                     Timber.e("onResponse FAILED (" + response.code() + ")");
-                final String result = response.body().string();
+                final String result = Objects.requireNonNull(response.body()).string();
 
                 if(VPlanFragment.this.getActivity() == null)
                     return;
@@ -236,13 +227,13 @@ public class VPlanFragment extends Fragment {
                         try {
                             VPlanFragment.this.fallbackLoad(result);
                         } catch(Exception exo) {
-                            Timber.d( "Failed on fallbackLoad: " + exo.getMessage());
+                            Timber.d( "Failed on fallbackLoad: %s", exo.getMessage());
                             Timber.e(exo);
                             exo.printStackTrace();
                         }
 
                     } catch(Exception e) {
-                        Timber.d( "Failed on ParseResponse: " + e.getMessage());
+                        Timber.d( "Failed on ParseResponse: %s", e.getMessage());
                         Timber.e(e);
                         e.printStackTrace();
                     }
@@ -269,7 +260,7 @@ public class VPlanFragment extends Fragment {
                     if (swipeContainer != null) swipeContainer.setRefreshing(true);
                 });
 
-        if(Util.hasInternet(getContext())) {
+        if(Util.hasInternet(requireContext())) {
             if (!isRefresh) {
                 boolean cacheState = loadFromHtmlCache();
                 Timber.d("Cache loaded after " + (System.currentTimeMillis() - appStart) + "ms");
@@ -286,7 +277,7 @@ public class VPlanFragment extends Fragment {
                             this.mCardView.clearCards();
                             this.mCardView.addCard(new MyPlayCard(istDunkel, "Fehler", "Es besteht keine Internetverbindung und es wurde noch kein Vertretungsplan zwischengespeichert!", "#FF0000", "#FF0000", true, false, false, cardMarquee));
                             this.mCardView.refresh();
-                        } else Toast.makeText(getContext(), "Vertretungsplan aus dem Zwischenspeicher geladen!", Toast.LENGTH_SHORT).show();
+                        } else Toast.makeText(requireContext(), "Vertretungsplan aus dem Zwischenspeicher geladen!", Toast.LENGTH_SHORT).show();
 
                     });
         }
@@ -294,9 +285,7 @@ public class VPlanFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.show_all:
-                /*if(this.showingAll) {
+        if (item.getItemId() == R.id.show_all) {/*if(this.showingAll) {
                     this.showingAll = false;
                     VPlanFragment.this.vplane.clear();
                     loadFromHtmlCache();
@@ -306,7 +295,7 @@ public class VPlanFragment extends Fragment {
                     loadFromHtmlCache();
                 }*/
 
-                return true;
+            return true;
             /*case R.id.show_src:
                 AlertDialog.Builder alert = new AlertDialog.Builder(VPlanFragment.this.getContext());
 
@@ -323,13 +312,12 @@ public class VPlanFragment extends Fragment {
 
                 alert.show();
                 return true;*/
-            default:
-                return super.onOptionsItemSelected(item);
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
         Util.prepareMenu(menu, Util.NavFragments.VERTRETUNGSPLAN);
         //if(PreferenceManager.getDefaultSharedPreferences(getContext()).getString("klasse", "").isEmpty())
         //menu.findItem(R.id.show_all).setVisible(false);
@@ -362,7 +350,7 @@ public class VPlanFragment extends Fragment {
 
 
         if (dateText.equals("Beschilderung beachten!")) {
-            Toast.makeText(getContext(), "Es sind Ferien!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Es sind Ferien!", Toast.LENGTH_SHORT).show();
             return;
         }
         this.dateD = dateText;
@@ -406,7 +394,7 @@ public class VPlanFragment extends Fragment {
                 if (d.html().contains("<strong>")) {
                     isNew = true;
                 }
-                if (Util.applyFilter(getContext(), data)) {
+                if (Util.applyFilter(requireContext(), data)) {
                     vplane.add(new Eintrag(data[0], data[1], data[2], data[3], data[4], data[5], data[6], isNew));
                 }
             }
@@ -431,7 +419,7 @@ public class VPlanFragment extends Fragment {
         if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
             if (getActivity() != null)
                 VPlanFragment.this.getActivity().runOnUiThread(() -> {
-                    if (VPlanFragment.this.isFiltered && Util.isLehrerModus(getContext()))
+                    if (VPlanFragment.this.isFiltered && Util.isLehrerModus(requireContext()))
                         displayAllTeacher();
                     else
                         displayAll();
@@ -439,14 +427,14 @@ public class VPlanFragment extends Fragment {
             else
                 Timber.d("Vertretungsplan Activity is null parseResponse");
         } else
-            if (VPlanFragment.this.isFiltered && Util.isLehrerModus(getContext()))
+            if (VPlanFragment.this.isFiltered && Util.isLehrerModus(requireContext()))
                 displayAllTeacher();
             else
                 displayAll();
     }
 
     private void fallbackLoad(String result) {
-        String Klasse = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Util.Preferences.KLASSE, "");
+        String Klasse = PreferenceManager.getDefaultSharedPreferences(requireContext()).getString(Util.Preferences.KLASSE, "");
         if(this.showingAll)
             Klasse = "";
         try {
@@ -525,6 +513,9 @@ public class VPlanFragment extends Fragment {
     }
 
     private String getURL() {
+        return "https://www.gymnasium-sonneberg.de/Informationen/vp.php5";
+    }
+    /*private String getURL() {
         int mode = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).getInt("debugSrc", 0);
         String URL;
         switch (mode) {
@@ -546,13 +537,13 @@ public class VPlanFragment extends Fragment {
         }
 
         return URL;
-    }
+    }*/
 
     private void displayAll() {
         Timber.d("Display start after " + (System.currentTimeMillis() - appStart) + "ms");
         mCardView.clearCards();
         CardStack dateHead = new CardStack(istDunkel);
-        dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
+        dateHead.setTypeface(Util.getTKFont(this.requireContext(), false));
         dateHead.setTitle("Für " + dateD);
         mCardView.addStack(dateHead);
 
@@ -561,7 +552,7 @@ public class VPlanFragment extends Fragment {
         if(!hinweisD.isEmpty()) {
             MyPlayCard card = new MyPlayCard(istDunkel,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\r\n]+","").trim(), "#00FF00", "#00FF00", true, false, false, cardMarquee);
             card.setOnClickListener(v -> {
-                AlertDialog ad = new AlertDialog.Builder(VPlanFragment.this.getContext()).create();
+                AlertDialog ad = new AlertDialog.Builder(VPlanFragment.this.requireContext()).create();
                 ad.setCancelable(true);
                 ad.setTitle("Hinweis");
                 ad.setMessage(hinweisD);
@@ -574,14 +565,14 @@ public class VPlanFragment extends Fragment {
         try {
             if(this.isFiltered) {
                 CardStack stacky = new CardStack(istDunkel);
-                stacky.setTypeface(Util.getTKFont(this.getContext(), false));
-                stacky.setTitle("Vertretungen für Klasse " + Util.getKlasse(getContext()) );
+                stacky.setTypeface(Util.getTKFont(this.requireContext(), false));
+                stacky.setTitle("Vertretungen für Klasse " + Util.getKlasse(requireContext()) );
                 mCardView.addStack(stacky);
             }
             for(String klassee : vplane.getKlassen()) {
                 if(!this.isFiltered) {
                     CardStack stacky = new CardStack(istDunkel);
-                    stacky.setTypeface(Util.getTKFont(this.getContext(), false));
+                    stacky.setTypeface(Util.getTKFont(this.requireContext(), false));
                     stacky.setTitle("Klasse " + klassee);
                     mCardView.addStack(stacky);
                 }
@@ -630,7 +621,7 @@ public class VPlanFragment extends Fragment {
                 }
             }
         } catch (KeineKlassenException e) {
-            mCardView.addCard(new MyPlayCard(istDunkel,"Keine Vertretungen", "", cMNT, cMNT, false, false, false, cardMarquee));
+            mCardView.addCard(new MyPlayCard(istDunkel,"Keine Vertretungen", "", "#4caf50", "#4caf50", false, false, false, cardMarquee));
             e.printStackTrace();
         } catch (KeineEintrageException e) {
             mCardView.addCard(new MyPlayCard(istDunkel,"ERROR", "KeineEinträgeException", "#FF0000", "#FF0000", false, false, false, cardMarquee));
@@ -654,7 +645,7 @@ public class VPlanFragment extends Fragment {
     private void displayAllTeacher() {
         mCardView.clearCards();
         CardStack dateHead = new CardStack(istDunkel);
-        dateHead.setTypeface(Util.getTKFont(this.getContext(), false));
+        dateHead.setTypeface(Util.getTKFont(this.requireContext(), false));
         dateHead.setTitle("Für " + dateD);
         mCardView.addStack(dateHead);
 
@@ -662,7 +653,7 @@ public class VPlanFragment extends Fragment {
         if(!hinweisD.isEmpty()) {
             MyPlayCard card = new MyPlayCard(istDunkel,"Hinweis:", hinweisD.replace("Hinweis:", "").replaceAll("[\r\n]+","").trim(), "#00FF00", "#00FF00", true, false, false, cardMarquee);
             card.setOnClickListener(v -> {
-                AlertDialog ad = new AlertDialog.Builder(VPlanFragment.this.getContext()).create();
+                AlertDialog ad = new AlertDialog.Builder(VPlanFragment.this.requireContext()).create();
                 ad.setCancelable(true);
                 ad.setTitle("Hinweis");
                 ad.setMessage(hinweisD);
@@ -676,8 +667,8 @@ public class VPlanFragment extends Fragment {
         try {
             if(this.isFiltered) {
                 CardStack stacky = new CardStack(istDunkel);
-                stacky.setTypeface(Util.getTKFont(this.getContext(), false));
-                stacky.setTitle("Vertretungen für " + Util.getTeacherName(Util.getLehrer(getContext()) ,true));
+                stacky.setTypeface(Util.getTKFont(this.requireContext(), false));
+                stacky.setTitle("Vertretungen für " + Util.getTeacherName(Util.getLehrer(requireContext()) ,true));
                 mCardView.addStack(stacky);
             }
 
@@ -720,7 +711,7 @@ public class VPlanFragment extends Fragment {
                 }
             }
         } catch (KeineKlassenException e) {
-            mCardView.addCard(new MyPlayCard(istDunkel,"Keine Vertretungen", "", cMNT, cMNT, false, false, false, cardMarquee));
+            mCardView.addCard(new MyPlayCard(istDunkel,"Keine Vertretungen", "", "#4caf50", "#4caf50", false, false, false, cardMarquee));
             e.printStackTrace();
         } catch (KeineEintrageException e) {
             mCardView.addCard(new MyPlayCard(istDunkel,"ERROR", "KeineEinträgeException", "#FF0000", "#FF0000", false, false, false, cardMarquee));
@@ -738,8 +729,6 @@ public class VPlanFragment extends Fragment {
     }
 
     private void displaySingleClass(String klasse) {
-        if(getFragmentManager() == null)
-            return;
         VPDetailSheet vds = new VPDetailSheet();
         ArrayList<Eintrag> inp;
         try {
@@ -758,11 +747,11 @@ public class VPlanFragment extends Fragment {
 
         vds.setArguments(bundl);
 
-        vds.show(getFragmentManager(), vds.getTag());
+        vds.show(getParentFragmentManager(), vds.getTag());
     }
 
     private void displayMoreInformation(Eintrag eintrag) {
-        AlertDialog ad = new AlertDialog.Builder(getContext()).create();
+        AlertDialog ad = new AlertDialog.Builder(requireContext()).create();
         ad.setCancelable(true); // This blocks the 'BACK' button
         ad.setTitle("Information");
         String note = "";
@@ -803,6 +792,7 @@ public class VPlanFragment extends Fragment {
         String cDeutsch = "#2196F3";
         String cEnglisch = "#ff9800";
         String cEthik = "#ff8f00";
+        String cMNT = "#4caf50";
         String cFRL = "#558b2f";
         String cGeografie = "#9e9d24";
         String cGeschichte = "#9c27b0";
@@ -984,7 +974,7 @@ public class VPlanFragment extends Fragment {
                 return true;
             }
 
-            return !Files.toString(hcache, Charsets.UTF_8).toLowerCase().equals(html.toLowerCase());
+            return !Files.asCharSource(hcache, Charsets.UTF_8).read().toLowerCase().equals(html.toLowerCase());
         } catch (Exception e) {
             e.printStackTrace();
             return true;

@@ -18,10 +18,15 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.MobileAds;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.io.Files;
 
@@ -42,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -50,14 +54,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -72,7 +68,7 @@ import timber.log.Timber;
 public class KlausurenFragment extends Fragment {
 
     private ProgressDialog progressDialog;
-    private List<Klausur> klausurs = new ArrayList<>();
+    private final List<Klausur> klausurs = new ArrayList<>();
     private FloatingActionButton fab;
     private KlausurenAdapter mAdapter;
     private int shownPage = 0;
@@ -81,7 +77,7 @@ public class KlausurenFragment extends Fragment {
 
     public KlausurenFragment() { }
 
-    private class KlasseState {
+    private static class KlasseState {
         static final int UNCHANGED = 0;
         static final int CHANGED = 1;
         static final int ERROR = 2;
@@ -90,13 +86,13 @@ public class KlausurenFragment extends Fragment {
     /*
     "ADT" für Klausurpläne der Klassen 11 und 12
      */
-    private class KlausurPlans {
+    private static class KlausurPlans {
         List<Klausur> kl11;
         List<Klausur> kl12;
         String headr11;
         String headr12;
 
-        class JSONKeys { //JSON-Schlüssel-Namen
+        static class JSONKeys { //JSON-Schlüssel-Namen
             static final String KLAUSUR_11 = "klausuren-11";
             static final String KLAUSUR_12 = "klausuren-12";
             static final String HEADER_11 = "header-11";
@@ -226,21 +222,8 @@ public class KlausurenFragment extends Fragment {
         if(getActivity() != null && getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Klausurenplan");
 
         shownPage = PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).getInt(Util.Preferences.KLAUSUR_PLAN, getPageFromKlasse(PreferenceManager.getDefaultSharedPreferences(GSApp.getContext()).getString(Util.Preferences.KLASSE, "KEINE")));
-
-        if(getContext() != null) MobileAds.initialize(getContext(), "ca-app-pub-6538125936915221~2281967739");
-        AdView mAdView = getView().findViewById(R.id.adView);
-        if(mAdView != null) {
-            AdRequest adRequest = new AdRequest.Builder().addTestDevice("F42D4035C5B8ABF685658DE77BCB840A")
-                    .addTestDevice("DD84F3C5FBEDC399E0A6707561EC7323")
-                    .addTestDevice("ED9E21C114D9DE1A8C0695C4607CD141")
-                    .build();
-            mAdView.loadAd(adRequest);
-        }
-
-
-
-        RecyclerView recyclerView = getView().findViewById(R.id.rv);
-        swipeContainer = getView().findViewById(R.id.swipeContainer);
+        RecyclerView recyclerView = requireView().findViewById(R.id.rv);
+        swipeContainer = requireView().findViewById(R.id.swipeContainer);
         swipeContainer.setOnRefreshListener(() -> {
             fetch(null, 0, true, null); //Erzwingt Aktualisierung
         });
@@ -248,10 +231,10 @@ public class KlausurenFragment extends Fragment {
 
         //Klassen-Umschalter
         //TODO: Mit in den Einstellungen gewählter Klasse starten
-        fab = getView().findViewById(R.id.fab_class);
+        fab = requireView().findViewById(R.id.fab_class);
         fab.setImageBitmap(textIconic(getContext(),"11")); //Icon setzen
         RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) fab.getLayoutParams();
-        lp.setMargins(lp.leftMargin, lp.topMargin, lp.rightMargin, AdSize.SMART_BANNER.getHeightInPixels(getContext()) + lp.bottomMargin);
+        lp.setMargins(lp.leftMargin, lp.topMargin, lp.rightMargin, lp.bottomMargin);
         fab.setLayoutParams(lp);
         fab.setOnClickListener(v -> {
             if(shownPage == 0) {
@@ -267,7 +250,7 @@ public class KlausurenFragment extends Fragment {
 
         klausurs.add(new Klausur("Fehler: (Noch) keine Daten..", new Date()));
 
-        mAdapter = new KlausurenAdapter(Objects.requireNonNull(getContext()), klausurs);
+        mAdapter = new KlausurenAdapter(requireContext(), klausurs);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this.getContext());
 
         recyclerView.setLayoutManager(mLayoutManager);
@@ -358,7 +341,7 @@ public class KlausurenFragment extends Fragment {
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Timber.e(e);
                 if(getActivity() == null)
                     return;
@@ -366,7 +349,7 @@ public class KlausurenFragment extends Fragment {
                 getActivity().runOnUiThread(() -> {
 
                     try {
-                        if(e.getMessage().contains("timeout")) {
+                        if(Objects.requireNonNull(e.getMessage()).contains("timeout")) {
                             Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
                         } else {
                             Toast.makeText(getContext(), "Der Klausurenplan konnte nicht geladen werden!", Toast.LENGTH_SHORT).show();
@@ -386,10 +369,10 @@ public class KlausurenFragment extends Fragment {
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if(!response.isSuccessful())
                     Timber.e("onResponse FAILED (" + response.code() + ")");
-                final String result = response.body().string();
+                final String result = Objects.requireNonNull(response.body()).string();
 
                     if(page == 0) {
                         fetch(showDialog, 1, force, result);
@@ -542,19 +525,18 @@ public class KlausurenFragment extends Fragment {
         String[] jahre;
         Matcher jahreMatcher = Pattern.compile("[0-9]{4}/[0-9]{4}").matcher(ksHeader); //Regex-Suche nach Jahreszahlen (XXXX/XXXX)
         if(jahreMatcher.matches())
-            jahre = jahreMatcher.group(0).split("/");
+            jahre = Objects.requireNonNull(jahreMatcher.group(0)).split("/");
         else
             jahre = ksHeader.split("<br>")[1].replaceAll("[^\\d/]", "" ).split("/"); //Fallback-Methode: Überschrift bei Linebreak teilen, dann Jahre trennen
 
         Elements vpEnts = doc.select("td[class=kopf] ~ td");
-        Iterator it = vpEnts.iterator();
-        while (it.hasNext()) {
+        for (Element vpEnt : vpEnts) {
             //Matcher datums = Pattern.compile("[0-9]{2}\\.[0-9]{2}\\.").matcher(((Element) it.next()).html());
-            String weekStart = ((Element) it.next()).html().split("<br>")[0]; //TODO: Doof.
+            String weekStart = vpEnt.html().split("<br>")[0]; //TODO: Doof.
             Calendar cal = Calendar.getInstance();
-            cal.setTime(format.parse(weekStart + "2000"));
+            cal.setTime(Objects.requireNonNull(format.parse(weekStart + "2000")));
             //int month = Integer.parseInt(Pattern.compile("([0-9]+)(?!.*[0-9])").matcher(weekStart).group(0));
-            if(8 <= cal.get(Calendar.MONTH) && cal.get(Calendar.MONTH) <= 12) //Wenn Monat zwischen 8 und 12 -> erstes Jahr, sonst 2. Jahr
+            if (8 <= cal.get(Calendar.MONTH) && cal.get(Calendar.MONTH) <= 12) //Wenn Monat zwischen 8 und 12 -> erstes Jahr, sonst 2. Jahr
                 cal.set(Calendar.YEAR, Integer.parseInt(jahre[0])); //1. Jahr setzen
             else
                 cal.set(Calendar.YEAR, Integer.parseInt(jahre[1])); //2. Jahr setzen
@@ -569,14 +551,12 @@ public class KlausurenFragment extends Fragment {
         while(day < 20) {
             //Timber.d(kartoffel.html());
             Elements klausuren = kartoffel.select("td:not(.tag,.kopf)");
-            Iterator klausurenIt = klausuren.iterator();
-            while (klausurenIt.hasNext()) {
-                Element klausur = ((Element) klausurenIt.next());
-                if(!klausur.html().equals("&nbsp;")) {
+            for (Element klausur : klausuren) {
+                if (!klausur.html().equals("&nbsp;")) {
                     Calendar c = Calendar.getInstance();
                     int thisDay = day;
                     int datePos = klausur.elementSiblingIndex();
-                    if(thisDay > 5) {
+                    if (thisDay > 5) {
                         datePos += numFirstDateRow;
                         thisDay -= 6;
                     }
@@ -589,8 +569,9 @@ public class KlausurenFragment extends Fragment {
                     else if (klausur.text().equals("Abgabe SF")) {
                         o.add(new Klausur("Abgabe SF", c.getTime()));
                     } else {
-                        for(String singleKlausur : klausur.text().split(" ")) {
-                            if(singleKlausur.length() < 6) o.add(new Klausur(singleKlausur, c.getTime()));
+                        for (String singleKlausur : klausur.text().split(" ")) {
+                            if (singleKlausur.length() < 6)
+                                o.add(new Klausur(singleKlausur, c.getTime()));
                         }
                     }
                 }
@@ -611,7 +592,7 @@ public class KlausurenFragment extends Fragment {
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
         Util.prepareMenu(menu, Util.NavFragments.KLAUSUREN);
         super.onPrepareOptionsMenu(menu);
     }

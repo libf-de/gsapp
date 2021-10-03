@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 
+import androidx.annotation.NonNull;
+
 import com.google.common.io.Files;
 
 import org.json.JSONArray;
@@ -19,6 +21,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -30,8 +33,8 @@ import timber.log.Timber;
 
 public class Feriencounter {
 
-    private Activity mActivity;
-    private FeriencounterCallback fc;
+    private final Activity mActivity;
+    private final FeriencounterCallback fc;
 
     static class FeriencounterCallback implements Runnable {
         String daysUntil;
@@ -95,7 +98,7 @@ public class Feriencounter {
             JSONObject disFerien = root.getJSONObject(i);
             Date begin = df.parse(disFerien.getString("start"));
             Date end = df.parse(disFerien.getString("end"));
-            if (!end.before(now)) { //Ferien enden in der Vergangenheit -> Ignorieren
+            if (!Objects.requireNonNull(end).before(now)) { //Ferien enden in der Vergangenheit -> Ignorieren
                 if (now.after(begin) && now.before(end)) { //Heute ist nach Ferienbeginn und vor Ferienende -> In den Ferien
                     long timeRem = TimeUnit.MILLISECONDS.toDays(end.getTime() - now.getTime()) + 1;
                     String timeSuff;
@@ -113,7 +116,7 @@ public class Feriencounter {
                         continue;
                     }
 
-                    if ( (begin.getTime() - now.getTime()) < (nearestDate.getTime() - now.getTime())) { //Diese Ferien früher als Gemerkte
+                    if ( (Objects.requireNonNull(begin).getTime() - now.getTime()) < (Objects.requireNonNull(nearestDate).getTime() - now.getTime())) { //Diese Ferien früher als Gemerkte
                         nearest = disFerien;
                         nearestDate = begin;
                     }
@@ -153,18 +156,18 @@ public class Feriencounter {
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Timber.e(e);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if(!response.isSuccessful()) {
                     Timber.e("onResponse FAILED (" + response.code() + ")");
                     return;
                 }
 
-                String result = response.body().string();
+                String result = Objects.requireNonNull(response.body()).string();
 
                 Files.write(result.getBytes(Charset.forName("UTF-8")), new File(mActivity.getCacheDir(), "gsferien.json")); //Ferien-JSON zwischenspeichern
 

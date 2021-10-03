@@ -14,6 +14,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -27,9 +31,8 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import javax.net.ssl.SSLHandshakeException;
+
 import de.xorg.cardsuilib.objects.CardStack;
 import de.xorg.cardsuilib.views.CardUI;
 import okhttp3.Call;
@@ -49,6 +52,7 @@ public class SpeiseplanFragment extends Fragment {
     private boolean istWeekend = false;
     private boolean showWeekend = true;
     private boolean didLoad = false;
+    private boolean useInsecureSSL = false;
     Button prevDay;
     Button nextDay;
     private CardUI mCardView;
@@ -63,12 +67,17 @@ public class SpeiseplanFragment extends Fragment {
 
     public SpeiseplanFragment() { }
 
-    private void fetchSpeiseplan() {
-        OkHttpClient.Builder b = new OkHttpClient.Builder();
-        b.readTimeout(20, TimeUnit.SECONDS);
-        b.connectTimeout(20, TimeUnit.SECONDS);
-
-        OkHttpClient client = b.build();
+    private void fetchSpeiseplan(){
+        OkHttpClient client;
+        if(this.useInsecureSSL)
+            client = Util.getUnsafeOkHttpClient();
+        else {
+            OkHttpClient.Builder b = new OkHttpClient.Builder();
+            b.readTimeout(20, TimeUnit.SECONDS);
+            b.connectTimeout(20, TimeUnit.SECONDS);
+            client = b.build();
+        }
+        //OkHttpClient client = Util.getUnsafeOkHttpClient();
 
         System.setProperty("http.keepAlive", "false");
 
@@ -84,7 +93,7 @@ public class SpeiseplanFragment extends Fragment {
 
         Request request = new Request.Builder()
                 //.url("https://www.schulkueche-bestellung.de/index.php?m=2;1")
-                .url("https://www.schulkueche-bestellung.de/de/menu/14/2020-09-07/2020-09-13/")
+                .url("https://www.schulkueche-bestellung.de/de/menu/14")
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -97,6 +106,14 @@ public class SpeiseplanFragment extends Fragment {
                 SpeiseplanFragment.this.getActivity().runOnUiThread(() -> {
                     if(e.getMessage().contains("timeout")) {
                         Toast.makeText(SpeiseplanFragment.this.getContext(), "Der Speiseplan konnte nicht neu geladen werden, da die Verbindung zum Server zu lang gedauert hat!", Toast.LENGTH_SHORT).show(); //TODO
+                    } else if(e instanceof SSLHandshakeException) {
+                        SpeiseplanFragment.this.useInsecureSSL = true;
+                        if (SpeiseplanFragment.this.progressDialog != null) {
+                            SpeiseplanFragment.this.progressDialog.dismiss();
+                        }
+                        Toast.makeText(SpeiseplanFragment.this.getContext(), "SSL-Fehler - stimmt die Systemzeit?", Toast.LENGTH_LONG).show();
+                        fetchSpeiseplan();
+                        return;
                     } else {
                         Toast.makeText(SpeiseplanFragment.this.getContext(), "Der Speiseplan konnte nicht neu geladen werden!", Toast.LENGTH_SHORT).show();
                     }

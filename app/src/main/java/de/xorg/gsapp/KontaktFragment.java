@@ -1,5 +1,7 @@
 package de.xorg.gsapp;
 
+import static android.content.Context.CLIPBOARD_SERVICE;
+
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -20,18 +22,17 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import timber.log.Timber;
-
-import static android.content.Context.CLIPBOARD_SERVICE;
 
 
 public class KontaktFragment extends Fragment {
@@ -59,14 +60,15 @@ public class KontaktFragment extends Fragment {
             istDunkel = (getArguments().getString("theme").equals(Util.AppTheme.DARK));
         }
 
-        listView = getView().findViewById(R.id.contactList);
+        listView = requireView().findViewById(R.id.contactList);
+
 
         if (istDunkel) {
-            RelativeLayout hdv = getView().findViewById(R.id.profile_layout);
+            RelativeLayout hdv = requireView().findViewById(R.id.profile_layout);
             int pad = Util.convertToPixels(GSApp.getContext(), 6);
             hdv.setBackgroundResource(R.color.background_dark);
             hdv.setPadding(0, pad, 0, pad);
-            getView().findViewById(R.id.layout).setBackgroundResource(R.color.background_dark);
+            requireView().findViewById(R.id.layout).setBackgroundResource(R.color.background_dark);
             listView.setBackgroundResource(R.color.background_dark);
         }
 
@@ -82,7 +84,7 @@ public class KontaktFragment extends Fragment {
             add(new KontaktData("Whats-App", "015902615854", KontaktTypes.WHATSAPP));
         }};
 
-        KontaktAdapter adapter = new KontaktAdapter(Objects.requireNonNull(getContext()), kontaktModels, istDunkel);
+        KontaktAdapter adapter = new KontaktAdapter(requireContext(), kontaktModels, istDunkel);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener((parent, view1, position, id) -> {
 
@@ -100,7 +102,7 @@ public class KontaktFragment extends Fragment {
                     } catch (ActivityNotFoundException ex) {
                         Snackbar.make(view1, "Es wurden keine E-Mail-Apps gefunden!", Snackbar.LENGTH_LONG)
                                 .setAction("Adr. kopieren", v -> {
-                                    ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(CLIPBOARD_SERVICE);
+                                    ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(CLIPBOARD_SERVICE);
                                     ClipData clip = ClipData.newPlainText("Mailadresse", kT.getTarget());
                                     clipboard.setPrimaryClip(clip);
                                 }).show();
@@ -115,7 +117,7 @@ public class KontaktFragment extends Fragment {
                         activityException.printStackTrace();
                         Snackbar.make(view1, "Es wurde keine Telefon-App gefunden!", Snackbar.LENGTH_LONG)
                                 .setAction("Tel-Nr. kopieren", v -> {
-                                    ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(CLIPBOARD_SERVICE);
+                                    ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(CLIPBOARD_SERVICE);
                                     ClipData clip = ClipData.newPlainText("Telefonnummer", kT.getTarget());
                                     clipboard.setPrimaryClip(clip);
                                 }).show();
@@ -138,11 +140,8 @@ public class KontaktFragment extends Fragment {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        return super.onOptionsItemSelected(item);
     }
 
     static class KontaktTypes {
@@ -151,7 +150,7 @@ public class KontaktFragment extends Fragment {
         static int WHATSAPP = 2;
     }
 
-    public class KontaktData {
+    public static class KontaktData {
         String title;
         String target;
         int type;
@@ -193,11 +192,11 @@ public class KontaktFragment extends Fragment {
         }
     }
 
-    public class KontaktAdapter extends ArrayAdapter<KontaktData> {
+    public static class KontaktAdapter extends ArrayAdapter<KontaktData> {
 
-        private Context mContext;
-        private List<KontaktData> kontaktList;
-        private boolean istDunkel;
+        private final Context mContext;
+        private final List<KontaktData> kontaktList;
+        private final boolean istDunkel;
 
         KontaktAdapter(@NonNull Context context, ArrayList<KontaktData> list, boolean istDunkel) {
             super(context, 0 , list);
@@ -210,7 +209,7 @@ public class KontaktFragment extends Fragment {
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             View listItem = convertView;
-            KontaktData tK = kontaktList.get(position);
+            KontaktData tK = Objects.requireNonNull(kontaktList.get(position));
 
             if(tK.getIsHeader()) {
                 if(listItem == null)

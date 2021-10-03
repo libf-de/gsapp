@@ -43,7 +43,8 @@
             android:label="GSApp"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleInstance"
-            android:theme="@style/AppMainTheme">
+            android:theme="@style/AppMainTheme"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -55,7 +56,8 @@
                 android:resource="@xml/app_shortcuts" />
         </activity>
 
-        <service android:name=".FirebaseService">
+        <service android:name=".FirebaseService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

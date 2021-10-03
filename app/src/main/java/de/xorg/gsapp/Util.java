@@ -19,6 +19,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.fragment.app.Fragment;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -34,13 +39,18 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.res.ResourcesCompat;
-import androidx.fragment.app.Fragment;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.OkHttpClient;
 import timber.log.Timber;
 
 public class Util {
@@ -48,8 +58,8 @@ public class Util {
     static final int FIRSTRUN_ACTIVITY = 392;
 
     static final String CHANGELOG = ""
-            + "App für Android 10 angepasst\n"
-            + "Speiseplan behoben\n";
+            + "App für Android 11 angepasst\n"
+            + "Speiseplan erneut behoben - SSL-Fehler tritt aktuell auf, muss durch Betreiber behoben werden\n";
 
     static final String NTF_CHANNEL_ID = "gsapp_notifications";
 
@@ -66,6 +76,47 @@ public class Util {
     public static <T> T last(T[] array) {
         if (array.length < 1) throw new NullPointerException("Array is empty");
         return array[array.length - 1];
+    }
+
+    public static OkHttpClient getUnsafeOkHttpClient() {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            final TrustManager[] trustAllCerts = new TrustManager[] {
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {}
+
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                        }
+
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+            };
+
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            // Create an ssl socket factory with our all-trusting manager
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0]);
+            builder.hostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
+            builder.readTimeout(20, TimeUnit.SECONDS);
+            builder.connectTimeout(20, TimeUnit.SECONDS);
+            return builder.build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     static int convertToPixels(Context context, int nDP)
@@ -479,13 +530,7 @@ public class Util {
     static void prepareMenu(Menu menu, int fragId) {
         switch (fragId) {
             case NavFragments.BESTELLUNG:
-                menu.findItem(R.id.eb_abmelden).setVisible(true);
-                menu.findItem(R.id.eb_account).setVisible(true);
-                menu.findItem(R.id.eb_bestellen).setVisible(true);
-                menu.findItem(R.id.eb_gotoo).setVisible(true);
-                menu.findItem(R.id.eb_plan).setVisible(true);
-                menu.findItem(R.id.eb_refresh).setVisible(true);
-                menu.findItem(R.id.eb_startseite).setVisible(true);
+                menu.findItem(R.id.eb_home).setVisible(true);
                 menu.findItem(R.id.web_refresh).setVisible(false);
                 menu.findItem(R.id.main_about).setVisible(false);
                 menu.findItem(R.id.main_settings).setVisible(false);
@@ -495,13 +540,7 @@ public class Util {
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 break;
             case NavFragments.TERMINE:
-                menu.findItem(R.id.eb_abmelden).setVisible(false);
-                menu.findItem(R.id.eb_account).setVisible(false);
-                menu.findItem(R.id.eb_bestellen).setVisible(false);
-                menu.findItem(R.id.eb_gotoo).setVisible(false);
-                menu.findItem(R.id.eb_plan).setVisible(false);
-                menu.findItem(R.id.eb_refresh).setVisible(false);
-                menu.findItem(R.id.eb_startseite).setVisible(false);
+                menu.findItem(R.id.eb_home).setVisible(false);
                 menu.findItem(R.id.web_refresh).setVisible(true);
                 menu.findItem(R.id.web_refresh).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
                 menu.findItem(R.id.main_about).setVisible(false);
@@ -512,13 +551,7 @@ public class Util {
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 break;
             case NavFragments.AKTUELLES:
-                menu.findItem(R.id.eb_abmelden).setVisible(false);
-                menu.findItem(R.id.eb_account).setVisible(false);
-                menu.findItem(R.id.eb_bestellen).setVisible(false);
-                menu.findItem(R.id.eb_gotoo).setVisible(false);
-                menu.findItem(R.id.eb_plan).setVisible(false);
-                menu.findItem(R.id.eb_refresh).setVisible(false);
-                menu.findItem(R.id.eb_startseite).setVisible(false);
+                menu.findItem(R.id.eb_home).setVisible(false);
                 menu.findItem(R.id.web_refresh).setVisible(false);
                 menu.findItem(R.id.main_about).setVisible(false);
                 menu.findItem(R.id.main_settings).setVisible(false);
@@ -530,13 +563,7 @@ public class Util {
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 break;
             case NavFragments.KONTAKT: //TODO: Entfernen
-                menu.findItem(R.id.eb_abmelden).setVisible(false);
-                menu.findItem(R.id.eb_account).setVisible(false);
-                menu.findItem(R.id.eb_bestellen).setVisible(false);
-                menu.findItem(R.id.eb_gotoo).setVisible(false);
-                menu.findItem(R.id.eb_plan).setVisible(false);
-                menu.findItem(R.id.eb_refresh).setVisible(false);
-                menu.findItem(R.id.eb_startseite).setVisible(false);
+                menu.findItem(R.id.eb_home).setVisible(false);
                 menu.findItem(R.id.web_refresh).setVisible(false);
                 menu.findItem(R.id.main_about).setVisible(false);
                 menu.findItem(R.id.main_settings).setVisible(false);
@@ -546,13 +573,7 @@ public class Util {
                 menu.findItem(R.id.action_klausur_toggle).setVisible(false);
                 break;
             case NavFragments.KLAUSUREN:
-                menu.findItem(R.id.eb_abmelden).setVisible(false);
-                menu.findItem(R.id.eb_account).setVisible(false);
-                menu.findItem(R.id.eb_bestellen).setVisible(false);
-                menu.findItem(R.id.eb_gotoo).setVisible(false);
-                menu.findItem(R.id.eb_plan).setVisible(false);
-                menu.findItem(R.id.eb_refresh).setVisible(false);
-                menu.findItem(R.id.eb_startseite).setVisible(false);
+                menu.findItem(R.id.eb_home).setVisible(false);
                 menu.findItem(R.id.web_refresh).setVisible(false);
                 menu.findItem(R.id.main_about).setVisible(false);
                 menu.findItem(R.id.main_settings).setVisible(false);
@@ -563,13 +584,7 @@ public class Util {
                 menu.findItem(R.id.action_klausur_toggle).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
                 break;
             case NavFragments.VERTRETUNGSPLAN:
-                menu.findItem(R.id.eb_abmelden).setVisible(false);
-                menu.findItem(R.id.eb_account).setVisible(false);
-                menu.findItem(R.id.eb_bestellen).setVisible(false);
-                menu.findItem(R.id.eb_gotoo).setVisible(false);
-                menu.findItem(R.id.eb_plan).setVisible(false);
-                menu.findItem(R.id.eb_refresh).setVisible(false);
-                menu.findItem(R.id.eb_startseite).setVisible(false);
+                menu.findItem(R.id.eb_home).setVisible(false);
                 menu.findItem(R.id.web_refresh).setVisible(false);
                 menu.findItem(R.id.main_about).setVisible(false);
                 menu.findItem(R.id.main_settings).setVisible(false);
@@ -581,13 +596,7 @@ public class Util {
                 //menu.findItem(R.id.show_all).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
                 break;
             default:
-                menu.findItem(R.id.eb_abmelden).setVisible(false);
-                menu.findItem(R.id.eb_account).setVisible(false);
-                menu.findItem(R.id.eb_bestellen).setVisible(false);
-                menu.findItem(R.id.eb_gotoo).setVisible(false);
-                menu.findItem(R.id.eb_plan).setVisible(false);
-                menu.findItem(R.id.eb_refresh).setVisible(false);
-                menu.findItem(R.id.eb_startseite).setVisible(false);
+                menu.findItem(R.id.eb_home).setVisible(false);
                 menu.findItem(R.id.web_refresh).setVisible(false);
                 menu.findItem(R.id.main_about).setVisible(false);
                 menu.findItem(R.id.main_settings).setVisible(false);

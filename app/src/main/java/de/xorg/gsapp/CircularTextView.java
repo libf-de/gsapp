@@ -40,7 +40,7 @@ public class CircularTextView extends AppCompatTextView
         int  h = this.getHeight();
         int  w = this.getWidth();
 
-        int diameter = ((h > w) ? h : w);
+        int diameter = (Math.max(h, w));
         int radius = diameter/2;
 
         this.setHeight(diameter);

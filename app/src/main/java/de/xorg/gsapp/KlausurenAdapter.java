@@ -4,8 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Rect;
 import android.preference.PreferenceManager;
 import android.provider.CalendarContract;
 import android.text.TextUtils;
@@ -15,11 +13,11 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.util.Calendar;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.Calendar;
+import java.util.List;
 
 public class KlausurenAdapter extends RecyclerView.Adapter<KlausurenAdapter.ViewHolder> {
 
@@ -110,22 +108,6 @@ public class KlausurenAdapter extends RecyclerView.Adapter<KlausurenAdapter.View
         }
 
 
-    }
-
-    public static class DividerItemDecoration extends RecyclerView.ItemDecoration {
-        private final int mVerticalSpaceHeight;
-
-        public DividerItemDecoration(int mVerticalSpaceHeight) {
-            this.mVerticalSpaceHeight = mVerticalSpaceHeight;
-        }
-
-        @Override
-        public void getItemOffsets(Rect outRect, View view, RecyclerView parent,
-                                   RecyclerView.State state) {
-            outRect.bottom = mVerticalSpaceHeight;
-            //outRect.left = mVerticalSpaceHeight;
-            //outRect.right = mVerticalSpaceHeight;
-        }
     }
 
 

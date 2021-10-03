@@ -10,3 +10,5 @@
 /captures
 .externalNativeBuild
 /app/google-services.json
+/app/release/*
+/.idea/compiler.xml

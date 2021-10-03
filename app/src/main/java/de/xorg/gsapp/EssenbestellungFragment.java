@@ -1,5 +1,6 @@
 package de.xorg.gsapp;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -11,9 +12,7 @@ import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
@@ -22,6 +21,11 @@ public class EssenbestellungFragment extends Fragment {
     private String URI;
     private boolean isConnected = true;
     private String themeId;
+    private WebView Speisen;
+    private ProgressDialog progressDialog;
+    private String ALOGUSER;
+    private String ALOGPASS;
+    private boolean autoLogin;
 
 
     public EssenbestellungFragment() { }
@@ -41,16 +45,21 @@ public class EssenbestellungFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if(getActivity() instanceof MainActivity2) ((MainActivity2) getActivity()).setBarTitle("Essenbestellung");
+
         if (getArguments() != null && getArguments().containsKey("theme")) {
             themeId = getArguments().getString("theme");
         }
 
+        autoLogin = false;
+
 
         //Variablen
-        WebView Speisen = getView().findViewById(R.id.WebView);
-        RelativeLayout FragFrm = getView().findViewById(R.id.withers);
+        Speisen = requireView().findViewById(R.id.WebView);
+        RelativeLayout FragFrm = requireView().findViewById(R.id.withers);
 
         switch(themeId) {
             case Util.AppTheme.DARK:
@@ -74,73 +83,32 @@ public class EssenbestellungFragment extends Fragment {
 
         isConnected = Util.hasInternet(this.getContext());
 
-        URI = "https://www.schulkueche-bestellung.de/";
+        ALOGUSER = Datenspeicher.getUser(this.getContext());
+        ALOGPASS = Datenspeicher.getPassword(this.getContext());
 
-        String ALOGUSER = Datenspeicher.getUser(this.getContext());
-        String ALOGPASS = Datenspeicher.getPassword(this.getContext());
+        autoLogin = (!ALOGUSER.equals("") && !ALOGPASS.startsWith("error"));
 
-        if (ALOGPASS.startsWith("error")) {
-            Toast.makeText(this.getContext(), "Fehler in autom. Anmeldung: Entschlüsseln des Passworts fehlgeschlagen", Toast.LENGTH_SHORT).show();
-            Speisen.loadUrl(URI);
-        } else {
-            if (ALOGUSER.equals("")) {
-                Speisen.loadUrl(URI);
-            } else {
-                try {
-                    Speisen.postUrl("https://www.schulkueche-bestellung.de/index.php?ear_a=akt_login", ("Login_Name=" + URLEncoder.encode(ALOGUSER, "UTF-8") + "&Login_Passwort=" + URLEncoder.encode(ALOGPASS, "UTF-8")).getBytes()); //TODO: Funktioniert das?
-                } catch (UnsupportedEncodingException e) {
-                    Toast.makeText(this.getContext(), "Automatische Anmeldung fehlgeschlagen (UnsupportedEncoding)", Toast.LENGTH_SHORT).show();
-                    Speisen.loadUrl(URI);
-                    e.printStackTrace();
-                }
-            }
-        }
+        if(ALOGPASS.startsWith("error")) Toast.makeText(this.getContext(), "Fehler in autom. Anmeldung: Entschlüsseln des Passworts fehlgeschlagen", Toast.LENGTH_SHORT).show();
+
+        Speisen.loadUrl("https://www.schulkueche-bestellung.de/de/content/");
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.eb_refresh:
-                openUrl(URI);
-                return true;
-            case R.id.eb_gotoo:
-                return true;
-            case R.id.eb_startseite:
-                URI = "https://www.schulkueche-bestellung.de/index.php?m=2;0";
-                openUrl(URI);
-                return true;
-            case R.id.eb_bestellen:
-                URI = "https://www.schulkueche-bestellung.de/index.php?m=2;2";
-                openUrl(URI);
-                return true;
-            case R.id.eb_plan:
-                URI = "https://www.schulkueche-bestellung.de/index.php?m=2;1";
-                openUrl(URI);
-                return true;
-            case R.id.eb_account:
-                URI = "https://www.schulkueche-bestellung.de/index.php?m=2;5";
-                openUrl(URI);
-                return true;
-            case R.id.eb_abmelden:
-                URI = "https://www.schulkueche-bestellung.de/?a=login/logout";
-                openUrl(URI);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.eb_home) {//if(EssenbestellungFragment.this.Speisen != null) Speisen.loadUrl("https://www.schulkueche-bestellung.de/de/content/");
+            Speisen.loadUrl("javascript:(function() { document.getElementById('login').value = 'franz'; ;})()");
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
         Util.prepareMenu(menu, Util.NavFragments.BESTELLUNG);
         super.onPrepareOptionsMenu(menu);
 
     }
 
-    private void openUrl(String url) {
-        WebView Speisen = getView().findViewById(R.id.WebView);
-        Speisen.loadUrl(url);
-    }
 
     private class MyWebViewClient extends WebViewClient {
 
@@ -169,6 +137,12 @@ public class EssenbestellungFragment extends Fragment {
                 view.stopLoading();
                 view.loadData(GENERIC, "text/html", "utf-8");
             }
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+            if(url.equals("https://www.schulkueche-bestellung.de/de/content/") && autoLogin) view.loadUrl("javascript:(function(){document.getElementById(\"login\").value=\"" + ALOGUSER + "\";document.getElementById(\"password\").value=\"" + ALOGPASS + "\"})();");
         }
     }
 }

@@ -21,6 +21,12 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
@@ -30,11 +36,6 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 import timber.log.Timber;
 
 public class MainActivity2 extends AppCompatActivity {
@@ -53,18 +54,19 @@ public class MainActivity2 extends AppCompatActivity {
 
     @Override
     protected void onNewIntent(Intent i) {
+        super.onNewIntent(i);
         Timber.d("Got Intent...");
-        if(i.hasExtra("FRAG_SHOW") && (i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN) == Util.NavFragments.VERTRETUNGSPLAN)) {
+        if (i.hasExtra("FRAG_SHOW") && (i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN) == Util.NavFragments.VERTRETUNGSPLAN)) {
             Timber.d("To VPlan...");
-                if (fragm instanceof VPlanFragment) {
-                    Timber.d("Showing VPlan...");
-                    VPlanFragment vpf = (VPlanFragment) fragm;
-                    new Thread(() -> vpf.loadData(true)).start();
-                } else {
-                    Timber.d("Opening VPlan...");
-                    showFragment(Util.NavFragments.VERTRETUNGSPLAN);
-                }
-        } else if(i.hasExtra("FRAG_SHOW")) {
+            if (fragm instanceof VPlanFragment) {
+                Timber.d("Showing VPlan...");
+                VPlanFragment vpf = (VPlanFragment) fragm;
+                new Thread(() -> vpf.loadData(true)).start();
+            } else {
+                Timber.d("Opening VPlan...");
+                showFragment(Util.NavFragments.VERTRETUNGSPLAN);
+            }
+        } else if (i.hasExtra("FRAG_SHOW")) {
             showFragment(i.getIntExtra("FRAG_SHOW", Util.NavFragments.VERTRETUNGSPLAN));
         }
     }
@@ -176,8 +178,6 @@ public class MainActivity2 extends AppCompatActivity {
             toolbar.setBackgroundResource(R.color.gsgelb);
 
         toolbarTextView = findViewById(R.id.toolbar_title);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN)
-            toolbarTextView.setTypeface(Util.getTKFont(this, false));
 
         toolbarTextView.setOnLongClickListener(v -> {
             if(fragm instanceof Settings2Fragment) {
@@ -394,11 +394,7 @@ public class MainActivity2 extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        switch(id) {
-            default:
-                return super.onOptionsItemSelected(item);
-
-        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void showFragment(int fragId) {
@@ -500,6 +496,7 @@ public class MainActivity2 extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Util.FIRSTRUN_ACTIVITY) {
             finish();
             overridePendingTransition(0, 0);

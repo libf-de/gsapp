@@ -6,8 +6,7 @@
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/adView">
+        android:layout_height="match_parent">
 
         <de.xorg.cardsuilib.views.CardUI
             android:id="@+id/cardsview"
@@ -16,17 +15,5 @@
 
         <include layout="@layout/vpdetail_sheet" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-    <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/adView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        ads:adSize="SMART_BANNER"
-        ads:adUnitId="ca-app-pub-6538125936915221/3766170296" />
-
-    <!-- ads:adUnitId="ca-app-pub-3940256099942544/6300978111" Debug -->
-    <!-- ads:adUnitId="ca-app-pub-6538125936915221/3766170296" - Release -->
 
 </RelativeLayout>

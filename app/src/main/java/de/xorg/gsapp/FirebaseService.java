@@ -20,6 +20,9 @@ import android.provider.Settings;
 import android.util.Base64;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -36,9 +39,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
-import androidx.core.app.NotificationCompat;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -53,7 +56,7 @@ public class FirebaseService extends FirebaseMessagingService {
      * @param remoteMessage Object representing the message received from Firebase Cloud Messaging.
      */
     @Override
-    public void onMessageReceived(RemoteMessage remoteMessage) {
+    public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage); //TODO: Only parse classes/teachers in their respective mode
         Map<String, String> data = remoteMessage.getData();
 
@@ -83,7 +86,7 @@ public class FirebaseService extends FirebaseMessagingService {
         Date forDate = new Date();
         SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
         try {
-            forDate = format.parse(data.get("forDate"));
+            forDate = format.parse(Objects.requireNonNull(data.get("forDate")));
         } catch (ParseException e) {
             e.printStackTrace();
             Timber.w("Konnte Datum nicht verarbeiten");
@@ -200,7 +203,7 @@ public class FirebaseService extends FirebaseMessagingService {
      * is initially generated so this is where you would retrieve the token.
      */
     @Override
-    public void onNewToken(String token) {
+    public void onNewToken(@NonNull String token) {
         Timber.d("Refreshed token: %s", token);
         sendToken(this, token);
     }
@@ -290,7 +293,7 @@ public class FirebaseService extends FirebaseMessagingService {
                 .post(requestBody)
                 .build();
         try (Response response = client.newCall(request).execute()) {
-            String resp = response.body().string();
+            String resp = Objects.requireNonNull(response.body()).string();
             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(c).edit();
             editor.putBoolean(Util.Preferences.HAS_REGISTERED, resp.equals("ACK"));
             editor.commit();

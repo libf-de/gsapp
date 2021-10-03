@@ -12,6 +12,8 @@ public class GSApp extends MultiDexApplication {
     }
 
     public static Context getContext(){
+        if(instance.getApplicationContext() == null)
+            throw new RuntimeException("No Application Context");
         return instance.getApplicationContext();
         // or return instance.getApplicationContext();
     }

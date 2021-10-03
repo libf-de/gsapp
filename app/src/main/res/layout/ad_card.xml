@@ -11,21 +11,6 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:weightSum="100" >
-
-        <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/adView"
-            android:layout_width="320dp"
-            android:layout_height="50dp"
-            android:layout_margin="2dp"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-6538125936915221/3766170296">     <!---->
-        </com.google.android.gms.ads.AdView>
-
-        <!-- ads:adUnitId="ca-app-pub-3940256099942544/6300978111" Debug -->
-        <!-- ads:adUnitId="ca-app-pub-6538125936915221/3766170296" - Release -->
-
     </LinearLayout>
 
         <LinearLayout
